@@ -1,10 +1,11 @@
 "use client";
 
-
-import { motion } from "framer-motion";
-import {  Heart, Mail } from "lucide-react";
+import { Heart, Mail } from "lucide-react";
+import { motion } from "motion/react";
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="w-full bg-foreground text-primary-foreground py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -61,7 +62,6 @@ export default function Footer() {
                 </button>
               </li>
               <li>
-                
                 {/** biome-ignore lint/a11y/useValidAnchor: todo later */}
                 <a href="#"
                   className="hover:text-primary-foreground transition-colors"
@@ -70,8 +70,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-               
-               {/** biome-ignore lint/a11y/useValidAnchor: todo later */}
+                {/** biome-ignore lint/a11y/useValidAnchor: todo later */}
                 <a href="#"
                   className="hover:text-primary-foreground transition-colors"
                 >
@@ -114,7 +113,7 @@ export default function Footer() {
           viewport={{ once: true }}
           className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60"
         >
-          <p>© 2025 Xolace. All rights reserved.</p>
+          <p>© {currentYear} Xolace. All rights reserved.</p>
           <div className="flex items-center gap-1">
             Made with
             <Heart className="w-4 h-4 text-primary" />

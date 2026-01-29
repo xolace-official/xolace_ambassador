@@ -1,29 +1,30 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import { motion } from "motion/react";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8 },
+  },
+};
+
 export default function HeroSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8 },
-    },
-  };
-
   return (
     <section className="relative min-h-screen w-full overflow-hidden bg-linear-to-br from-background via-background to-secondary/30 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       {/* Animated background elements */}
@@ -75,28 +76,29 @@ export default function HeroSection() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
         >
-          <button
-            type="button"
+          <Button
+            size="lg"
             onClick={() => {
               document
                 .getElementById("signup-form")
                 ?.scrollIntoView({ behavior: "smooth" });
             }}
-            className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+            className="px-8 py-4 font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
           >
-            Sign Up Now
-          </button>
-          <button
-            type="button"
+            Join the Program
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
             onClick={() => {
               document
                 .getElementById("program-details")
                 ?.scrollIntoView({ behavior: "smooth" });
             }}
-            className="px-8 py-4 bg-secondary text-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-all duration-300 border border-border/30 hover:border-border/60"
+            className="px-8 py-4 font-semibold transition-all duration-300 border border-border/30 hover:border-border/60"
           >
             Learn More
-          </button>
+          </Button>
         </motion.div>
 
         {/* Scroll Indicator */}

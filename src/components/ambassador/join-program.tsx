@@ -63,7 +63,7 @@ export default function JoinProgramForm() {
             transition={{ duration: 0.4, delay: 0.1 }}
             viewport={{ once: true, margin: "-50px" }}
           >
-            <Card className="p-8 bg-white border border-border/40">
+            <Card className="p-8 bg-card border border-border/40">
               {submitted ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -98,11 +98,14 @@ export default function JoinProgramForm() {
                     viewport={{ once: true, margin: "-50px" }}
                     className="space-y-2"
                   >
-                    {/** biome-ignore lint/a11y/noLabelWithoutControl: well */}
-                    <label className="text-sm font-medium text-foreground">
+                    <label
+                      htmlFor="full-name"
+                      className="text-sm font-medium text-foreground"
+                    >
                       Full Name
                     </label>
                     <Input
+                      id="full-name"
                       type="text"
                       name="name"
                       value={formData.name}
