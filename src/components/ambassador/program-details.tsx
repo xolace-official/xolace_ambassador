@@ -89,7 +89,7 @@ export default function ProgramDetails() {
             The Ambassador Program
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">
-            We operate in the space around therapy—before people seek care, between
+            We operate in the space around therapy, before people seek care, between
             sessions, and outside of clinical treatment. Ambassadors help us scale
             this vision safely and sustainably.
           </p>
@@ -108,7 +108,7 @@ export default function ProgramDetails() {
               <h3 className="text-2xl font-semibold">Our Purpose</h3>
               <p className="text-foreground/70 leading-relaxed">
                 Xolace exists to bridge the gap in mental health support. We're
-                building tools for the moments that matter most—when someone needs
+                building tools for the moments that matter most, when someone needs
                 guidance before scheduling therapy, comfort during a difficult week,
                 or resources to supplement their professional care.
               </p>
