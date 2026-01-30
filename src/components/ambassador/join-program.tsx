@@ -5,10 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { getSupabaseBrowserClient } from "@/utils/supabase/client";
+import { Coolshape } from "coolshapes-react";
 
 export default function JoinProgramForm() {
+    // initialize supabase client
+  const supabase = getSupabaseBrowserClient();
+  
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [error , setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,21 +22,38 @@ export default function JoinProgramForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+
+        const { error: ambassadorsError } = await supabase
+      .from('ambassadors')
+      .insert({ name: formData.name, email: formData.email });
+
+      if (ambassadorsError) {
+        throw ambassadorsError;
+      }
 
     setSubmitted(true);
     setIsLoading(false);
 
-    // Reset form after 2 seconds
+    // Reset form after 4 seconds
     setTimeout(() => {
       setFormData({ name: "", email: "" });
       setSubmitted(false);
-    }, 2000);
+    }, 4000);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setError(true);
+      setIsLoading(false);
+
+      // Reset error after 3 seconds
+      setTimeout(() => {
+        setError(false);
+      }, 3000);
+    }
   };
 
   return (
@@ -83,8 +106,31 @@ export default function JoinProgramForm() {
                       You're In!
                     </h3>
                     <p className="text-sm text-foreground/60">
-                      Check your email for next steps. Welcome to the Xolace
+                      You will receive an email within 8hrs for next steps. Welcome to the Xolace
                       family.
+                    </p>
+                  </div>
+                </motion.div>
+              ) : error ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/20"
+                  >
+                    <Coolshape type="triangle" index={9} size={100} noise />
+                  </motion.div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-foreground">
+                      Something went wrong
+                    </h3>
+                    <p className="text-sm text-foreground/60">
+                      Please try again later.
                     </p>
                   </div>
                 </motion.div>
