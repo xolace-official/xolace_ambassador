@@ -71,7 +71,7 @@ export default function JoinProgramForm() {
         >
           {/* Header */}
           <div className="text-center space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold">
+            <h2 className="text-3xl sm:text-4xl font-bold">
               Ready to Make a Difference?
             </h2>
             <p className="text-foreground/60 text-balance">
