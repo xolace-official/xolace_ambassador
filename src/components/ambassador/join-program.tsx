@@ -106,7 +106,7 @@ export default function JoinProgramForm() {
                       You're In!
                     </h3>
                     <p className="text-sm text-foreground/60">
-                      You will receive an email within 8hrs for next steps. Welcome to the Xolace
+                      You will receive an email within a few hours for next steps. Welcome to the Xolace
                       family.
                     </p>
                   </div>
