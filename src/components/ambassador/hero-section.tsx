@@ -60,7 +60,7 @@ export default function HeroSection() {
 
         {/* Main Heading */}
         <motion.div variants={itemVariants} className="space-y-4">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold text-balance leading-tight">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl  font-bold text-balance leading-tight">
             Become a
             <span className="block mt-2 text-primary">Xolace Ambassador</span>
           </h1>

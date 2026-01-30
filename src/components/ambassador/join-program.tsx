@@ -75,7 +75,7 @@ export default function JoinProgramForm() {
               Ready to Make a Difference?
             </h2>
             <p className="text-foreground/60 text-balance">
-              Join thousands of ambassadors already supporting Xolace's mission.
+              Join hundreds of ambassadors already supporting Xolace's mission.
             </p>
           </div>
 
