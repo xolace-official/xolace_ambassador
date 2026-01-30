@@ -85,7 +85,7 @@ export default function ProgramDetails() {
           viewport={{ once: true, margin: '-50px' }}
           className="text-center space-y-4"
         >
-          <h2 className="text-4xl sm:text-5xl font-serif font-bold text-balance">
+          <h2 className="text-4xl sm:text-5xl font-bold text-balance">
             The Ambassador Program
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">

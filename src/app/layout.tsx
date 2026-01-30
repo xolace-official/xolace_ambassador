@@ -1,14 +1,14 @@
 import { Analytics } from "@vercel/analytics/next";
-import { Nunito, PT_Serif } from "next/font/google";
+import { Nunito, PT_Sans } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
 
 
 const _nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
-const _ptSerif = PT_Serif({
+const ptSans = PT_Sans({
+  variable: "--font-pt-sans",
   subsets: ["latin"],
   weight: ["400", "700"],
-  variable: "--font-pt-serif",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${_nunito.variable} ${_ptSerif.variable} font-sans antialiased`}
+        className={`${_nunito.variable} ${ptSans.variable}  antialiased`}
       >
         {children}
         <Analytics />

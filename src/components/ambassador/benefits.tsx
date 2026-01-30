@@ -76,7 +76,7 @@ export default function Benefits() {
           viewport={{ once: true, margin: '-50px' }}
           className="text-center space-y-4"
         >
-          <h2 className="text-4xl sm:text-5xl font-serif font-bold text-balance">
+          <h2 className="text-4xl sm:text-5xl font-bold text-balance">
             What You'll Gain
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">
@@ -140,7 +140,7 @@ export default function Benefits() {
                 },
                 {
                   quote: 'The flexibility is incredible. I can contribute on my own terms, and the support from the community is amazing.',
-                  author: 'James K., Ambassador',
+                  author: 'Chris, Ambassador',
                 },
               ].map((testimonial, index) => (
                 <motion.div
