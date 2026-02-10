@@ -2,6 +2,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { Nunito, PT_Sans } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
+import Footer from "@/components/ambassador/footer";
+import NavBar from "@/components/layout/nav-bar";
 
 
 const _nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
@@ -33,8 +35,10 @@ export default function RootLayout({
       <body
         className={`${_nunito.variable} ${ptSans.variable}  antialiased`}
       >
-        {children}
-        <Analytics />
+      <NavBar />
+      {children}
+      <Footer />
+      <Analytics />
       </body>
     </html>
   );
