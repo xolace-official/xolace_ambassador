@@ -33,7 +33,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           transition={{ duration: 1.2 }}
-          className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/20 blur-3xl"
+          className="absolute -top-40 -right-20 w-80 h-80 rounded-full bg-background/30 blur-3xl"
         />
         <motion.div
           initial={{ opacity: 0 }}
