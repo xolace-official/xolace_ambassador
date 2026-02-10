@@ -26,44 +26,45 @@ const navigationData: NavItem[] = [
     label: "Home",
     href: "/",
   },
-  {
-    label: "About",
-    href: "/about",
-  },
+  // {
+  //   label: "About",
+  //   href: "/about",
+  // },
   {
     label: "Ambassadors",
     href: "/ambassadors",
-    dropdown: [
-      {
-        label: "Our Ambassadors",
-        href: "/ambassadors",
-        description: "Meet our global community of advocates",
-        icon: <Users className="w-4 h-4"/>,
-      },
-      {
-        label: "Events Hosted",
-        href: "/ambassadors/events",
-        description: "Community events and initiatives",
-        icon: <Calendar className="w-4 h-4"/>,
-      },
-      {
-        label: "Lives Impacted",
-        href: "/ambassadors/impact",
-        description: "Stories of change and transformation",
-        icon: <Heart className="w-4 h-4"/>,
-      },
-      {
-        label: "Ambassador Success",
-        href: "/ambassadors/success",
-        description: "Achievements and milestones",
-        icon: <Trophy className="w-4 h-4"/>,
-      },
-    ],
+    // dropdown: [
+    //   {
+    //     label: "Our Ambassadors",
+    //     href: "/ambassadors",
+    //     description: "Meet our global community of advocates",
+    //     icon: <Users className="w-4 h-4"/>,
+    //   },
+    //   {
+    //     label: "Events Hosted",
+    //     href: "/ambassadors/events",
+    //     description: "Community events and initiatives",
+    //     icon: <Calendar className="w-4 h-4"/>,
+    //   },
+    //   {
+    //     label: "Lives Impacted",
+    //     href: "/ambassadors/impact",
+    //     description: "Stories of change and transformation",
+    //     icon: <Heart className="w-4 h-4"/>,
+    //   },
+    //   {
+    //     label: "Ambassador Success",
+    //     href: "/ambassadors/success",
+    //     description: "Achievements and milestones",
+    //     icon: <Trophy className="w-4 h-4"/>,
+    //   },
+    // ],
+
   },
-  {
-    label: "Contact",
-    href: "/contact",
-  },
+  // {
+  //   label: "Contact",
+  //   href: "/contact",
+  // },
 ]
 
 const NavBar = () => {
@@ -146,7 +147,7 @@ const NavBar = () => {
   }
 
   return (
-    <header className="px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full bg-background">
+    <header className="px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full">
       <div
         className="max-w-6xl mx-auto w-full py-1 px-2 flex items-center justify-between border border-border bg-muted rounded-2xl">
         <div className="w-full flex flex-row gap-8">
