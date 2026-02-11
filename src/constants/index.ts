@@ -25,7 +25,8 @@ export const OFFICIAL_AMBASSADORS = [
       linkedin: "linkedin.com/in/oachristhedev/",
       twitter: undefined,
       instagram: "https://www.instagram.com/oachristhedev",
-      tiktok: undefined
+      tiktok: undefined,
+      github: "https://github.com/oachristhedev"
     },
     joinedDate: "February 2026",
     new: false,

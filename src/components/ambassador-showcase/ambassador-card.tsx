@@ -1,7 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Linkedin, Twitter, Instagram, MapPin } from "lucide-react";
+import { Twitter, Instagram, MapPin } from "lucide-react";
+import { TikTok } from "@/components/icons/tiktok-light";
+import { LinkedIn } from "@/components/icons/linkedIn";
+import { GitHub } from "@/components/icons/github";
 import Image from "next/image";
 
 interface Ambassador {
@@ -21,6 +24,7 @@ interface Ambassador {
     twitter?: string;
     instagram?: string;
     tiktok?: string;
+    github?: string;
   };
   joinedDate: string;
   new: boolean;
@@ -130,7 +134,7 @@ const AmbassadorCard = ({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Linkedin aria-hidden="true" className="w-4 h-4" />
+                <LinkedIn aria-hidden="true" className="w-4 h-4 fill-current" />
               </a>
             ) : null}
             {ambassador.social.twitter ? (
@@ -153,6 +157,28 @@ const AmbassadorCard = ({
                 rel="noopener noreferrer"
               >
                 <Instagram aria-hidden="true" className="w-4 h-4" />
+              </a>
+            ) : null}
+            {ambassador.social.tiktok ? (
+              <a
+                href={ambassador.social.tiktok}
+                aria-label={`${ambassador.name} on TikTok`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <TikTok aria-hidden="true" className="w-4 h-4 fill-current" />
+              </a>
+            ) : null}
+             {ambassador.social.github ? (
+              <a
+                href={ambassador.social.github}
+                aria-label={`${ambassador.name} on Github`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GitHub aria-hidden="true" className="w-4 h-4 fill-current" />
               </a>
             ) : null}
           </div>
