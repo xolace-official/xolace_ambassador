@@ -4,6 +4,7 @@ import React, {useEffect, useState, useRef, useCallback} from "react"
 import {Menu, X, ChevronDown} from "lucide-react"
 import Link from 'next/link'
 import Image from "next/image"
+import {usePathname, useRouter} from 'next/navigation'
 import {motion, AnimatePresence} from 'motion/react'
 import mascot from '../../../public/assets/x-logo-full.webp'
 import {Button} from "@/components/ui/button"
@@ -100,12 +101,19 @@ const NavBar = () => {
     }
   }, [isOpen, closeMenu])
 
+  const pathname = usePathname()
+  const router = useRouter()
+
   const scrollToApply = () => {
-    const applySection = document.getElementById('apply-section')
-    if (applySection) {
-      applySection.scrollIntoView({behavior: 'smooth'})
-    }
     closeMenu()
+    if (pathname === "/") {
+      const applySection = document.getElementById('signup-form')
+      if (applySection) {
+        applySection.scrollIntoView({behavior: 'smooth'})
+      }
+    } else {
+      router.push('/#signup-form')
+    }
   }
 
   return (
