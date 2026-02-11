@@ -137,15 +137,8 @@ const AmbassadorCard = ({
               </a>
             ) : null}
           </div>
-          <div
-            className="text-xs text-muted-foreground"
-            suppressHydrationWarning
-          >
-            Since{" "}
-            {new Intl.DateTimeFormat("en-US", {
-              year: "numeric",
-              month: "long",
-            }).format(new Date(ambassador.joinedDate))}
+          <div className="text-xs text-muted-foreground">
+            Since {ambassador.joinedDate}
           </div>
         </div>
       </div>
