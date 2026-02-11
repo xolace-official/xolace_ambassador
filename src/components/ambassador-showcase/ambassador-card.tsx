@@ -22,6 +22,7 @@ interface Ambassador {
     instagram?: string;
   };
   joinedDate: string;
+  new: boolean
 }
 
 const MAX_STAGGER_DELAY = 0.5;
@@ -49,6 +50,8 @@ const AmbassadorCard = ({
           src={ambassador.image}
           alt={ambassador.name}
           fill
+          loading="lazy"
+          quality={80}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -80,12 +83,14 @@ const AmbassadorCard = ({
               </div>
               <div className="text-xs text-muted-foreground">Reached</div>
             </div>
-            <div>
-              <div className="text-lg font-bold text-primary tabular-nums">
-                {ambassador.impact.eventsHosted}
+            {ambassador.impact.eventsHosted > 0 && (
+              <div>
+                <div className="text-lg font-bold text-primary tabular-nums">
+                  {ambassador.impact.eventsHosted}
+                </div>
+                <div className="text-xs text-muted-foreground">Events</div>
               </div>
-              <div className="text-xs text-muted-foreground">Events</div>
-            </div>
+            )}
             <div>
               <div className="text-lg font-bold text-primary tabular-nums">
                 {ambassador.impact.communitiesServed}

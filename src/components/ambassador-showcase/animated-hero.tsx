@@ -1,14 +1,7 @@
 "use client";
 
-import { Users, Globe, Heart, Award } from "lucide-react";
 import { motion } from "motion/react";
-
-const stats = [
-  { icon: Users, label: "Active Ambassadors", value: "500+" },
-  { icon: Globe, label: "Countries", value: "25+" },
-  { icon: Heart, label: "Lives Impacted", value: "50k+" },
-  { icon: Award, label: "Events Hosted", value: "200+" },
-];
+import { STATS } from "@/constants";
 
 const AnimatedHero = () => {
   return (
@@ -55,7 +48,7 @@ const AnimatedHero = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-12"
         >
-          {stats.map((stat, index) => (
+          {STATS.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, scale: 0.9 }}
