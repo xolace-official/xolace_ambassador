@@ -75,4 +75,26 @@ export const OFFICIAL_AMBASSADORS = [
     joinedDate: "February 2026",
     new: true,
   },
+     {
+    id: 4,
+    name: "Boateng Ernest",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Boateng%20Ernest.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: undefined
+    },
+    joinedDate: "February 2026",
+    new: true,
+  },
 ];
