@@ -22,12 +22,15 @@ export const OFFICIAL_AMBASSADORS = [
       communitiesServed: 1,
     },
     social: {
-      linkedin: "#",
-      twitter: "#",
-      instagram: "#",
+      linkedin: "https://linkedin.com/in/oachristhedev/",
+      twitter: undefined,
+      instagram: "https://www.instagram.com/oachristhedev",
+      tiktok: undefined,
+      github: "https://github.com/oachristhedev"
     },
     joinedDate: "February 2026",
-    new: true,
+    new: false,
+    roles: ["Web Developer", "UI/UX Designer"]
   },
   {
     id: 2,
@@ -43,9 +46,31 @@ export const OFFICIAL_AMBASSADORS = [
       communitiesServed: 1,
     },
     social: {
-      linkedin: "#",
-      twitter: "#",
-      instagram: "#",
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+    },
+    joinedDate: "February 2026",
+    new: true,
+  },
+    {
+    id: 3,
+    name: "Antwi Richard Yeboah",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Antwi%20Richard%20Yeboah.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: "https://www.tiktok.com/@grannys_son1"
     },
     joinedDate: "February 2026",
     new: true,

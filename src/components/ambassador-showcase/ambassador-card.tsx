@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Linkedin, Twitter, Instagram, MapPin } from "lucide-react";
-import Image from "next/image";
+import { Twitter, Instagram, MapPin } from "lucide-react";
+import { TikTok } from "@/components/icons/tiktok-light";
+import { LinkedIn } from "@/components/icons/linkedIn";
+import { GitHub } from "@/components/icons/github";
+import ImagePreview from "@/components/ui/image-preview";
 
 interface Ambassador {
   id: number;
@@ -20,9 +23,12 @@ interface Ambassador {
     linkedin?: string;
     twitter?: string;
     instagram?: string;
+    tiktok?: string;
+    github?: string;
   };
   joinedDate: string;
-  new: boolean
+  new: boolean;
+  roles?: string[];
 }
 
 const MAX_STAGGER_DELAY = 0.5;
@@ -46,15 +52,20 @@ const AmbassadorCard = ({
     >
       {/* Ambassador Image */}
       <div className="relative h-64 bg-muted overflow-hidden">
-        <Image
+        <ImagePreview
           src={ambassador.image}
           alt={ambassador.name}
           fill
           loading="lazy"
           quality={80}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer rounded-lg"
         />
+        {ambassador.new ? (
+          <span className="absolute top-3 right-3 px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
+            New
+          </span>
+        ) : null}
       </div>
 
       {/* Ambassador Info */}
@@ -64,6 +75,18 @@ const AmbassadorCard = ({
             {ambassador.name}
           </h3>
           <p className="text-primary font-medium mb-1">{ambassador.role}</p>
+          {ambassador.roles && ambassador.roles.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {ambassador.roles.map((role) => (
+                <span
+                  key={role}
+                  className="px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded-md"
+                >
+                  {role}
+                </span>
+              ))}
+            </div>
+          ) : null}
           <div className="flex items-center text-muted-foreground text-sm">
             <MapPin aria-hidden="true" className="w-4 h-4 mr-1" />
             {ambassador.location}
@@ -75,7 +98,7 @@ const AmbassadorCard = ({
         </p>
 
         {/* Impact Stats */}
-        <div className="bg-muted/50 rounded-xl p-2 mb-4 border border-border">
+        {/* <div className="bg-muted/50 rounded-xl p-2 mb-4 border border-border">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <div className="text-lg font-bold text-primary tabular-nums">
@@ -98,7 +121,7 @@ const AmbassadorCard = ({
               <div className="text-xs text-muted-foreground">Communities</div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Social Links */}
         <div className="flex items-center justify-between">
@@ -111,7 +134,7 @@ const AmbassadorCard = ({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Linkedin aria-hidden="true" className="w-4 h-4" />
+                <LinkedIn aria-hidden="true" className="w-4 h-4 fill-current" />
               </a>
             ) : null}
             {ambassador.social.twitter ? (
@@ -136,16 +159,31 @@ const AmbassadorCard = ({
                 <Instagram aria-hidden="true" className="w-4 h-4" />
               </a>
             ) : null}
+            {ambassador.social.tiktok ? (
+              <a
+                href={ambassador.social.tiktok}
+                aria-label={`${ambassador.name} on TikTok`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <TikTok aria-hidden="true" className="w-4 h-4 fill-current" />
+              </a>
+            ) : null}
+             {ambassador.social.github ? (
+              <a
+                href={ambassador.social.github}
+                aria-label={`${ambassador.name} on GitHub`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GitHub aria-hidden="true" className="w-4 h-4 fill-current" />
+              </a>
+            ) : null}
           </div>
-          <div
-            className="text-xs text-muted-foreground"
-            suppressHydrationWarning
-          >
-            Since{" "}
-            {new Intl.DateTimeFormat("en-US", {
-              year: "numeric",
-              month: "long",
-            }).format(new Date(ambassador.joinedDate))}
+          <div className="text-xs text-muted-foreground">
+            Since {ambassador.joinedDate}
           </div>
         </div>
       </div>
