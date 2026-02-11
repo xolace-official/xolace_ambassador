@@ -29,7 +29,10 @@ const MAX_STAGGER_DELAY = 0.5;
 const AmbassadorCard = ({
   ambassador,
   index,
-}: { ambassador: Ambassador; index: number }) => {
+}: {
+  ambassador: Ambassador;
+  index: number;
+}) => {
   const delay = Math.min(index * 0.1, MAX_STAGGER_DELAY);
 
   return (
@@ -38,7 +41,7 @@ const AmbassadorCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
-      className="bg-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-border"
+      className="bg-card rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden group border border-border"
     >
       {/* Ambassador Image */}
       <div className="relative h-64 bg-muted overflow-hidden">
@@ -59,7 +62,7 @@ const AmbassadorCard = ({
           </h3>
           <p className="text-primary font-medium mb-1">{ambassador.role}</p>
           <div className="flex items-center text-muted-foreground text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
+            <MapPin aria-hidden="true" className="w-4 h-4 mr-1" />
             {ambassador.location}
           </div>
         </div>
@@ -72,19 +75,19 @@ const AmbassadorCard = ({
         <div className="bg-muted/50 rounded-xl p-2 mb-4 border border-border">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-lg font-bold text-primary">
+              <div className="text-lg font-bold text-primary tabular-nums">
                 {ambassador.impact.peopleReached}
               </div>
               <div className="text-xs text-muted-foreground">Reached</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-primary">
+              <div className="text-lg font-bold text-primary tabular-nums">
                 {ambassador.impact.eventsHosted}
               </div>
               <div className="text-xs text-muted-foreground">Events</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-primary">
+              <div className="text-lg font-bold text-primary tabular-nums">
                 {ambassador.impact.communitiesServed}
               </div>
               <div className="text-xs text-muted-foreground">Communities</div>
@@ -98,40 +101,46 @@ const AmbassadorCard = ({
             {ambassador.social.linkedin ? (
               <a
                 href={ambassador.social.linkedin}
-                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
+                aria-label={`${ambassador.name} on LinkedIn`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Linkedin className="w-4 h-4" />
+                <Linkedin aria-hidden="true" className="w-4 h-4" />
               </a>
             ) : null}
             {ambassador.social.twitter ? (
               <a
                 href={ambassador.social.twitter}
-                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
+                aria-label={`${ambassador.name} on Twitter`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Twitter className="w-4 h-4" />
+                <Twitter aria-hidden="true" className="w-4 h-4" />
               </a>
             ) : null}
             {ambassador.social.instagram ? (
               <a
                 href={ambassador.social.instagram}
-                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
+                aria-label={`${ambassador.name} on Instagram`}
+                className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Instagram className="w-4 h-4" />
+                <Instagram aria-hidden="true" className="w-4 h-4" />
               </a>
             ) : null}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div
+            className="text-xs text-muted-foreground"
+            suppressHydrationWarning
+          >
             Since{" "}
-            {new Date(ambassador.joinedDate).toLocaleString("en-US", {
+            {new Intl.DateTimeFormat("en-US", {
               year: "numeric",
               month: "long",
-            })}
+            }).format(new Date(ambassador.joinedDate))}
           </div>
         </div>
       </div>

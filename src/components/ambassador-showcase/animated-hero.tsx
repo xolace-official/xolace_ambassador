@@ -63,8 +63,11 @@ const AnimatedHero = () => {
               transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
               className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-border"
             >
-              <stat.icon className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold text-foreground mb-1">
+              <stat.icon
+                aria-hidden="true"
+                className="w-8 h-8 mx-auto mb-2 text-primary"
+              />
+              <div className="text-2xl font-bold text-foreground mb-1 tabular-nums">
                 {stat.value}
               </div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>

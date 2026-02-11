@@ -4,7 +4,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Footer from "@/components/ambassador/footer";
 import NavBar from "@/components/layout/nav-bar";
-
+import { Providers } from "@/components/providers";
 
 const _nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 const ptSans = PT_Sans({
@@ -32,13 +32,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${_nunito.variable} ${ptSans.variable}  antialiased`}
-      >
-      <NavBar />
-      {children}
-      <Footer />
-      <Analytics />
+      <body className={`${_nunito.variable} ${ptSans.variable}  antialiased`}>
+        <Providers>
+          <NavBar />
+          <main id="main-content">{children}</main>
+          <Footer />
+        </Providers>
+        <Analytics />
       </body>
     </html>
   );

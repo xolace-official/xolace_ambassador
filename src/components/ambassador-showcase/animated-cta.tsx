@@ -22,9 +22,9 @@ const AnimatedCta = () => {
           </p>
           <a
             href="mailto:ambassadors@xolaceinc.com"
-            className="inline-flex items-center gap-2 bg-background text-foreground px-8 py-4 rounded-xl font-semibold hover:bg-background/90 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center gap-2 bg-background text-foreground px-8 py-4 rounded-xl font-semibold hover:bg-background/90 transition-[color,background-color,box-shadow] duration-300 shadow-lg hover:shadow-xl"
           >
-            <Mail className="w-5 h-5" />
+            <Mail aria-hidden="true" className="w-5 h-5" />
             Contact Us to Apply
           </a>
         </motion.div>
