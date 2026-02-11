@@ -5,6 +5,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 
 interface ImagePreviewProps {
   src: string;
@@ -48,6 +49,9 @@ export default function ImagePreview({
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[50]" />
           <DialogPrimitive.Content className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] max-w-[90vw] max-h-[90vh] w-auto h-auto p-0 bg-transparent border-0 z-[51]">
+            <VisuallyHidden.Root asChild>
+              <DialogPrimitive.Title>{alt}</DialogPrimitive.Title>
+            </VisuallyHidden.Root>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
