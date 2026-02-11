@@ -1,7 +1,7 @@
 'use client'
 
-import React, {useEffect, useState, useRef} from "react"
-import {Menu, X, ChevronDown, Users, Calendar, Heart, Trophy} from "lucide-react"
+import React, {useEffect, useState, useRef, useCallback} from "react"
+import {Menu, X, ChevronDown} from "lucide-react"
 import Link from 'next/link'
 import Image from "next/image"
 import {motion, AnimatePresence} from 'motion/react'
@@ -26,51 +26,26 @@ const navigationData: NavItem[] = [
     label: "Home",
     href: "/",
   },
-  // {
-  //   label: "About",
-  //   href: "/about",
-  // },
   {
     label: "Ambassadors",
     href: "/ambassadors",
-    // dropdown: [
-    //   {
-    //     label: "Our Ambassadors",
-    //     href: "/ambassadors",
-    //     description: "Meet our global community of advocates",
-    //     icon: <Users className="w-4 h-4"/>,
-    //   },
-    //   {
-    //     label: "Events Hosted",
-    //     href: "/ambassadors/events",
-    //     description: "Community events and initiatives",
-    //     icon: <Calendar className="w-4 h-4"/>,
-    //   },
-    //   {
-    //     label: "Lives Impacted",
-    //     href: "/ambassadors/impact",
-    //     description: "Stories of change and transformation",
-    //     icon: <Heart className="w-4 h-4"/>,
-    //   },
-    //   {
-    //     label: "Ambassador Success",
-    //     href: "/ambassadors/success",
-    //     description: "Achievements and milestones",
-    //     icon: <Trophy className="w-4 h-4"/>,
-    //   },
-    // ],
-
   },
-  // {
-  //   label: "Contact",
-  //   href: "/contact",
-  // },
 ]
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const openMenu = useCallback(() => {
+    setIsOpen(true)
+    document.body.style.overflow = "hidden"
+  }, [])
+
+  const closeMenu = useCallback(() => {
+    setIsOpen(false)
+    document.body.style.overflow = "unset"
+  }, [])
 
   const handleMouseEnter = (label: string) => {
     if (timeoutRef.current) {
@@ -92,7 +67,7 @@ const NavBar = () => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setIsOpen(false)
+        closeMenu()
       }
     }
 
@@ -106,26 +81,13 @@ const NavBar = () => {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [isOpen])
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "unset"
-    }
-
-    return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [isOpen])
+  }, [isOpen, closeMenu])
 
   // Auto-close mobile menu on scroll (mobile only)
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerWidth < 768 && isOpen) {
-        setIsOpen(false)
+        closeMenu()
       }
     }
 
@@ -136,15 +98,14 @@ const NavBar = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isOpen])
+  }, [isOpen, closeMenu])
 
   const scrollToApply = () => {
-    console.log("apply")
     const applySection = document.getElementById('apply-section')
     if (applySection) {
       applySection.scrollIntoView({behavior: 'smooth'})
     }
-    setIsOpen(false)
+    closeMenu()
   }
 
   return (
@@ -192,7 +153,7 @@ const NavBar = () => {
 
                 {/* Desktop Dropdown Menu */}
                 <AnimatePresence>
-                  {activeDropdown === item.label && item.dropdown && (
+                  {activeDropdown === item.label && item.dropdown ? (
                     <motion.div
                       initial={{opacity: 0, y: 10, scale: 0.95}}
                       animate={{opacity: 1, y: 0, scale: 1}}
@@ -200,7 +161,7 @@ const NavBar = () => {
                       transition={{duration: 0.2}}
                       className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-muted rounded-xl shadow-lg border border-border py-2 z-50"
                     >
-                      {item.dropdown.map((dropdownItem, dropdownIndex) => (
+                      {item.dropdown.map((dropdownItem) => (
                         <Link
                           key={dropdownItem.label}
                           href={dropdownItem.href}
@@ -213,16 +174,16 @@ const NavBar = () => {
                             <div className="font-medium truncate">
                               {dropdownItem.label}
                             </div>
-                            {dropdownItem.description && (
+                            {dropdownItem.description ? (
                               <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
                                 {dropdownItem.description}
                               </div>
-                            )}
+                            ) : null}
                           </div>
                         </Link>
                       ))}
                     </motion.div>
-                  )}
+                  ) : null}
                 </AnimatePresence>
               </div>
             ))}
@@ -231,7 +192,7 @@ const NavBar = () => {
 
         {/* Mobile Menu Overlay */}
         <AnimatePresence>
-          {isOpen && (
+          {isOpen ? (
             <>
               <motion.div
                 className="fixed inset-0 z-40"
@@ -239,7 +200,7 @@ const NavBar = () => {
                 animate={{opacity: 1}}
                 exit={{opacity: 0}}
                 transition={{duration: 0.2}}
-                onClick={() => setIsOpen(false)}
+                onClick={closeMenu}
               />
 
               <motion.div
@@ -251,7 +212,7 @@ const NavBar = () => {
               >
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold"></span>
-                  <button type="button" onClick={() => setIsOpen(false)}>
+                  <button type="button" onClick={closeMenu}>
                     <X className="w-6 h-6"/>
                   </button>
                 </div>
@@ -260,7 +221,7 @@ const NavBar = () => {
                     <MobileNavItem
                       key={item.label}
                       item={item}
-                      onLinkClick={() => setIsOpen(false)}
+                      onLinkClick={closeMenu}
                     />
                   ))}
 
@@ -274,7 +235,7 @@ const NavBar = () => {
                 </div>
               </motion.div>
             </>
-          )}
+          ) : null}
         </AnimatePresence>
 
         <div className="flex flex-row gap-2">
@@ -287,7 +248,7 @@ const NavBar = () => {
           </Button>
 
           {/* Mobile menu button */}
-          <button type="button" className="md:hidden p-2" onClick={() => setIsOpen(true)}>
+          <button type="button" className="md:hidden p-2" onClick={openMenu}>
             <Menu className="w-5 h-5"/>
           </button>
         </div>
@@ -330,7 +291,7 @@ function MobileNavItem(
       </button>
 
       <AnimatePresence>
-        {isOpen && item.dropdown && (
+        {isOpen && item.dropdown ? (
           <motion.div
             initial={{opacity: 0, height: 0}}
             animate={{opacity: 1, height: "auto"}}
@@ -351,17 +312,17 @@ function MobileNavItem(
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">{dropdownItem.label}</div>
-                    {dropdownItem.description && (
+                    {dropdownItem.description ? (
                       <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
                         {dropdownItem.description}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </Link>
               ))}
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   )
