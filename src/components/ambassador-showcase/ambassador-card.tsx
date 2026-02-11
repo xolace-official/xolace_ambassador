@@ -173,7 +173,7 @@ const AmbassadorCard = ({
              {ambassador.social.github ? (
               <a
                 href={ambassador.social.github}
-                aria-label={`${ambassador.name} on Github`}
+                aria-label={`${ambassador.name} on GitHub`}
                 className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 target="_blank"
                 rel="noopener noreferrer"
