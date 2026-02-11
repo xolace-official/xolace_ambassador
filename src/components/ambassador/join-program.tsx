@@ -9,12 +9,12 @@ import { getSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Coolshape } from "coolshapes-react";
 
 export default function JoinProgramForm() {
-    // initialize supabase client
+  // initialize supabase client
   const supabase = getSupabaseBrowserClient();
-  
+
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [submitted, setSubmitted] = useState(false);
-  const [error , setError] = useState(false);
+  const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,23 +27,22 @@ export default function JoinProgramForm() {
     setIsLoading(true);
 
     try {
-
-        const { error: ambassadorsError } = await supabase
-      .from('ambassadors')
-      .insert({ name: formData.name, email: formData.email });
+      const { error: ambassadorsError } = await supabase
+        .from("ambassadors")
+        .insert({ name: formData.name, email: formData.email });
 
       if (ambassadorsError) {
         throw ambassadorsError;
       }
 
-    setSubmitted(true);
-    setIsLoading(false);
+      setSubmitted(true);
+      setIsLoading(false);
 
-    // Reset form after 4 seconds
-    setTimeout(() => {
-      setFormData({ name: "", email: "" });
-      setSubmitted(false);
-    }, 4000);
+      // Reset form after 4 seconds
+      setTimeout(() => {
+        setFormData({ name: "", email: "" });
+        setSubmitted(false);
+      }, 5000);
     } catch (error) {
       console.error("Error submitting form:", error);
       setError(true);
@@ -106,8 +105,8 @@ export default function JoinProgramForm() {
                       You're In!
                     </h3>
                     <p className="text-sm text-foreground/60">
-                      You will receive an email within a few hours for next steps. Welcome to the Xolace
-                      family.
+                      You will receive an email within a few hours for next
+                      steps. Welcome to the Xolace family.
                     </p>
                   </div>
                 </motion.div>
@@ -130,7 +129,8 @@ export default function JoinProgramForm() {
                       Something went wrong
                     </h3>
                     <p className="text-sm text-foreground/60">
-                      Please try again later.
+                      Please check your connection and try again, or email us at
+                      ambassadors@xolaceinc.com.
                     </p>
                   </div>
                 </motion.div>
@@ -154,9 +154,10 @@ export default function JoinProgramForm() {
                       id="full-name"
                       type="text"
                       name="name"
+                      autoComplete="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Your name"
+                      placeholder="Your name…"
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
@@ -180,9 +181,11 @@ export default function JoinProgramForm() {
                       id="email"
                       type="email"
                       name="email"
+                      autoComplete="email"
+                      spellCheck={false}
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="your@email.com"
+                      placeholder="you@example.com…"
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
@@ -198,9 +201,9 @@ export default function JoinProgramForm() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
+                      className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-[background-color,transform,opacity] duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                     >
-                      {isLoading ? "Joining..." : "Join the Program"}
+                      {isLoading ? "Joining…" : "Join the Program"}
                     </button>
                   </motion.div>
 

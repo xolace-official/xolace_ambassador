@@ -62,20 +62,14 @@ export default function Footer() {
                 </button>
               </li>
               <li>
-                {/** biome-ignore lint/a11y/useValidAnchor: todo later */}
-                <a href="#"
-                  className="hover:text-primary-foreground transition-colors"
-                >
+                <span className="text-primary-foreground/40 cursor-default">
                   FAQs
-                </a>
+                </span>
               </li>
               <li>
-                {/** biome-ignore lint/a11y/useValidAnchor: todo later */}
-                <a href="#"
-                  className="hover:text-primary-foreground transition-colors"
-                >
+                <span className="text-primary-foreground/40 cursor-default">
                   Privacy Policy
-                </a>
+                </span>
               </li>
             </ul>
           </motion.div>
@@ -93,7 +87,7 @@ export default function Footer() {
               href="mailto:ambassadors@xolaceinc.com"
               className="inline-flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
             >
-              <Mail className="w-4 h-4" />
+              <Mail aria-hidden="true" className="w-4 h-4" />
               ambassadors@xolaceinc.com
             </a>
             <p className="text-xs text-primary-foreground/60">
@@ -113,10 +107,12 @@ export default function Footer() {
           viewport={{ once: true }}
           className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60"
         >
-          <p>© {currentYear} Xolace. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            © {currentYear} Xolace. All rights reserved.
+          </p>
           <div className="flex items-center gap-1">
             Made with
-            <Heart className="w-4 h-4 text-primary" />
+            <Heart aria-hidden="true" className="w-4 h-4 text-primary" />
             for mental health
           </div>
         </motion.div>

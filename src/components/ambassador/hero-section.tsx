@@ -33,7 +33,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           transition={{ duration: 1.2 }}
-          className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/20 blur-3xl"
+          className="absolute -top-40 -right-20 w-80 h-80 rounded-full bg-background/30 blur-3xl"
         />
         <motion.div
           initial={{ opacity: 0 }}
@@ -77,27 +77,19 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
         >
           <Button
+            asChild
             size="lg"
-            onClick={() => {
-              document
-                .getElementById("signup-form")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="px-8 py-4 font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+            className="px-8 py-4 font-semibold transition-[box-shadow,transform] duration-300 hover:shadow-lg transform hover:-translate-y-1"
           >
-            Join the Program
+            <a href="#signup-form">Join the Program</a>
           </Button>
           <Button
+            asChild
             variant="secondary"
             size="lg"
-            onClick={() => {
-              document
-                .getElementById("program-details")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="px-8 py-4 font-semibold transition-all duration-300 border border-border/30 hover:border-border/60"
+            className="px-8 py-4 font-semibold transition-[border-color] duration-300 border border-border/30 hover:border-border/60"
           >
-            Learn More
+            <a href="#program-details">Learn More</a>
           </Button>
         </motion.div>
 
@@ -107,7 +99,10 @@ export default function HeroSection() {
           transition={{ duration: 2, repeat: Infinity }}
           className="pt-12"
         >
-          <ArrowDown className="mx-auto text-primary/60 w-5 h-5" />
+          <ArrowDown
+            aria-hidden="true"
+            className="mx-auto text-primary/60 w-5 h-5"
+          />
         </motion.div>
       </motion.div>
     </section>

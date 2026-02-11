@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { motion } from 'motion/react';
-import { Card } from '@/components/ui/card';
+import { motion } from "motion/react";
+import { Card } from "@/components/ui/card";
 import {
   Award,
   BookOpen,
@@ -9,7 +9,7 @@ import {
   DollarSign,
   Clock,
   Star,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function Benefits() {
   const containerVariants = {
@@ -35,33 +35,39 @@ export default function Benefits() {
   const benefits = [
     {
       icon: Award,
-      title: 'Official Recognition',
-      description: 'Become a certified Xolace Ambassador with official credentials to showcase your commitment.',
+      title: "Official Recognition",
+      description:
+        "Become a certified Xolace Ambassador with official credentials to showcase your commitment.",
     },
     {
       icon: BookOpen,
-      title: 'Exclusive Resources',
-      description: 'Access training materials, guidelines, and tools designed to help you succeed.',
+      title: "Exclusive Resources",
+      description:
+        "Access training materials, guidelines, and tools designed to help you succeed.",
     },
     {
       icon: Network,
-      title: 'Vibrant Community',
-      description: 'Connect with fellow ambassadors in private forums, events, and collaborative initiatives.',
+      title: "Vibrant Community",
+      description:
+        "Connect with fellow ambassadors in private forums, events, and collaborative initiatives.",
     },
     {
       icon: DollarSign,
-      title: 'Rewards & Incentives',
-      description: 'Earn rewards through referrals and meaningful contributions to the program.',
+      title: "Rewards & Incentives",
+      description:
+        "Earn rewards through referrals and meaningful contributions to the program.",
     },
     {
       icon: Clock,
-      title: 'Flexible Commitment',
-      description: 'Work at your own pace. Whether you have hours or just moments, we have opportunities for you.',
+      title: "Flexible Commitment",
+      description:
+        "Work at your own pace. Whether you have hours or just moments, we have opportunities for you.",
     },
     {
       icon: Star,
-      title: 'Career Growth',
-      description: 'Build your portfolio and potentially unlock career opportunities within the mental health space.',
+      title: "Career Growth",
+      description:
+        "Build your portfolio and potentially unlock career opportunities within the mental health space.",
     },
   ];
 
@@ -73,14 +79,15 @@ export default function Benefits() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          viewport={{ once: true, margin: '-50px' }}
+          viewport={{ once: true, margin: "-50px" }}
           className="text-center space-y-4"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-balance">
             What You'll Gain
           </h2>
           <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">
-            Being part of our ambassador community comes with real benefits that support your growth and impact.
+            Being part of our ambassador community comes with real benefits that
+            support your growth and impact.
           </p>
         </motion.div>
 
@@ -89,15 +96,15 @@ export default function Benefits() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: '-50px' }}
+          viewport={{ once: true, margin: "-50px" }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
               // biome-ignore lint/suspicious/noArrayIndexKey: index only
-<motion.div key={index} variants={itemVariants}>
-                <Card className="h-full p-6 bg-linear-to-br from-secondary/40 to-secondary/20 border border-border/20 hover:border-accent/40 transition-all duration-300 group hover:shadow-lg">
+              <motion.div key={index} variants={itemVariants}>
+                <Card className="h-full p-6 bg-linear-to-br from-secondary/40 to-secondary/20 border border-border/20 hover:border-accent/40 transition-[border-color,box-shadow] duration-300 group hover:shadow-lg">
                   <div className="space-y-4">
                     <motion.div
                       initial={{ scale: 1 }}
@@ -124,7 +131,7 @@ export default function Benefits() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true, margin: '-50px' }}
+          viewport={{ once: true, margin: "-50px" }}
           className="mt-16 pt-16 border-t border-border/30"
         >
           <div className="text-center space-y-8">
@@ -135,12 +142,14 @@ export default function Benefits() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 {
-                  quote: 'I\'ve never felt more connected to a mission. Being an ambassador let me turn my passion for mental health into real action.',
-                  author: 'Sarah M., Ambassador',
+                  quote:
+                    "I've never felt more connected to a mission. Being an ambassador let me turn my passion for mental health into real action.",
+                  author: "Sarah M., Ambassador",
                 },
                 {
-                  quote: 'The flexibility is incredible. I can contribute on my own terms, and the support from the community is amazing.',
-                  author: 'Chris, Ambassador',
+                  quote:
+                    "The flexibility is incredible. I can contribute on my own terms, and the support from the community is amazing.",
+                  author: "Chris, Ambassador",
                 },
               ].map((testimonial, index) => (
                 <motion.div
@@ -149,11 +158,11 @@ export default function Benefits() {
                   initial={{ opacity: 0, x: index === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
-                  viewport={{ once: true, margin: '-50px' }}
+                  viewport={{ once: true, margin: "-50px" }}
                 >
-                  <Card className="p-8 bg-white border border-border/30 relative">
+                  <Card className="p-8 bg-card border border-border/30 relative">
                     <div className="absolute top-4 left-4 text-4xl text-primary/20">
-                      "
+                      {"\u201C"}
                     </div>
                     <blockquote className="space-y-4">
                       <p className="text-foreground/80 italic text-balance">
