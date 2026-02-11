@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Twitter, Instagram, MapPin } from "lucide-react";
+import { Twitter, Instagram, MapPin, Expand } from "lucide-react";
 import { TikTok } from "@/components/icons/tiktok-light";
 import { LinkedIn } from "@/components/icons/linkedIn";
 import { GitHub } from "@/components/icons/github";
@@ -59,8 +59,11 @@ const AmbassadorCard = ({
           loading="lazy"
           quality={80}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer rounded-lg"
+          className="object-cover object-top group-hover:scale-105 transition-transform duration-300 cursor-pointer rounded-lg"
         />
+        <div className="absolute bottom-3 right-3 p-1.5 rounded-full bg-black/40 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <Expand aria-hidden="true" className="w-3.5 h-3.5" />
+        </div>
         {ambassador.new ? (
           <span className="absolute top-3 right-3 px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
             New
