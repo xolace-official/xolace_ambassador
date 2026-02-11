@@ -139,6 +139,7 @@ const NavBar = () => {
   }, [isOpen])
 
   const scrollToApply = () => {
+    console.log("apply")
     const applySection = document.getElementById('apply-section')
     if (applySection) {
       applySection.scrollIntoView({behavior: 'smooth'})
@@ -147,7 +148,7 @@ const NavBar = () => {
   }
 
   return (
-    <header className="px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full">
+    <header className=" px-2 sm:px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full">
       <div
         className="max-w-6xl mx-auto w-full py-1 px-2 flex items-center justify-between border border-border bg-muted rounded-2xl">
         <div className="w-full flex flex-row gap-8">
@@ -250,7 +251,7 @@ const NavBar = () => {
               >
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold"></span>
-                  <button onClick={() => setIsOpen(false)}>
+                  <button type="button" onClick={() => setIsOpen(false)}>
                     <X className="w-6 h-6"/>
                   </button>
                 </div>
@@ -286,7 +287,7 @@ const NavBar = () => {
           </Button>
 
           {/* Mobile menu button */}
-          <button className="md:hidden p-2" onClick={() => setIsOpen(true)}>
+          <button type="button" className="md:hidden p-2" onClick={() => setIsOpen(true)}>
             <Menu className="w-5 h-5"/>
           </button>
         </div>
@@ -308,6 +309,7 @@ function MobileNavItem(
   return (
     <div className="border-b border-border last:border-b-0 pb-4 last:pb-0">
       <button
+      type="button"
         onClick={() => item.dropdown ? setIsOpen(!isOpen) : null}
         className="flex items-center justify-between w-full text-left py-3 font-medium text-base transition-colors duration-200 min-h-11"
       >
