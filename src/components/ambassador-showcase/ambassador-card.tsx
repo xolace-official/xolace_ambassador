@@ -5,7 +5,7 @@ import { Twitter, Instagram, MapPin } from "lucide-react";
 import { TikTok } from "@/components/icons/tiktok-light";
 import { LinkedIn } from "@/components/icons/linkedIn";
 import { GitHub } from "@/components/icons/github";
-import ImagePreview from "../ui/image-preview";
+import ImagePreview from "@/components/ui/image-preview";
 
 interface Ambassador {
   id: number;

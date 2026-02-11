@@ -27,7 +27,8 @@ export default function ImagePreview({
   className = "cursor-pointer rounded-lg hover:opacity-90 transition-opacity",
   loading,
   fill,
-  quality
+  quality, 
+  sizes
 }: ImagePreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,6 +42,7 @@ export default function ImagePreview({
         className={className}
         loading={loading}
         fill={fill}
+        sizes={sizes}
         quality={quality}
         onClick={() => setIsOpen(true)}
       />
