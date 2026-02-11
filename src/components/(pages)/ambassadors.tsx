@@ -1,18 +1,6 @@
-"use client";
-
-import { motion } from "motion/react";
-import {
-  Linkedin,
-  Twitter,
-  Instagram,
-  MapPin,
-  Award,
-  Users,
-  Globe,
-  Heart,
-  Mail,
-} from "lucide-react";
-import Image from "next/image";
+import AmbassadorCard from "../ambassador-showcase/ambassador-card";
+import AnimatedCta from "../ambassador-showcase/animated-cta";
+import AnimatedHero from "../ambassador-showcase/animated-hero";
 
 // Sample ambassador data
 const ambassadors = [
@@ -197,224 +185,24 @@ const ambassadors = [
 const Ambassadors = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6"
-            >
-              Meet Our{" "}
-              <span className="bg-linear-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                Ambassadors
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10"
-            >
-              Passionate individuals around the world making mental health
-              support accessible, compassionate, and transformative in their
-              communities.
-            </motion.p>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-12"
-          >
-            {[
-              { icon: Users, label: "Active Ambassadors", value: "500+" },
-              { icon: Globe, label: "Countries", value: "25+" },
-              { icon: Heart, label: "Lives Impacted", value: "50k+" },
-              { icon: Award, label: "Events Hosted", value: "200+" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-border"
-              >
-                <stat.icon className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <div className="text-2xl font-bold text-foreground mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <AnimatedHero />
 
       {/* Ambassadors Grid */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {ambassadors.map((ambassador, index) => (
-              <motion.div
+              <AmbassadorCard
                 key={ambassador.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-card rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-border"
-              >
-                {/* Ambassador Image */}
-                <div className="relative h-64 bg-muted overflow-hidden">
-                  <Image
-                    src={ambassador.image}
-                    alt={ambassador.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-
-                {/* Ambassador Info */}
-                <div className="p-4">
-                  <div className="mb-4">
-                    <h3 className="text-2xl font-bold text-foreground">
-                      {ambassador.name}
-                    </h3>
-                    <p className="text-primary font-medium mb-1">
-                      {ambassador.role}
-                    </p>
-                    <div className="flex items-center text-muted-foreground text-sm">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {ambassador.location}
-                    </div>
-                  </div>
-
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                    {ambassador.bio}
-                  </p>
-
-                  {/* Impact Stats */}
-                  <div className="bg-muted/50 rounded-xl p-2 mb-4 border border-border">
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
-                        <div className="text-lg font-bold text-primary">
-                          {ambassador.impact.peopleReached}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Reached
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold text-primary">
-                          {ambassador.impact.eventsHosted}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Events
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold text-primary">
-                          {ambassador.impact.communitiesServed}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Communities
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Social Links */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-3">
-                      {ambassador.social.linkedin && (
-                        <a
-                          href={ambassador.social.linkedin}
-                          className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Linkedin className="w-4 h-4" />
-                        </a>
-                      )}
-                      {ambassador.social.twitter && (
-                        <a
-                          href={ambassador.social.twitter}
-                          className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Twitter className="w-4 h-4" />
-                        </a>
-                      )}
-                      {ambassador.social.instagram && (
-                        <a
-                          href={ambassador.social.instagram}
-                          className="w-9 h-9 bg-muted hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-all duration-300"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Instagram className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Since{" "}
-                      {new Date(ambassador.joinedDate).toLocaleString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                ambassador={ambassador}
+                index={index}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Want to Join Our Ambassador Program?
-            </h2>
-            <p className="text-xl text-primary-foreground/90 mb-8">
-              Be part of a global movement making mental health support
-              accessible to everyone.
-            </p>
-            <a
-              href="mailto:ambassadors@xolaceinc.com"
-              className="inline-flex items-center gap-2 bg-background text-foreground px-8 py-4 rounded-xl font-semibold hover:bg-background/90 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              <Mail className="w-5 h-5" />
-              Contact Us to Apply
-            </a>
-          </motion.div>
-        </div>
-      </section>
+      <AnimatedCta />
     </div>
   );
 };

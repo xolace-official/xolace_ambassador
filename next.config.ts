@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ]
-  }
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
 };
 
 export default nextConfig;
