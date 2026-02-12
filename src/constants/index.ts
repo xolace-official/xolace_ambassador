@@ -74,6 +74,7 @@ export const OFFICIAL_AMBASSADORS = [
     },
     joinedDate: "February 2026",
     new: true,
+    roles: ["Graphics Designer"]
   },
      {
     id: 4,
@@ -95,6 +96,29 @@ export const OFFICIAL_AMBASSADORS = [
       tiktok: undefined
     },
     joinedDate: "February 2026",
+    new: true,
+  },
+       {
+    id: 5,
+    name: "Jason Owusu",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/jason.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Creative UI/UX Designer focused on building intuitive digital experiences and strategic solutions that drive growth.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: undefined
+    },
+    joinedDate: "February 2026",
+    roles: ["UI/UX Designer", "Tech Community Builder"],
     new: true,
   },
 ];
