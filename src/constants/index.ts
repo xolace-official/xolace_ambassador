@@ -26,11 +26,11 @@ export const OFFICIAL_AMBASSADORS = [
       twitter: undefined,
       instagram: "https://www.instagram.com/oachristhedev",
       tiktok: undefined,
-      github: "https://github.com/oachristhedev"
+      github: "https://github.com/oachristhedev",
     },
     joinedDate: "February 2026",
     new: false,
-    roles: ["Web Developer", "UI/UX Designer"]
+    roles: ["Web Developer", "UI/UX Designer"],
   },
   {
     id: 2,
@@ -53,7 +53,7 @@ export const OFFICIAL_AMBASSADORS = [
     joinedDate: "February 2026",
     new: true,
   },
-    {
+  {
     id: 3,
     name: "Antwi Richard Yeboah",
     role: "Campus Ambassador",
@@ -70,13 +70,13 @@ export const OFFICIAL_AMBASSADORS = [
       linkedin: undefined,
       twitter: undefined,
       instagram: undefined,
-      tiktok: "https://www.tiktok.com/@grannys_son1"
+      tiktok: "https://www.tiktok.com/@grannys_son1",
     },
     joinedDate: "February 2026",
     new: true,
-    roles: ["Graphics Designer"]
+    roles: ["Graphics Designer"],
   },
-     {
+  {
     id: 4,
     name: "Boateng Ernest",
     role: "Campus Ambassador",
@@ -93,12 +93,12 @@ export const OFFICIAL_AMBASSADORS = [
       linkedin: undefined,
       twitter: undefined,
       instagram: undefined,
-      tiktok: undefined
+      tiktok: undefined,
     },
     joinedDate: "February 2026",
     new: true,
   },
-       {
+  {
     id: 5,
     name: "Jason Owusu",
     role: "Campus Ambassador",
@@ -115,10 +115,56 @@ export const OFFICIAL_AMBASSADORS = [
       linkedin: undefined,
       twitter: undefined,
       instagram: undefined,
-      tiktok: undefined
+      tiktok: undefined,
     },
     joinedDate: "February 2026",
     roles: ["UI/UX Designer", "Tech Community Builder"],
+    new: true,
+  },
+  {
+    id: 6,
+    name: "Magdalene Teye Mangorkuor",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Magdalene-teye.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: undefined,
+    },
+    joinedDate: "February 2026",
+    roles: ["System Analyst"],
+    new: true,
+  },
+    {
+    id: 7,
+    name: "Agbesi Prosper Kwesi",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Prosper.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: undefined,
+    },
+    joinedDate: "February 2026",
+    roles: ["Mobile App Developer", "Backend Developer"],
     new: true,
   },
 ];
