@@ -10,7 +10,7 @@ export const STATS = [
 export const OFFICIAL_AMBASSADORS = [
   {
     id: 1,
-    name: "Odoom Christopher Abueny",
+    name: "Odoom Christopher Abuenyi",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
     image:
@@ -139,6 +139,7 @@ export const OFFICIAL_AMBASSADORS = [
       twitter: undefined,
       instagram: undefined,
       tiktok: undefined,
+      snapchat: undefined,
     },
     joinedDate: "February 2026",
     roles: ["System Analyst"],
@@ -165,6 +166,54 @@ export const OFFICIAL_AMBASSADORS = [
     },
     joinedDate: "February 2026",
     roles: ["Mobile App Developer", "Backend Developer"],
+    new: true,
+  },
+      {
+    id: 8,
+    name: "Dwamena Boahemaa Rosemary",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/rosie2.jpg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: "https://www.linkedin.com/in/dwamena-rosemary-80b3a03b7",
+      twitter: undefined,
+      instagram: "https://www.instagram.com/_rosemary_boahemaa_",
+      tiktok: "https://www.tiktok.com/@only_herside",
+      snapchat: "https://snapchat.com/t/EGNKgE0Z",
+    },
+    joinedDate: "March 2026",
+    roles: ["Web developer"],
+    new: true,
+  },
+      {
+    id: 9,
+    name: "Dansowaa Erica",
+    role: "Campus Ambassador",
+    location: "Koforidua, Ghana",
+    image:
+      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/erica2.jpeg",
+    bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
+    impact: {
+      peopleReached: "2+",
+      eventsHosted: 0,
+      communitiesServed: 1,
+    },
+    social: {
+      linkedin: undefined,
+      twitter: undefined,
+      instagram: undefined,
+      tiktok: "tiktok.com/@just_ricka0",
+      snapchat: "https://www.snapchat.com/add/gal_lykricka",
+    },
+    joinedDate: "March 2026",
+    roles: ["Web developer"],
     new: true,
   },
 ];

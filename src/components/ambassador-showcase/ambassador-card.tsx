@@ -5,6 +5,7 @@ import { Twitter, Instagram, MapPin, Expand } from "lucide-react";
 import { TikTok } from "@/components/icons/tiktok-light";
 import { LinkedIn } from "@/components/icons/linkedIn";
 import { GitHub } from "@/components/icons/github";
+import { Snapchat } from "@/components/icons/snapchat";
 import ImagePreview from "@/components/ui/image-preview";
 
 interface Ambassador {
@@ -25,6 +26,7 @@ interface Ambassador {
     instagram?: string;
     tiktok?: string;
     github?: string;
+    snapchat?: string;
   };
   joinedDate: string;
   new: boolean;
@@ -182,6 +184,17 @@ const AmbassadorCard = ({
                 rel="noopener noreferrer"
               >
                 <GitHub aria-hidden="true" className="w-4 h-4 fill-current" />
+              </a>
+            ) : null}
+            {ambassador.social.snapchat ? (
+              <a
+                href={ambassador.social.snapchat}
+                aria-label={`${ambassador.name} on Snapchat`}
+                className="w-9 h-9 hover:bg-primary hover:text-primary-foreground rounded-full flex items-center justify-center transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Snapchat aria-hidden="true" className="w-8 h-8 fill-current" />
               </a>
             ) : null}
           </div>
