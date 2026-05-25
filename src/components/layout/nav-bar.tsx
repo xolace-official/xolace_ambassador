@@ -183,7 +183,7 @@ const NavBar = () => {
             ) : null}
           </AnimatePresence>
 
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 md:gap-4">
             <nav className="md:pe-8 w-full hidden md:flex items-center justify-start space-x-6 font-semibold">
               {navigationData.map((item) => (
                   <div
