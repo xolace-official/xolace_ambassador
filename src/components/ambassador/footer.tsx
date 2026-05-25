@@ -2,6 +2,7 @@
 
 import { Heart, Mail } from "lucide-react";
 import { motion } from "motion/react";
+import { XolaceLogo } from "@/components/layout/xolace-logo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -18,7 +19,7 @@ export default function Footer() {
             viewport={{ once: true }}
             className="space-y-4"
           >
-            <h3 className="text-xl font-serif font-bold">Xolace</h3>
+            <XolaceLogo  />
             <p className="text-primary-foreground/70 text-sm leading-relaxed max-w-xs">
               Creating pathways to mental health support before crisis, between
               sessions, and beyond clinical care.
