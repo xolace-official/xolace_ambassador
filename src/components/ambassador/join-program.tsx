@@ -2,9 +2,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Check } from "lucide-react";
+import { Camera, Check } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/utils/supabase/client";
 import { Coolshape } from "coolshapes-react";
 
@@ -13,13 +14,24 @@ export default function JoinProgramForm() {
   const supabase = getSupabaseBrowserClient();
 
   const [formData, setFormData] = useState({ name: "", email: "" });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -27,31 +39,41 @@ export default function JoinProgramForm() {
     setIsLoading(true);
 
     try {
+      let avatar_url: string | null = null;
+
+      if (avatarFile) {
+        const ext = avatarFile.name.split(".").pop();
+        const path = `${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("ambassador-avatars")
+          .upload(path, avatarFile);
+        if (uploadError) throw uploadError;
+        avatar_url = supabase.storage
+          .from("ambassador-avatars")
+          .getPublicUrl(path).data.publicUrl;
+      }
+
       const { error: ambassadorsError } = await supabase
         .from("ambassadors")
-        .insert({ name: formData.name, email: formData.email });
+        .insert({ name: formData.name, email: formData.email, avatar_url });
 
-      if (ambassadorsError) {
-        throw ambassadorsError;
-      }
+      if (ambassadorsError) throw ambassadorsError;
 
       setSubmitted(true);
       setIsLoading(false);
 
-      // Reset form after 4 seconds
       setTimeout(() => {
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
         setFormData({ name: "", email: "" });
+        setAvatarFile(null);
+        setAvatarPreview(null);
         setSubmitted(false);
       }, 5000);
     } catch (error) {
       console.error("Error submitting form:", error);
       setError(true);
       setIsLoading(false);
-
-      // Reset error after 3 seconds
-      setTimeout(() => {
-        setError(false);
-      }, 3000);
+      setTimeout(() => setError(false), 3000);
     }
   };
 
@@ -136,6 +158,51 @@ export default function JoinProgramForm() {
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Avatar Upload */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="relative w-20 h-20 rounded-full border-2 border-dashed border-border/60 hover:border-primary transition-colors overflow-hidden bg-muted group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Upload profile photo"
+                    >
+                      {avatarPreview ? (
+                        <Image
+                          src={avatarPreview}
+                          alt="Profile preview"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="flex flex-col items-center justify-center w-full h-full gap-1 text-foreground/40 group-hover:text-primary transition-colors">
+                          <Camera className="w-6 h-6" />
+                          <span className="text-[10px] font-medium">Photo</span>
+                        </span>
+                      )}
+                      {avatarPreview && (
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Camera className="w-5 h-5 text-white" />
+                        </span>
+                      )}
+                    </button>
+                    <span className="text-xs text-foreground/50">
+                      Optional — JPG, PNG or WebP, max 5 MB
+                    </span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={handleAvatarChange}
+                    />
+                  </motion.div>
+
                   {/* Name Input */}
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
