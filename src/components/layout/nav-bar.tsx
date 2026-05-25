@@ -3,11 +3,10 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import mascot from "../../../public/assets/x-logo-full.webp";
 import { Button } from "@/components/ui/button";
+import { XolaceLogo } from "@/components/layout/xolace-logo";
 
 interface DropdownItem {
   label: string;
@@ -128,14 +127,7 @@ const NavBar = () => {
         <div className="max-w-6xl mx-auto w-full py-1 px-2 flex items-center justify-between border border-border bg-muted rounded-2xl">
           <div className="w-full flex flex-row gap-8">
             <Link href="/">
-              <Image
-                src={mascot}
-                alt="logo"
-                width={40}
-                height={40}
-                priority={true}
-                loading="eager"
-              />
+              <XolaceLogo size="sm" priority />
             </Link>
 
             {/* Desktop Navigation */}
