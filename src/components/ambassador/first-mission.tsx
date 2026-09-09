@@ -19,7 +19,7 @@ export default function FirstMission() {
           viewport={{ once: true, margin: "-50px" }}
           className="text-center space-y-4"
         >
-          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Your First Mission
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
@@ -28,14 +28,14 @@ export default function FirstMission() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
         >
-          <Card className="p-8 bg-linear-to-br from-primary/10 to-accent/10 border border-primary/20 space-y-4">
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wide">
-              <Target aria-hidden="true" className="w-4 h-4" />
+          <Card className="p-8 bg-linear-to-br from-primary/10 via-card to-accent/10 border border-primary/20 shadow-xl space-y-4">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wide bg-primary/10 rounded-full px-3 py-1.5">
+              <Target aria-hidden="true" className="w-3.5 h-3.5" />
               Mission Preview
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-balance">
