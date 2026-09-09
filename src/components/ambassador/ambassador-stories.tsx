@@ -2,7 +2,6 @@
 
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
-import { Card } from "@/components/ui/card";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,18 +30,21 @@ const stories = [
     track: "Creator",
     quote:
       "Add their story — why they joined and what they've been working on.",
+    strip: "from-primary to-primary/70",
   },
   {
     name: "Ambassador Name",
     track: "Community",
     quote:
       "Add their story — why they joined and what they've been working on.",
+    strip: "from-accent to-accent/70",
   },
   {
     name: "Ambassador Name",
     track: "Advocacy",
     quote:
       "Add their story — why they joined and what they've been working on.",
+    strip: "from-foreground to-foreground/75",
   },
 ];
 
@@ -96,35 +98,34 @@ export default function AmbassadorStories() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-7"
         >
           {stories.map((story, index) => (
             <motion.div
               // biome-ignore lint/suspicious/noArrayIndexKey: placeholder data, no stable id yet
               key={index}
               variants={itemVariants}
+              className="bg-card border border-border/40 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-[box-shadow,transform] duration-300"
             >
-              <Card className="h-full p-6 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    aria-hidden="true"
-                    className="w-12 h-12 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0"
-                  >
-                    {getInitials(story.name)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">
-                      {story.name}
-                    </p>
-                    <p className="text-xs font-medium text-foreground/60">
-                      {story.track} Ambassador
-                    </p>
-                  </div>
+              <div className={`relative h-16 bg-linear-to-br ${story.strip}`}>
+                <div
+                  aria-hidden="true"
+                  className="absolute left-6 -bottom-8 w-16 h-16 rounded-full bg-card border-4 border-card shadow-md flex items-center justify-center font-extrabold text-primary"
+                >
+                  {getInitials(story.name)}
                 </div>
-                <blockquote className="text-foreground/70 text-sm leading-relaxed italic">
+              </div>
+              <div className="pt-12 px-6 pb-6 space-y-3">
+                <div>
+                  <p className="font-bold text-foreground">{story.name}</p>
+                  <span className="inline-block text-[11px] font-bold uppercase tracking-wide bg-foreground/5 text-foreground/60 px-2.5 py-1 rounded-full mt-1">
+                    {story.track}
+                  </span>
+                </div>
+                <blockquote className="text-foreground/65 text-sm leading-relaxed italic">
                   {story.quote}
                 </blockquote>
-              </Card>
+              </div>
             </motion.div>
           ))}
         </motion.div>
