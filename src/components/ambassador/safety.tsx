@@ -4,6 +4,26 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+};
+
 const boundaries = [
   { type: "never", text: "Diagnose or act as a therapist." },
   {
@@ -28,15 +48,15 @@ export default function Safety() {
       id="safety"
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
-      <div className="max-w-2xl mx-auto space-y-10">
+      <div className="max-w-4xl mx-auto space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center space-y-4"
+          className="max-w-2xl space-y-4"
         >
-          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Safety & Responsibility
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
@@ -49,36 +69,35 @@ export default function Safety() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
-          <Card className="p-6 sm:p-8 bg-card border border-border/40">
-            <ul className="space-y-4">
-              {boundaries.map((item) => (
-                <li key={item.text} className="flex items-start gap-3">
-                  {item.type === "never" ? (
-                    <XCircle
-                      aria-hidden="true"
-                      className="w-5 h-5 text-destructive shrink-0 mt-0.5"
-                    />
-                  ) : (
-                    <CheckCircle2
-                      aria-hidden="true"
-                      className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                    />
-                  )}
-                  <span className="text-foreground/80 leading-relaxed">
-                    <span className="font-semibold text-foreground">
-                      {item.type === "never" ? "Never " : "Always "}
-                    </span>
-                    {item.text}
+          {boundaries.map((item) => (
+            <motion.div key={item.text} variants={itemVariants}>
+              <Card className="h-full flex items-start gap-3 p-5 bg-card border border-border/40">
+                {item.type === "never" ? (
+                  <XCircle
+                    aria-hidden="true"
+                    className="w-5 h-5 text-destructive shrink-0 mt-0.5"
+                  />
+                ) : (
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="w-5 h-5 text-primary shrink-0 mt-0.5"
+                  />
+                )}
+                <span className="text-foreground/80 leading-relaxed text-sm">
+                  <span className="font-bold text-foreground">
+                    {item.type === "never" ? "Never " : "Always "}
                   </span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+                  {item.text}
+                </span>
+              </Card>
+            </motion.div>
+          ))}
         </motion.div>
 
         <motion.p
