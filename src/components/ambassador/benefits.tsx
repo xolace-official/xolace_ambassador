@@ -127,12 +127,12 @@ export default function Benefits() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="bg-primary rounded-3xl p-8 sm:p-10"
+          className="bg-accent rounded-3xl p-8 sm:p-10"
         >
-          <p className="text-2xl sm:text-3xl font-bold text-balance text-primary-foreground">
+          <p className="text-2xl sm:text-3xl font-bold text-balance text-accent-foreground">
             The biggest benefit? You get to build something real.
           </p>
-          <p className="text-primary-foreground/80 pt-2">
+          <p className="text-accent-foreground/70 pt-2">
             That&apos;s worth more than a certificate.
           </p>
         </motion.div>
