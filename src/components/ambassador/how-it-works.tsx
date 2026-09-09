@@ -66,15 +66,15 @@ export default function HowItWorks() {
       id="how-it-works"
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20"
     >
-      <div className="max-w-4xl mx-auto space-y-16">
+      <div className="max-w-4xl mx-auto space-y-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center space-y-4"
+          className="max-w-2xl space-y-4"
         >
-          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             How It Works
           </p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
@@ -87,7 +87,7 @@ export default function HowItWorks() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="relative max-w-2xl mx-auto"
+          className="relative max-w-2xl"
         >
           <div
             aria-hidden="true"
