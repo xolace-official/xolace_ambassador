@@ -8,7 +8,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-foreground text-primary-foreground py-16 px-4 sm:px-6 lg:px-8">
+    <footer className="w-full bg-[oklch(0.1649_0.0352_281.8285)] text-primary-foreground py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           {/* Brand Column */}
@@ -41,7 +41,7 @@ export default function Footer() {
                   type="button"
                   onClick={() => {
                     document
-                      .getElementById("signup-form")
+                      .getElementById("apply")
                       ?.scrollIntoView({ behavior: "smooth" });
                   }}
                   className="hover:text-primary-foreground transition-colors"
@@ -54,12 +54,12 @@ export default function Footer() {
                   type="button"
                   onClick={() => {
                     document
-                      .getElementById("program-details")
+                      .getElementById("how-it-works")
                       ?.scrollIntoView({ behavior: "smooth" });
                   }}
                   className="hover:text-primary-foreground transition-colors"
                 >
-                  Program Details
+                  How It Works
                 </button>
               </li>
               <li>
