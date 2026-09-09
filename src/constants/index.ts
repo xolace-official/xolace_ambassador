@@ -145,7 +145,7 @@ export const OFFICIAL_AMBASSADORS = [
     roles: ["System Analyst"],
     new: true,
   },
-    {
+  {
     id: 7,
     name: "Agbesi Prosper Kwesi",
     role: "Campus Ambassador",
@@ -168,7 +168,7 @@ export const OFFICIAL_AMBASSADORS = [
     roles: ["Mobile App Developer", "Backend Developer"],
     new: true,
   },
-      {
+  {
     id: 8,
     name: "Dwamena Boahemaa Rosemary",
     role: "Campus Ambassador",
@@ -192,7 +192,7 @@ export const OFFICIAL_AMBASSADORS = [
     roles: ["Web developer"],
     new: true,
   },
-      {
+  {
     id: 9,
     name: "Dansowaa Erica",
     role: "Campus Ambassador",
