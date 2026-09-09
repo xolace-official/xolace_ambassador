@@ -1,9 +1,15 @@
 "use client";
 
-import HeroSection from "@/components/ambassador/hero-section";
-import JoinProgramForm from "@/components/ambassador/join-program";
-import ProgramDetails from "@/components/ambassador/program-details";
+import AmbassadorStories from "@/components/ambassador/ambassador-stories";
 import Benefits from "@/components/ambassador/benefits";
+import FirstMission from "@/components/ambassador/first-mission";
+import HeroSection from "@/components/ambassador/hero-section";
+import HowItWorks from "@/components/ambassador/how-it-works";
+import Impact from "@/components/ambassador/impact";
+import JoinProgramForm from "@/components/ambassador/join-program";
+import Safety from "@/components/ambassador/safety";
+import Tracks from "@/components/ambassador/tracks";
+import WhyAmbassadors from "@/components/ambassador/why-ambassadors";
 
 export default function Home() {
   return (
@@ -14,9 +20,15 @@ export default function Home() {
     >
       <div className="flex items-start justify-start w-full flex-col bg-background">
         <HeroSection />
-        <JoinProgramForm />
-        <ProgramDetails />
+        <WhyAmbassadors />
+        <Tracks />
+        <HowItWorks />
         <Benefits />
+        <AmbassadorStories />
+        <Impact />
+        <FirstMission />
+        <Safety />
+        <JoinProgramForm />
       </div>
     </main>
   );
