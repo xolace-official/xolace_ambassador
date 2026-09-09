@@ -2,7 +2,7 @@ import type { SVGProps } from "react";
 
 const TikTok = (props: SVGProps<SVGSVGElement>) => (
   // biome-ignore lint/a11y/noSvgWithoutTitle: i dont know
-<svg {...props} id="tiktok_icon_light-Layer_2" viewBox="0 0 352.28 398.67">
+  <svg {...props} id="tiktok_icon_light-Layer_2" viewBox="0 0 352.28 398.67">
     <g id="tiktok_icon_light-Layer_1-2">
       <path d="M137.17 156.98v-15.56c-5.34-.73-10.76-1.18-16.29-1.18C54.23 140.24 0 194.47 0 261.13c0 40.9 20.43 77.09 51.61 98.97-20.12-21.6-32.46-50.53-32.46-82.31 0-65.7 52.69-119.28 118.03-120.81Z" />
       <path d="M140.02 333c29.74 0 54-23.66 55.1-53.13l.11-263.2h48.08c-1-5.41-1.55-10.97-1.55-16.67h-65.67l-.11 263.2c-1.1 29.47-25.36 53.13-55.1 53.13-9.24 0-17.95-2.31-25.61-6.34C105.3 323.9 121.6 333 140.02 333ZM333.13 106V91.37c-18.34 0-35.43-5.45-49.76-14.8 12.76 14.65 30.09 25.22 49.76 29.43Z" />
