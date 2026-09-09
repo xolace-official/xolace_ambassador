@@ -1,46 +1,28 @@
 "use client";
 
-import { CheckCircle2, XCircle } from "lucide-react";
+import { Check, XCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { Card } from "@/components/ui/card";
+
+const neverItems = [
+  "Diagnose or act as a therapist.",
+  "Promise confidentiality outside Xolace's actual systems.",
+  "Pressure anyone to disclose personal information.",
+  "Exploit someone's vulnerable moment for content.",
+  "Fabricate testimonials or use someone's story without permission.",
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 },
-  },
+  hidden: { opacity: 0, x: -10 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
 };
-
-const boundaries = [
-  { type: "never", text: "Diagnose or act as a therapist." },
-  {
-    type: "never",
-    text: "Promise confidentiality outside Xolace's actual systems.",
-  },
-  { type: "never", text: "Pressure anyone to disclose personal information." },
-  { type: "never", text: "Exploit someone's vulnerable moment for content." },
-  {
-    type: "never",
-    text: "Fabricate testimonials or use someone's story without permission.",
-  },
-  {
-    type: "always",
-    text: "Know when to point someone toward real professional or emergency support.",
-  },
-] as const;
 
 export default function Safety() {
   return (
@@ -69,35 +51,52 @@ export default function Safety() {
         </motion.div>
 
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+          className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] rounded-3xl overflow-hidden border border-border/40"
         >
-          {boundaries.map((item) => (
-            <motion.div key={item.text} variants={itemVariants}>
-              <Card className="h-full flex items-start gap-3 p-5 bg-card border border-border/40">
-                {item.type === "never" ? (
-                  <XCircle
-                    aria-hidden="true"
-                    className="w-5 h-5 text-destructive shrink-0 mt-0.5"
-                  />
-                ) : (
-                  <CheckCircle2
-                    aria-hidden="true"
-                    className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                  />
-                )}
-                <span className="text-foreground/80 leading-relaxed text-sm">
-                  <span className="font-bold text-foreground">
-                    {item.type === "never" ? "Never " : "Always "}
-                  </span>
-                  {item.text}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="bg-card p-8 sm:p-9 space-y-5"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-destructive">
+              Never
+            </p>
+            {neverItems.map((item) => (
+              <motion.div
+                key={item}
+                variants={itemVariants}
+                className="flex items-start gap-3"
+              >
+                <XCircle
+                  aria-hidden="true"
+                  className="w-[18px] h-[18px] text-destructive shrink-0 mt-0.5"
+                />
+                <span className="text-foreground/80 text-sm leading-relaxed">
+                  {item}
                 </span>
-              </Card>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <div className="bg-primary p-8 sm:p-9 flex flex-col justify-center gap-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/85">
+              Always
+            </p>
+            <Check
+              aria-hidden="true"
+              className="w-8 h-8 text-primary-foreground"
+            />
+            <p className="text-lg font-bold leading-relaxed text-primary-foreground">
+              Know when to point someone toward real professional or emergency
+              support.
+            </p>
+          </div>
         </motion.div>
 
         <motion.p
