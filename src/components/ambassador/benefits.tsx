@@ -2,27 +2,6 @@
 
 import { GraduationCap, KeyRound, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
-import { Card } from "@/components/ui/card";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6 },
-  },
-};
 
 const benefits = [
   {
@@ -35,6 +14,7 @@ const benefits = [
       "Portfolio opportunities",
       "LinkedIn recognition",
     ],
+    reverse: false,
   },
   {
     icon: GraduationCap,
@@ -46,6 +26,7 @@ const benefits = [
       "Community building",
       "Content & video production",
     ],
+    reverse: true,
   },
   {
     icon: KeyRound,
@@ -57,8 +38,18 @@ const benefits = [
       "Behind-the-scenes campaigns",
       "Direct work with the creative/product team",
     ],
+    reverse: false,
   },
 ];
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6 },
+  },
+};
 
 export default function Benefits() {
   return (
@@ -66,7 +57,7 @@ export default function Benefits() {
       id="what-you-get"
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
-      <div className="max-w-6xl mx-auto space-y-14">
+      <div className="max-w-4xl mx-auto space-y-14">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -83,61 +74,65 @@ export default function Benefits() {
           </h2>
         </motion.div>
 
-        {/* Benefits Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
+        {/* Feature rows */}
+        <div>
           {benefits.map((benefit) => {
             const Icon = benefit.icon;
             return (
-              <motion.div key={benefit.title} variants={itemVariants}>
-                <Card className="h-full p-6 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
-                      <Icon
-                        aria-hidden="true"
-                        className="w-6 h-6 text-primary"
-                      />
-                    </div>
-                    <h3 className="font-bold text-lg text-foreground">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-foreground/60 text-sm leading-relaxed">
-                      {benefit.hook}
-                    </p>
-                    <ul className="flex flex-wrap gap-2 pt-1">
-                      {benefit.examples.map((example) => (
-                        <li
-                          key={example}
-                          className="text-xs font-medium text-foreground/60 bg-secondary px-2.5 py-1 rounded-full"
-                        >
-                          {example}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Card>
+              <motion.div
+                key={benefit.title}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={rowVariants}
+                className={`flex flex-col items-start gap-6 py-8 md:py-9 border-b border-border/40 last:border-b-0 md:gap-12 ${
+                  benefit.reverse ? "md:flex-row-reverse" : "md:flex-row"
+                } md:items-center`}
+              >
+                <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Icon aria-hidden="true" className="w-7 h-7 md:w-8 md:h-8" />
+                </div>
+                <div
+                  className={benefit.reverse ? "md:text-right" : "md:text-left"}
+                >
+                  <h3 className="font-bold text-xl sm:text-2xl mb-2">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-foreground/70 text-sm sm:text-base leading-relaxed mb-4">
+                    {benefit.hook}
+                  </p>
+                  <ul
+                    className={`flex flex-wrap gap-2 ${
+                      benefit.reverse ? "md:justify-end" : ""
+                    }`}
+                  >
+                    {benefit.examples.map((example) => (
+                      <li
+                        key={example}
+                        className="text-xs font-medium text-foreground/60 bg-secondary px-2.5 py-1 rounded-full"
+                      >
+                        {example}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
 
         {/* Opportunities statement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="max-w-3xl border-l-4 border-primary bg-card rounded-r-2xl pl-8 pr-6 py-6"
+          className="bg-primary rounded-3xl p-8 sm:p-10"
         >
-          <p className="text-2xl sm:text-3xl font-bold text-balance">
+          <p className="text-2xl sm:text-3xl font-bold text-balance text-primary-foreground">
             The biggest benefit? You get to build something real.
           </p>
-          <p className="text-foreground/60 pt-2">
+          <p className="text-primary-foreground/80 pt-2">
             That&apos;s worth more than a certificate.
           </p>
         </motion.div>
