@@ -66,16 +66,16 @@ export default function Benefits() {
       id="what-you-get"
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-14">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center space-y-4"
+          className="max-w-2xl space-y-4"
         >
-          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             What You Get
           </p>
           <h2 className="text-4xl sm:text-5xl font-bold text-balance">
@@ -95,15 +95,15 @@ export default function Benefits() {
             const Icon = benefit.icon;
             return (
               <motion.div key={benefit.title} variants={itemVariants}>
-                <Card className="h-full p-6 bg-linear-to-br from-secondary/40 to-secondary/20 border border-border/20 hover:border-accent/40 transition-[border-color,box-shadow] duration-300 hover:shadow-lg">
+                <Card className="h-full p-6 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
                   <div className="space-y-4">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/20">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
                       <Icon
                         aria-hidden="true"
-                        className="w-6 h-6 text-accent"
+                        className="w-6 h-6 text-primary"
                       />
                     </div>
-                    <h3 className="font-semibold text-lg text-foreground">
+                    <h3 className="font-bold text-lg text-foreground">
                       {benefit.title}
                     </h3>
                     <p className="text-foreground/60 text-sm leading-relaxed">
@@ -132,7 +132,7 @@ export default function Benefits() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center pt-4"
+          className="max-w-3xl border-l-4 border-primary bg-card rounded-r-2xl pl-8 pr-6 py-6"
         >
           <p className="text-2xl sm:text-3xl font-bold text-balance">
             The biggest benefit? You get to build something real.
