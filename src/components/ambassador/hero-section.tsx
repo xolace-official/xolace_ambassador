@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,7 +53,7 @@ export default function HeroSection() {
         <motion.div variants={itemVariants} className="inline-block">
           <div className="px-4 py-2 rounded-full bg-secondary border border-border/50">
             <p className="text-sm font-medium text-foreground">
-              Join Our Movement
+              Join the Movement
             </p>
           </div>
         </motion.div>
@@ -61,13 +61,15 @@ export default function HeroSection() {
         {/* Main Heading */}
         <motion.div variants={itemVariants} className="space-y-4">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl  font-bold text-balance leading-tight">
-            Become a
-            <span className="block mt-2 text-primary">Xolace Ambassador</span>
+            Help build a world
+            <span className="block mt-2 text-primary">
+              where people feel heard.
+            </span>
           </h1>
           <p className="text-lg sm:text-xl text-foreground/70 max-w-2xl mx-auto text-balance font-light">
-            Help us reach people in their moments of need. Be part of a
-            community making mental health support accessible, compassionate,
-            and truly transformative.
+            Xolace Ambassadors believe emotional wellbeing shouldn&apos;t be
+            something we only talk about when things get bad. You don&apos;t
+            have to be an expert — you just have to care.
           </p>
         </motion.div>
 
@@ -81,7 +83,7 @@ export default function HeroSection() {
             size="lg"
             className="px-8 py-4 font-semibold transition-[box-shadow,transform] duration-300 hover:shadow-lg transform hover:-translate-y-1"
           >
-            <a href="#signup-form">Join the Program</a>
+            <a href="#apply">Become an Ambassador</a>
           </Button>
           <Button
             asChild
@@ -89,7 +91,7 @@ export default function HeroSection() {
             size="lg"
             className="px-8 py-4 font-semibold transition-[border-color] duration-300 border border-border/30 hover:border-border/60"
           >
-            <a href="#program-details">Learn More</a>
+            <a href="#how-it-works">See How It Works</a>
           </Button>
         </motion.div>
 
