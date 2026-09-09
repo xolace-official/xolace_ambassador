@@ -1,0 +1,73 @@
+"use client";
+
+import { Target } from "lucide-react";
+import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+export default function FirstMission() {
+  return (
+    <section
+      id="first-mission"
+      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20"
+    >
+      <div className="max-w-2xl mx-auto space-y-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true, margin: "-50px" }}
+          className="text-center space-y-4"
+        >
+          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+            Your First Mission
+          </p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
+            Here&apos;s the kind of thing you&apos;ll actually do.
+          </h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          viewport={{ once: true, margin: "-50px" }}
+        >
+          <Card className="p-8 bg-linear-to-br from-primary/10 to-accent/10 border border-primary/20 space-y-4">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wide">
+              <Target aria-hidden="true" className="w-4 h-4" />
+              Mission Preview
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-balance">
+              Start a conversation about something people don&apos;t usually
+              talk about.
+            </h3>
+            <p className="text-foreground/70 leading-relaxed">
+              Ask someone you know a question that goes beneath the surface.
+              Listen without trying to fix anything. Then tell us what you
+              noticed.
+            </p>
+            <p className="text-sm text-foreground/50">
+              ~15 minutes · Any track · No experience required
+            </p>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          viewport={{ once: true, margin: "-50px" }}
+          className="text-center space-y-4"
+        >
+          <p className="text-sm text-foreground/60">
+            This is just the first one. More unlock as you go.
+          </p>
+          <Button asChild size="lg" className="font-semibold">
+            <a href="#apply">Become an Ambassador to Unlock It</a>
+          </Button>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
