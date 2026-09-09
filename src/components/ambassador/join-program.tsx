@@ -36,6 +36,12 @@ const initialFormData = {
   whyXolace: "",
 };
 
+const reassurances = [
+  "We read every application — no bots, no filters.",
+  "You'll hear back within a few days, either way.",
+  "Onboarding starts right after — no waiting around.",
+];
+
 export default function JoinProgramForm() {
   // initialize supabase client
   const supabase = getSupabaseBrowserClient();
@@ -131,144 +137,144 @@ export default function JoinProgramForm() {
   return (
     <section
       id="apply"
-      className="relative w-full py-20 px-2 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
+      className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
       <div
         aria-hidden="true"
         className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-accent/15 blur-3xl pointer-events-none"
       />
-      <div className="relative max-w-md mx-auto">
+
+      <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
+        {/* Left: header + reassurance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="space-y-8"
+          className="lg:pt-6 space-y-8"
         >
-          {/* Header */}
-          <div className="text-center space-y-3">
+          <div className="space-y-3">
             <p className="text-sm font-medium text-primary uppercase tracking-wide">
               Ready?
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-balance">
               You don&apos;t have to be an expert. You just have to care.
             </h2>
-            <p className="text-foreground/60 text-balance">
-              Fill out the form below — we&apos;ll follow up with next steps.
-            </p>
           </div>
 
-          {/* Form Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            viewport={{ once: true, margin: "-50px" }}
-          >
-            <Card className="p-8 bg-card border border-border/40 rounded-3xl shadow-xl">
-              {submitted ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center space-y-4"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/20"
-                  >
-                    <Check className="w-8 h-8 text-accent" />
-                  </motion.div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-foreground">
-                      You're In!
-                    </h3>
-                    <p className="text-sm text-foreground/60">
-                      You will receive an email within a few hours for next
-                      steps. Welcome to the Xolace family.
-                    </p>
-                  </div>
-                </motion.div>
-              ) : error ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center space-y-4"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/20"
-                  >
-                    <Coolshape type="triangle" index={9} size={100} noise />
-                  </motion.div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-foreground">
-                      Something went wrong
-                    </h3>
-                    <p className="text-sm text-foreground/60">
-                      Please check your connection and try again, or email us at
-                      ambassadors@xolaceinc.com.
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Avatar Upload */}
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="flex flex-col items-center gap-2"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="relative w-20 h-20 rounded-full border-2 border-dashed border-border/60 hover:border-primary transition-colors overflow-hidden bg-muted group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label="Upload profile photo"
-                    >
-                      {avatarPreview ? (
-                        <Image
-                          src={avatarPreview}
-                          alt="Profile preview"
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="flex flex-col items-center justify-center w-full h-full gap-1 text-foreground/40 group-hover:text-primary transition-colors">
-                          <Camera className="w-6 h-6" />
-                          <span className="text-[10px] font-medium">Photo</span>
-                        </span>
-                      )}
-                      {avatarPreview && (
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Camera className="w-5 h-5 text-white" />
-                        </span>
-                      )}
-                    </button>
-                    <span className="text-xs text-foreground/50">
-                      Optional — JPG, PNG or WebP, max 5 MB
-                    </span>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
-                      onChange={handleAvatarChange}
-                    />
-                  </motion.div>
+          <div className="space-y-4">
+            {reassurances.map((text, index) => (
+              <div key={text} className="flex items-start gap-3.5">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                  {index + 1}
+                </span>
+                <span className="text-foreground/70 text-sm leading-relaxed pt-0.5">
+                  {text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
 
-                  {/* Name Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.15 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
+        {/* Right: form card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          viewport={{ once: true, margin: "-50px" }}
+        >
+          <Card className="p-6 sm:p-8 bg-card border border-border/40 rounded-3xl shadow-xl">
+            {submitted ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-4 py-6"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/20"
+                >
+                  <Check className="w-8 h-8 text-accent" />
+                </motion.div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">
+                    You're In!
+                  </h3>
+                  <p className="text-sm text-foreground/60">
+                    You will receive an email within a few hours for next steps.
+                    Welcome to the Xolace family.
+                  </p>
+                </div>
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-4 py-6"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/20"
+                >
+                  <Coolshape type="triangle" index={9} size={100} noise />
+                </motion.div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">
+                    Something went wrong
+                  </h3>
+                  <p className="text-sm text-foreground/60">
+                    Please check your connection and try again, or email us at
+                    ambassadors@xolaceinc.com.
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Avatar Upload */}
+                <div className="flex items-center gap-3 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-14 h-14 shrink-0 rounded-full border-2 border-dashed border-border/60 hover:border-primary transition-colors overflow-hidden bg-muted group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label="Upload profile photo"
                   >
+                    {avatarPreview ? (
+                      <Image
+                        src={avatarPreview}
+                        alt="Profile preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex items-center justify-center w-full h-full text-foreground/40 group-hover:text-primary transition-colors">
+                        <Camera className="w-5 h-5" />
+                      </span>
+                    )}
+                    {avatarPreview && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-4 h-4 text-white" />
+                      </span>
+                    )}
+                  </button>
+                  <span className="text-xs text-foreground/50">
+                    Optional photo — JPG, PNG or WebP, max 5 MB
+                  </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={handleAvatarChange}
+                  />
+                </div>
+
+                {/* Name + Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <label
                       htmlFor="full-name"
                       className="text-sm font-medium text-foreground"
@@ -286,16 +292,8 @@ export default function JoinProgramForm() {
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
-                  </motion.div>
-
-                  {/* Email Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
-                  >
+                  </div>
+                  <div className="space-y-2">
                     <label
                       htmlFor="email"
                       className="text-sm font-medium text-foreground"
@@ -314,16 +312,12 @@ export default function JoinProgramForm() {
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
-                  </motion.div>
+                  </div>
+                </div>
 
-                  {/* Location Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.22 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
-                  >
+                {/* Location + School/Community */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <label
                       htmlFor="location"
                       className="text-sm font-medium text-foreground"
@@ -341,21 +335,13 @@ export default function JoinProgramForm() {
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
-                  </motion.div>
-
-                  {/* School / Community Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.24 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
-                  >
+                  </div>
+                  <div className="space-y-2">
                     <label
                       htmlFor="school-or-community"
                       className="text-sm font-medium text-foreground"
                     >
-                      School or Community{" "}
+                      School / Community{" "}
                       <span className="text-foreground/40 font-normal">
                         (optional)
                       </span>
@@ -366,19 +352,15 @@ export default function JoinProgramForm() {
                       name="schoolOrCommunity"
                       value={formData.schoolOrCommunity}
                       onChange={handleChange}
-                      placeholder="Your school, campus, or community…"
+                      placeholder="Your school or community…"
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
-                  </motion.div>
+                  </div>
+                </div>
 
-                  {/* Social Handle Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.26 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
-                  >
+                {/* Social Handle + Track */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <label
                       htmlFor="social-handle"
                       className="text-sm font-medium text-foreground"
@@ -394,24 +376,16 @@ export default function JoinProgramForm() {
                       name="socialHandle"
                       value={formData.socialHandle}
                       onChange={handleChange}
-                      placeholder="Instagram, TikTok, or X handle…"
+                      placeholder="Instagram, TikTok, or X…"
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
-                  </motion.div>
-
-                  {/* Track Select */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.28 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
-                  >
+                  </div>
+                  <div className="space-y-2">
                     <label
                       htmlFor="track"
                       className="text-sm font-medium text-foreground"
                     >
-                      Which track interests you?
+                      Track
                     </label>
                     <Select
                       value={formData.track}
@@ -436,57 +410,44 @@ export default function JoinProgramForm() {
                         Please select a track.
                       </p>
                     )}
-                  </motion.div>
+                  </div>
+                </div>
 
-                  {/* Why Xolace Textarea */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="space-y-2"
+                {/* Why Xolace Textarea */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="why-xolace"
+                    className="text-sm font-medium text-foreground"
                   >
-                    <label
-                      htmlFor="why-xolace"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Why Xolace?
-                    </label>
-                    <Textarea
-                      id="why-xolace"
-                      name="whyXolace"
-                      value={formData.whyXolace}
-                      onChange={handleChange}
-                      placeholder="What draws you to this? No perfect answer needed…"
-                      required
-                      rows={3}
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
-                  </motion.div>
+                    Why Xolace?
+                  </label>
+                  <Textarea
+                    id="why-xolace"
+                    name="whyXolace"
+                    value={formData.whyXolace}
+                    onChange={handleChange}
+                    placeholder="What draws you to this? No perfect answer needed…"
+                    required
+                    rows={3}
+                    className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                  />
+                </div>
 
-                  {/* Submit Button */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.25 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                  >
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-[background-color,transform,opacity] duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
-                    >
-                      {isLoading ? "Joining…" : "Join the Program"}
-                    </button>
-                  </motion.div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-[background-color,transform,opacity] duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
+                >
+                  {isLoading ? "Joining…" : "Join the Program"}
+                </button>
 
-                  <p className="text-xs text-foreground/50 text-center">
-                    We respect your privacy. No spam, ever.
-                  </p>
-                </form>
-              )}
-            </Card>
-          </motion.div>
+                <p className="text-xs text-foreground/50 text-center">
+                  We respect your privacy. No spam, ever.
+                </p>
+              </form>
+            )}
+          </Card>
         </motion.div>
       </div>
     </section>
