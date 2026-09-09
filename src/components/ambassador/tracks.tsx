@@ -31,7 +31,7 @@ const itemVariants = {
   },
 };
 
-const tracks = [
+const featuredTracks = [
   {
     icon: Video,
     name: "Creator",
@@ -42,31 +42,30 @@ const tracks = [
     icon: Users,
     name: "Community",
     hook: "For people who make a room feel a little safer just by showing up.",
-    tags: ["Conversations", "Campus events", "Awareness", "Group activities"],
+    tags: ["Conversations", "Campus events", "Awareness"],
   },
+];
+
+const standardTracks = [
   {
     icon: TrendingUp,
     name: "Growth",
     hook: "For people who know exactly who needs to hear about this.",
-    tags: ["Referrals", "Outreach", "Partnerships", "Campus acquisition"],
   },
   {
     icon: Palette,
     name: "Creative",
-    hook: "For people who design the thing that makes it easier to talk about.",
-    tags: ["Graphic design", "Illustration", "UI/UX", "Campaign concepts"],
+    hook: "For people who design what makes it easier to talk about.",
   },
   {
     icon: Clapperboard,
     name: "Production",
     hook: "For people who tell stories through a lens.",
-    tags: ["Film", "Behind Her Smile", "Campaigns", "Video production"],
   },
   {
     icon: HeartHandshake,
     name: "Advocacy",
     hook: "For people who care about the why, not just the app.",
-    tags: ["Mental health awareness", "Peer support", "Education", "Workshops"],
   },
 ];
 
@@ -102,42 +101,67 @@ export default function Tracks() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="space-y-6"
         >
-          {tracks.map((track, index) => {
-            const Icon = track.icon;
-            return (
-              <motion.div key={track.name} variants={itemVariants}>
-                <Card className="relative h-full p-6 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
-                  <span className="absolute top-6 right-6 text-xs font-bold text-foreground/25 tabular-nums">
-                    0{index + 1}
-                  </span>
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
+          {/* Featured row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {featuredTracks.map((track) => {
+              const Icon = track.icon;
+              return (
+                <motion.div key={track.name} variants={itemVariants}>
+                  <Card className="h-full p-7 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
+                    <div className="flex items-start gap-5">
+                      <div className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
+                        <Icon
+                          aria-hidden="true"
+                          className="w-6 h-6 text-primary"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <h3 className="font-bold text-xl">{track.name}</h3>
+                        <p className="text-foreground/70 text-sm leading-relaxed">
+                          {track.hook}
+                        </p>
+                        <ul className="flex flex-wrap gap-2 pt-1">
+                          {track.tags.map((tag) => (
+                            <li
+                              key={tag}
+                              className="text-xs font-medium text-foreground/60 bg-secondary px-2.5 py-1 rounded-full"
+                            >
+                              {tag}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Standard row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {standardTracks.map((track) => {
+              const Icon = track.icon;
+              return (
+                <motion.div key={track.name} variants={itemVariants}>
+                  <Card className="h-full p-5 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300 space-y-3">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                       <Icon
                         aria-hidden="true"
-                        className="w-6 h-6 text-primary"
+                        className="w-5 h-5 text-primary"
                       />
                     </div>
-                    <h3 className="font-bold text-lg pr-6">{track.name}</h3>
-                    <p className="text-foreground/70 text-sm leading-relaxed">
+                    <h3 className="font-bold text-base">{track.name}</h3>
+                    <p className="text-foreground/60 text-sm leading-relaxed">
                       {track.hook}
                     </p>
-                    <ul className="flex flex-wrap gap-2 pt-1">
-                      {track.tags.map((tag) => (
-                        <li
-                          key={tag}
-                          className="text-xs font-medium text-foreground/60 bg-secondary px-2.5 py-1 rounded-full"
-                        >
-                          {tag}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Card>
-              </motion.div>
-            );
-          })}
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
         </motion.div>
 
         <motion.p
