@@ -84,15 +84,15 @@ export default function Safety() {
             ))}
           </motion.div>
 
-          <div className="bg-primary p-8 sm:p-9 flex flex-col justify-center gap-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-primary-foreground/85">
+          <div className="bg-accent p-8 sm:p-9 flex flex-col justify-center gap-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-accent-foreground/70">
               Always
             </p>
             <Check
               aria-hidden="true"
-              className="w-8 h-8 text-primary-foreground"
+              className="w-8 h-8 text-accent-foreground"
             />
-            <p className="text-lg font-bold leading-relaxed text-primary-foreground">
+            <p className="text-lg font-bold leading-relaxed text-accent-foreground">
               Know when to point someone toward real professional or emergency
               support.
             </p>
