@@ -3,24 +3,29 @@
 import { motion } from "motion/react";
 import { STATS } from "@/constants";
 
+const positions = [
+  { leftPct: 1.6, topPct: 9.4, widthPct: 16.1, rotate: -6 },
+  { leftPct: 22.6, topPct: 0, widthPct: 16.1, rotate: 4 },
+  { leftPct: 43.5, topPct: 12.5, widthPct: 16.1, rotate: -3 },
+  { leftPct: 64.5, topPct: 3.1, widthPct: 16.1, rotate: 7 },
+];
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
+  hidden: { opacity: 0, y: 20, rotate: 0 },
+  visible: (rotate: number) => ({
     opacity: 1,
     y: 0,
+    rotate,
     transition: { duration: 0.5 },
-  },
+  }),
 };
 
 export default function Impact() {
@@ -29,7 +34,7 @@ export default function Impact() {
       id="impact"
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
-      <div className="max-w-5xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -49,32 +54,47 @@ export default function Impact() {
           </p>
         </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 sm:grid-cols-4 bg-card border border-border/40 rounded-3xl overflow-hidden shadow-sm"
-        >
-          {STATS.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              variants={itemVariants}
-              className={`p-6 sm:p-8 text-center space-y-2 ${
-                index !== 0 ? "border-t sm:border-t-0 sm:border-l" : ""
-              } border-border/40`}
-            >
-              <stat.icon
-                aria-hidden="true"
-                className="w-6 h-6 mx-auto text-primary"
-              />
-              <div className="text-3xl font-bold text-foreground">
-                {stat.value}
-              </div>
-              <div className="text-sm text-foreground/60">{stat.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Same scattered polaroid composition at every width — scrolls
+            horizontally on narrow screens rather than being redesigned. */}
+        <div className="overflow-x-auto pb-4 -mb-4">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="relative min-w-[700px] aspect-[1240/320]"
+          >
+            {STATS.map((stat, index) => {
+              const pos = positions[index];
+              return (
+                <motion.div
+                  key={stat.label}
+                  custom={pos.rotate}
+                  variants={itemVariants}
+                  className="absolute bg-card rounded-md shadow-xl p-3 pb-4"
+                  style={{
+                    left: `${pos.leftPct}%`,
+                    top: `${pos.topPct}%`,
+                    width: `${pos.widthPct}%`,
+                  }}
+                >
+                  <div className="bg-primary/8 rounded-sm aspect-[3/2] flex flex-col items-center justify-center gap-1.5">
+                    <stat.icon
+                      aria-hidden="true"
+                      className="w-6 h-6 text-primary"
+                    />
+                    <span className="text-2xl font-extrabold text-foreground">
+                      {stat.value}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-center text-[11px] font-bold text-foreground/70">
+                    {stat.label}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
       </div>
     </section>
   );
