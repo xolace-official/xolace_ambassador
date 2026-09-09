@@ -26,11 +26,31 @@ const TRACKS = [
   "Advocacy",
 ] as const;
 
+const SOCIAL_PLATFORMS = [
+  "LinkedIn",
+  "X",
+  "TikTok",
+  "Instagram",
+  "Reddit",
+] as const;
+
+const SOCIAL_HANDLE_PLACEHOLDERS: Record<
+  (typeof SOCIAL_PLATFORMS)[number],
+  string
+> = {
+  LinkedIn: "your-profile-slug",
+  X: "@yourhandle",
+  TikTok: "@yourhandle",
+  Instagram: "@yourhandle",
+  Reddit: "u/yourhandle",
+};
+
 const initialFormData = {
   name: "",
   email: "",
   location: "",
   schoolOrCommunity: "",
+  socialPlatform: "",
   socialHandle: "",
   track: "",
   whyXolace: "",
@@ -65,6 +85,10 @@ export default function JoinProgramForm() {
   const handleTrackChange = (value: string) => {
     setFormData((prev) => ({ ...prev, track: value }));
     setTrackError(false);
+  };
+
+  const handleSocialPlatformChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, socialPlatform: value }));
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +132,7 @@ export default function JoinProgramForm() {
           avatar_url,
           location: formData.location,
           school_or_community: formData.schoolOrCommunity || null,
+          social_platform: formData.socialPlatform || null,
           social_handle: formData.socialHandle || null,
           track: formData.track,
           why_xolace: formData.whyXolace,
@@ -370,15 +395,38 @@ export default function JoinProgramForm() {
                         (optional)
                       </span>
                     </label>
-                    <Input
-                      id="social-handle"
-                      type="text"
-                      name="socialHandle"
-                      value={formData.socialHandle}
-                      onChange={handleChange}
-                      placeholder="Instagram, TikTok, or X…"
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
+                    <div className="flex gap-2">
+                      <Select
+                        value={formData.socialPlatform}
+                        onValueChange={handleSocialPlatformChange}
+                      >
+                        <SelectTrigger className="w-[112px] shrink-0 bg-background border border-border/50 rounded-lg">
+                          <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SOCIAL_PLATFORMS.map((platform) => (
+                            <SelectItem key={platform} value={platform}>
+                              {platform}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="social-handle"
+                        type="text"
+                        name="socialHandle"
+                        value={formData.socialHandle}
+                        onChange={handleChange}
+                        placeholder={
+                          formData.socialPlatform
+                            ? SOCIAL_HANDLE_PLACEHOLDERS[
+                                formData.socialPlatform as (typeof SOCIAL_PLATFORMS)[number]
+                              ]
+                            : "Your handle…"
+                        }
+                        className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label
