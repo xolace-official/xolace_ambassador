@@ -131,9 +131,13 @@ export default function JoinProgramForm() {
   return (
     <section
       id="apply"
-      className="w-full py-20 px-2 sm:px-6 lg:px-8 bg-background scroll-mt-20"
+      className="relative w-full py-20 px-2 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
-      <div className="max-w-md mx-auto">
+      <div
+        aria-hidden="true"
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-accent/15 blur-3xl pointer-events-none"
+      />
+      <div className="relative max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -161,7 +165,7 @@ export default function JoinProgramForm() {
             transition={{ duration: 0.4, delay: 0.1 }}
             viewport={{ once: true, margin: "-50px" }}
           >
-            <Card className="p-8 bg-card border border-border/40">
+            <Card className="p-8 bg-card border border-border/40 rounded-3xl shadow-xl">
               {submitted ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
