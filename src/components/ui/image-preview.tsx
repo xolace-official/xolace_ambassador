@@ -16,7 +16,7 @@ interface ImagePreviewProps {
   loading?: "eager" | "lazy";
   fill?: boolean;
   quality?: number | `${number}`;
-  sizes?: string
+  sizes?: string;
 }
 
 export default function ImagePreview({
@@ -27,8 +27,8 @@ export default function ImagePreview({
   className = "cursor-pointer rounded-lg hover:opacity-90 transition-opacity",
   loading,
   fill,
-  quality, 
-  sizes
+  quality,
+  sizes,
 }: ImagePreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
 
