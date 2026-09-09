@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import { Button } from "@/components/ui/button";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
+import { Button } from "@/components/ui/button";
 
 interface DropdownItem {
   label: string;
@@ -106,12 +107,12 @@ const NavBar = () => {
   const scrollToApply = () => {
     closeMenu();
     if (pathname === "/") {
-      const applySection = document.getElementById("signup-form");
+      const applySection = document.getElementById("apply");
       if (applySection) {
         applySection.scrollIntoView({ behavior: "smooth" });
       }
     } else {
-      router.push("/#signup-form");
+      router.push("/#apply");
     }
   };
 
@@ -131,7 +132,6 @@ const NavBar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-
           </div>
 
           {/* Mobile Menu Overlay */}
@@ -186,68 +186,71 @@ const NavBar = () => {
           <div className="flex flex-row gap-2 md:gap-4">
             <nav className="md:pe-8 w-full hidden md:flex items-center justify-start space-x-6 font-semibold">
               {navigationData.map((item) => (
-                  <div
-                      key={item.label}
-                      className="relative"
-                      onMouseEnter={() =>
-                          item.dropdown && handleMouseEnter(item.label)
-                      }
-                      onMouseLeave={handleMouseLeave}
-                  >
-                    {item.dropdown ? (
-                        <button className="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm">
-                          {item.label}
-                          <ChevronDown
-                              aria-hidden="true"
-                              className={`w-3 h-3 transition-transform duration-200 ${
-                                  activeDropdown === item.label ? "rotate-180" : ""
-                              }`}
-                          />
-                        </button>
-                    ) : (
-                        <Link
-                            href={item.href}
-                            className="cursor-pointer hover:text-primary transition"
-                        >
-                          {item.label}
-                        </Link>
-                    )}
+                <div
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() =>
+                    item.dropdown && handleMouseEnter(item.label)
+                  }
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {item.dropdown ? (
+                    <button
+                      type="button"
+                      className="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm"
+                    >
+                      {item.label}
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`w-3 h-3 transition-transform duration-200 ${
+                          activeDropdown === item.label ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="cursor-pointer hover:text-primary transition"
+                    >
+                      {item.label}
+                    </Link>
+                  )}
 
-                    {/* Desktop Dropdown Menu */}
-                    <AnimatePresence>
-                      {activeDropdown === item.label && item.dropdown ? (
-                          <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                              transition={{ duration: 0.2 }}
-                              className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-muted rounded-xl shadow-lg border border-border py-2 z-50"
+                  {/* Desktop Dropdown Menu */}
+                  <AnimatePresence>
+                    {activeDropdown === item.label && item.dropdown ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-muted rounded-xl shadow-lg border border-border py-2 z-50"
+                      >
+                        {item.dropdown.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.label}
+                            href={dropdownItem.href}
+                            className="flex items-start gap-3 px-4 py-3 text-sm hover:bg-accent/60 transition-colors duration-150 rounded-lg mx-2"
                           >
-                            {item.dropdown.map((dropdownItem) => (
-                                <Link
-                                    key={dropdownItem.label}
-                                    href={dropdownItem.href}
-                                    className="flex items-start gap-3 px-4 py-3 text-sm hover:bg-accent/60 transition-colors duration-150 rounded-lg mx-2"
-                                >
-                                  <div className="text-primary mt-0.5 shrink-0">
-                                    {dropdownItem.icon}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <div className="font-medium truncate">
-                                      {dropdownItem.label}
-                                    </div>
-                                    {dropdownItem.description ? (
-                                        <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                                          {dropdownItem.description}
-                                        </div>
-                                    ) : null}
-                                  </div>
-                                </Link>
-                            ))}
-                          </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
+                            <div className="text-primary mt-0.5 shrink-0">
+                              {dropdownItem.icon}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">
+                                {dropdownItem.label}
+                              </div>
+                              {dropdownItem.description ? (
+                                <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
+                                  {dropdownItem.description}
+                                </div>
+                              ) : null}
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
               ))}
             </nav>
             <Button variant="default" size="sm" onClick={scrollToApply}>
