@@ -15,10 +15,10 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
-    scale: 1,
+    y: 0,
     transition: { duration: 0.5 },
   },
 };
@@ -35,15 +35,15 @@ export default function Impact() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="text-center space-y-4"
+          className="max-w-2xl space-y-4"
         >
-          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Your Impact
           </p>
           <h2 className="text-4xl sm:text-5xl font-bold text-balance">
             Still early. Already real.
           </h2>
-          <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">
+          <p className="text-lg text-foreground/60 text-balance">
             These are actual numbers, not projections — and they grow with every
             ambassador who joins.
           </p>
@@ -54,19 +54,21 @@ export default function Impact() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-4 bg-card border border-border/40 rounded-3xl overflow-hidden shadow-sm"
         >
-          {STATS.map((stat) => (
+          {STATS.map((stat, index) => (
             <motion.div
               key={stat.label}
               variants={itemVariants}
-              className="bg-card rounded-2xl p-6 text-center shadow-sm border border-border/30"
+              className={`p-6 sm:p-8 text-center space-y-2 ${
+                index !== 0 ? "border-t sm:border-t-0 sm:border-l" : ""
+              } border-border/40`}
             >
               <stat.icon
                 aria-hidden="true"
-                className="w-8 h-8 mx-auto mb-2 text-primary"
+                className="w-6 h-6 mx-auto text-primary"
               />
-              <div className="text-3xl font-bold text-foreground mb-1">
+              <div className="text-3xl font-bold text-foreground">
                 {stat.value}
               </div>
               <div className="text-sm text-foreground/60">{stat.label}</div>
