@@ -1,29 +1,64 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Coolshape } from "coolshapes-react";
 import { Camera, Check } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseBrowserClient } from "@/utils/supabase/client";
-import { Coolshape } from "coolshapes-react";
+
+const TRACKS = [
+  "Creator",
+  "Community",
+  "Growth",
+  "Creative",
+  "Production",
+  "Advocacy",
+] as const;
+
+const initialFormData = {
+  name: "",
+  email: "",
+  location: "",
+  schoolOrCommunity: "",
+  socialHandle: "",
+  track: "",
+  whyXolace: "",
+};
 
 export default function JoinProgramForm() {
   // initialize supabase client
   const supabase = getSupabaseBrowserClient();
 
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState(initialFormData);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [trackError, setTrackError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTrackChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, track: value }));
+    setTrackError(false);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +71,12 @@ export default function JoinProgramForm() {
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!formData.track) {
+      setTrackError(true);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -55,7 +96,16 @@ export default function JoinProgramForm() {
 
       const { error: ambassadorsError } = await supabase
         .from("ambassadors")
-        .insert({ name: formData.name, email: formData.email, avatar_url });
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          avatar_url,
+          location: formData.location,
+          school_or_community: formData.schoolOrCommunity || null,
+          social_handle: formData.socialHandle || null,
+          track: formData.track,
+          why_xolace: formData.whyXolace,
+        });
 
       if (ambassadorsError) throw ambassadorsError;
 
@@ -64,10 +114,11 @@ export default function JoinProgramForm() {
 
       setTimeout(() => {
         if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        setFormData({ name: "", email: "" });
+        setFormData(initialFormData);
         setAvatarFile(null);
         setAvatarPreview(null);
         setSubmitted(false);
+        setTrackError(false);
       }, 5000);
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -79,7 +130,7 @@ export default function JoinProgramForm() {
 
   return (
     <section
-      id="signup-form"
+      id="apply"
       className="w-full py-20 px-2 sm:px-6 lg:px-8 bg-background scroll-mt-20"
     >
       <div className="max-w-md mx-auto">
@@ -92,11 +143,14 @@ export default function JoinProgramForm() {
         >
           {/* Header */}
           <div className="text-center space-y-3">
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              Ready to Make a Difference?
+            <p className="text-sm font-medium text-primary uppercase tracking-wide">
+              Ready?
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-balance">
+              You don&apos;t have to be an expert. You just have to care.
             </h2>
             <p className="text-foreground/60 text-balance">
-              Join hundreds of ambassadors already supporting Xolace's mission.
+              Fill out the form below — we&apos;ll follow up with next steps.
             </p>
           </div>
 
@@ -254,6 +308,154 @@ export default function JoinProgramForm() {
                       onChange={handleChange}
                       placeholder="you@example.com…"
                       required
+                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                    />
+                  </motion.div>
+
+                  {/* Location Input */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.22 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="space-y-2"
+                  >
+                    <label
+                      htmlFor="location"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Location
+                    </label>
+                    <Input
+                      id="location"
+                      type="text"
+                      name="location"
+                      autoComplete="address-level2"
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="City, country…"
+                      required
+                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                    />
+                  </motion.div>
+
+                  {/* School / Community Input */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.24 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="space-y-2"
+                  >
+                    <label
+                      htmlFor="school-or-community"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      School or Community{" "}
+                      <span className="text-foreground/40 font-normal">
+                        (optional)
+                      </span>
+                    </label>
+                    <Input
+                      id="school-or-community"
+                      type="text"
+                      name="schoolOrCommunity"
+                      value={formData.schoolOrCommunity}
+                      onChange={handleChange}
+                      placeholder="Your school, campus, or community…"
+                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                    />
+                  </motion.div>
+
+                  {/* Social Handle Input */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.26 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="space-y-2"
+                  >
+                    <label
+                      htmlFor="social-handle"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Social Handle{" "}
+                      <span className="text-foreground/40 font-normal">
+                        (optional)
+                      </span>
+                    </label>
+                    <Input
+                      id="social-handle"
+                      type="text"
+                      name="socialHandle"
+                      value={formData.socialHandle}
+                      onChange={handleChange}
+                      placeholder="Instagram, TikTok, or X handle…"
+                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                    />
+                  </motion.div>
+
+                  {/* Track Select */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.28 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="space-y-2"
+                  >
+                    <label
+                      htmlFor="track"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Which track interests you?
+                    </label>
+                    <Select
+                      value={formData.track}
+                      onValueChange={handleTrackChange}
+                    >
+                      <SelectTrigger
+                        id="track"
+                        className="w-full bg-background border border-border/50 rounded-lg"
+                      >
+                        <SelectValue placeholder="Select a track…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRACKS.map((track) => (
+                          <SelectItem key={track} value={track}>
+                            {track}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {trackError && (
+                      <p className="text-xs text-destructive">
+                        Please select a track.
+                      </p>
+                    )}
+                  </motion.div>
+
+                  {/* Why Xolace Textarea */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="space-y-2"
+                  >
+                    <label
+                      htmlFor="why-xolace"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Why Xolace?
+                    </label>
+                    <Textarea
+                      id="why-xolace"
+                      name="whyXolace"
+                      value={formData.whyXolace}
+                      onChange={handleChange}
+                      placeholder="What draws you to this? No perfect answer needed…"
+                      required
+                      rows={3}
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
                   </motion.div>
