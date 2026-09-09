@@ -175,7 +175,7 @@ const AmbassadorCard = ({
                 <TikTok aria-hidden="true" className="w-4 h-4 fill-current" />
               </a>
             ) : null}
-             {ambassador.social.github ? (
+            {ambassador.social.github ? (
               <a
                 href={ambassador.social.github}
                 aria-label={`${ambassador.name} on GitHub`}
