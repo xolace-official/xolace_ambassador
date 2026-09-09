@@ -1,78 +1,71 @@
 "use client";
 
+import { GraduationCap, KeyRound, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
-import {
-  Award,
-  BookOpen,
-  Network,
-  DollarSign,
-  Clock,
-  Star,
-} from "lucide-react";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6 },
+  },
+};
+
+const benefits = [
+  {
+    icon: Sparkles,
+    title: "Personal Brand",
+    hook: "Get seen for the work you actually do.",
+    examples: [
+      "Featured on Xolace platforms",
+      "Ambassador spotlight",
+      "Portfolio opportunities",
+      "LinkedIn recognition",
+    ],
+  },
+  {
+    icon: GraduationCap,
+    title: "Skills",
+    hook: "Learn from real workshops, not a PDF.",
+    examples: [
+      "Storytelling",
+      "Mental-health communication",
+      "Community building",
+      "Content & video production",
+    ],
+  },
+  {
+    icon: KeyRound,
+    title: "Access",
+    hook: "Get closer to the people building Xolace.",
+    examples: [
+      "Founder sessions",
+      "Product previews & beta access",
+      "Behind-the-scenes campaigns",
+      "Direct work with the creative/product team",
+    ],
+  },
+];
 
 export default function Benefits() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  };
-
-  const benefits = [
-    {
-      icon: Award,
-      title: "Official Recognition",
-      description:
-        "Become a certified Xolace Ambassador with official credentials to showcase your commitment.",
-    },
-    {
-      icon: BookOpen,
-      title: "Exclusive Resources",
-      description:
-        "Access training materials, guidelines, and tools designed to help you succeed.",
-    },
-    {
-      icon: Network,
-      title: "Vibrant Community",
-      description:
-        "Connect with fellow ambassadors in private forums, events, and collaborative initiatives.",
-    },
-    {
-      icon: DollarSign,
-      title: "Rewards & Incentives",
-      description:
-        "Earn rewards through referrals and meaningful contributions to the program.",
-    },
-    {
-      icon: Clock,
-      title: "Flexible Commitment",
-      description:
-        "Work at your own pace. Whether you have hours or just moments, we have opportunities for you.",
-    },
-    {
-      icon: Star,
-      title: "Career Growth",
-      description:
-        "Build your portfolio and potentially unlock career opportunities within the mental health space.",
-    },
-  ];
-
   return (
-    <section className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-background">
+    <section
+      id="what-you-get"
+      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
+    >
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Header */}
         <motion.div
@@ -82,13 +75,12 @@ export default function Benefits() {
           viewport={{ once: true, margin: "-50px" }}
           className="text-center space-y-4"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-balance">
-            What You'll Gain
-          </h2>
-          <p className="text-lg text-foreground/60 max-w-2xl mx-auto text-balance">
-            Being part of our ambassador community comes with real benefits that
-            support your growth and impact.
+          <p className="text-sm font-medium text-primary uppercase tracking-wide">
+            What You Get
           </p>
+          <h2 className="text-4xl sm:text-5xl font-bold text-balance">
+            Real benefits. Not just a certificate.
+          </h2>
         </motion.div>
 
         {/* Benefits Grid */}
@@ -97,28 +89,36 @@ export default function Benefits() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {benefits.map((benefit, index) => {
+          {benefits.map((benefit) => {
             const Icon = benefit.icon;
             return (
-              // biome-ignore lint/suspicious/noArrayIndexKey: index only
-              <motion.div key={index} variants={itemVariants}>
-                <Card className="h-full p-6 bg-linear-to-br from-secondary/40 to-secondary/20 border border-border/20 hover:border-accent/40 transition-[border-color,box-shadow] duration-300 group hover:shadow-lg">
+              <motion.div key={benefit.title} variants={itemVariants}>
+                <Card className="h-full p-6 bg-linear-to-br from-secondary/40 to-secondary/20 border border-border/20 hover:border-accent/40 transition-[border-color,box-shadow] duration-300 hover:shadow-lg">
                   <div className="space-y-4">
-                    <motion.div
-                      initial={{ scale: 1 }}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/20 group-hover:bg-accent/30 transition-colors"
-                    >
-                      <Icon className="w-6 h-6 text-accent" />
-                    </motion.div>
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-accent/20">
+                      <Icon
+                        aria-hidden="true"
+                        className="w-6 h-6 text-accent"
+                      />
+                    </div>
                     <h3 className="font-semibold text-lg text-foreground">
                       {benefit.title}
                     </h3>
                     <p className="text-foreground/60 text-sm leading-relaxed">
-                      {benefit.description}
+                      {benefit.hook}
                     </p>
+                    <ul className="flex flex-wrap gap-2 pt-1">
+                      {benefit.examples.map((example) => (
+                        <li
+                          key={example}
+                          className="text-xs font-medium text-foreground/60 bg-secondary px-2.5 py-1 rounded-full"
+                        >
+                          {example}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </Card>
               </motion.div>
@@ -126,57 +126,20 @@ export default function Benefits() {
           })}
         </motion.div>
 
-        {/* Testimonial Section */}
+        {/* Opportunities statement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="mt-16 pt-16 border-t border-border/30"
+          className="text-center pt-4"
         >
-          <div className="text-center space-y-8">
-            <h3 className="text-2xl font-semibold text-balance">
-              Why Ambassadors Love This Program
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {[
-                {
-                  quote:
-                    "I've never felt more connected to a mission. Being an ambassador let me turn my passion for mental health into real action.",
-                  author: "Sarah M., Ambassador",
-                },
-                {
-                  quote:
-                    "The flexibility is incredible. I can contribute on my own terms, and the support from the community is amazing.",
-                  author: "Chris, Ambassador",
-                },
-              ].map((testimonial, index) => (
-                <motion.div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: only have index
-                  key={index}
-                  initial={{ opacity: 0, x: index === 0 ? -20 : 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 * (index + 1) }}
-                  viewport={{ once: true, margin: "-50px" }}
-                >
-                  <Card className="p-8 bg-card border border-border/30 relative">
-                    <div className="absolute top-4 left-4 text-4xl text-primary/20">
-                      {"\u201C"}
-                    </div>
-                    <blockquote className="space-y-4">
-                      <p className="text-foreground/80 italic text-balance">
-                        {testimonial.quote}
-                      </p>
-                      <footer className="font-semibold text-sm text-foreground">
-                        — {testimonial.author}
-                      </footer>
-                    </blockquote>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-balance">
+            The biggest benefit? You get to build something real.
+          </p>
+          <p className="text-foreground/60 pt-2">
+            That&apos;s worth more than a certificate.
+          </p>
         </motion.div>
       </div>
     </section>
