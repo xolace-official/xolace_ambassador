@@ -54,47 +54,75 @@ export default function Impact() {
           </p>
         </motion.div>
 
-        {/* Same scattered polaroid composition at every width — scrolls
-            horizontally on narrow screens rather than being redesigned. */}
-        <div className="overflow-x-auto pb-4 -mb-4">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            className="relative min-w-[700px] aspect-[1240/320]"
-          >
-            {STATS.map((stat, index) => {
-              const pos = positions[index];
-              return (
-                <motion.div
-                  key={stat.label}
-                  custom={pos.rotate}
-                  variants={itemVariants}
-                  className="absolute bg-card rounded-md shadow-xl p-3 pb-4"
-                  style={{
-                    left: `${pos.leftPct}%`,
-                    top: `${pos.topPct}%`,
-                    width: `${pos.widthPct}%`,
-                  }}
-                >
-                  <div className="bg-primary/8 rounded-sm aspect-[3/2] flex flex-col items-center justify-center gap-1.5">
-                    <stat.icon
-                      aria-hidden="true"
-                      className="w-6 h-6 text-primary"
-                    />
-                    <span className="text-2xl font-extrabold text-foreground">
-                      {stat.value}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-center text-[11px] font-bold text-foreground/70">
-                    {stat.label}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
+        {/* Desktop/tablet: scattered polaroid composition */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="hidden lg:block relative aspect-[1240/320]"
+        >
+          {STATS.map((stat, index) => {
+            const pos = positions[index];
+            return (
+              <motion.div
+                key={stat.label}
+                custom={pos.rotate}
+                variants={itemVariants}
+                className="absolute bg-card rounded-md shadow-xl p-3 pb-4"
+                style={{
+                  left: `${pos.leftPct}%`,
+                  top: `${pos.topPct}%`,
+                  width: `${pos.widthPct}%`,
+                }}
+              >
+                <div className="bg-primary/8 rounded-sm aspect-[3/2] flex flex-col items-center justify-center gap-1.5">
+                  <stat.icon
+                    aria-hidden="true"
+                    className="w-6 h-6 text-primary"
+                  />
+                  <span className="text-2xl font-extrabold text-foreground">
+                    {stat.value}
+                  </span>
+                </div>
+                <p className="mt-3 text-center text-[11px] font-bold text-foreground/70">
+                  {stat.label}
+                </p>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* Mobile/tablet: same card style, plain grid — no horizontal scroll */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid grid-cols-2 gap-4 lg:hidden"
+        >
+          {STATS.map((stat) => (
+            <motion.div
+              key={stat.label}
+              variants={itemVariants}
+              custom={0}
+              className="bg-card rounded-md shadow-md p-3 pb-4"
+            >
+              <div className="bg-primary/8 rounded-sm aspect-[3/2] flex flex-col items-center justify-center gap-1.5">
+                <stat.icon
+                  aria-hidden="true"
+                  className="w-6 h-6 text-primary"
+                />
+                <span className="text-2xl font-extrabold text-foreground">
+                  {stat.value}
+                </span>
+              </div>
+              <p className="mt-3 text-center text-[11px] font-bold text-foreground/70">
+                {stat.label}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
