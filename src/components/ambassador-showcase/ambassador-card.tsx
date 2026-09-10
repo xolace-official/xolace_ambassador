@@ -88,19 +88,6 @@ const AmbassadorCard = ({
           {ambassador.location}
         </div>
 
-        {ambassador.roles && ambassador.roles.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
-            {ambassador.roles.map((role) => (
-              <span
-                key={role}
-                className="px-2 py-0.5 text-[11px] font-medium bg-secondary text-secondary-foreground rounded-full"
-              >
-                {role}
-              </span>
-            ))}
-          </div>
-        ) : null}
-
         {hasSocials ? (
           <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border">
             {ambassador.social.linkedin ? (
