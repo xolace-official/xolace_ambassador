@@ -181,7 +181,7 @@ const NavBar = () => {
                 variant="default"
                 size="sm"
                 onClick={handleVisitPortal}
-                className="hidden sm:inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold shadow-md shadow-primary/20 hover:scale-105 transition-transform"
+                className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-md shadow-primary/20 hover:scale-105 transition-transform"
               >
                 <ExternalLink className="w-4 h-4" />
                 Visit Portal
@@ -205,7 +205,7 @@ const NavBar = () => {
       <AnimatePresence>
         {isOpen ? (
           <motion.div
-            className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col justify-between p-6 sm:p-8 h-screen w-screen overflow-y-auto"
+            className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col justify-start p-6 sm:p-8 h-screen w-screen overflow-y-auto"
             initial={{ opacity: 0, y: "-100%" }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "-100%" }}
@@ -227,10 +227,7 @@ const NavBar = () => {
             </div>
 
             {/* Middle Nav Items */}
-            <div className="my-auto py-8 space-y-6 flex flex-col items-start w-full">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Navigation
-              </span>
+            <div className="my-2 py-8 space-y-6 flex flex-col items-start w-full">
 
               {navigationData.map((item) => {
                 const isActive = pathname === item.href;
@@ -241,32 +238,23 @@ const NavBar = () => {
                     onClick={closeMenu}
                     className={`w-full py-3 px-4 rounded-2xl text-3xl font-black transition-all flex items-center justify-between ${
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                        : "text-foreground hover:bg-secondary/70"
+                          ? "text-primary font-bold border-b-2 border-primary"
+                          : "text-foreground/80 hover:text-primary"
                     }`}
                   >
                     <span>{item.label}</span>
-                    <span className="text-sm font-semibold opacity-60">→</span>
                   </Link>
                 );
               })}
             </div>
+            <div/>
 
             {/* Bottom Card & CTA */}
             <div className="pt-6 border-t border-border/50 space-y-4">
-              <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50 text-xs space-y-1">
-                <p className="font-bold text-foreground">
-                  Xolace Ambassadors
-                </p>
-                <p className="text-muted-foreground">
-                  Building campus safe-spaces for peer support & emotional wellbeing.
-                </p>
-              </div>
-
               <Button
                 onClick={handleVisitPortal}
                 size="lg"
-                className="w-full py-4 rounded-2xl font-extrabold text-base shadow-xl shadow-primary/25"
+                className="w-full py-4 rounded-full font-extrabold text-base shadow-xl shadow-primary/25"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
                 Visit Ambassador Portal

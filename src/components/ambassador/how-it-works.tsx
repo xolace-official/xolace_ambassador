@@ -6,37 +6,32 @@ const steps = [
   {
     number: "01",
     title: "Apply",
-    description:
-      "Tell us who you are and why Xolace matters to you. No 20-question forms — just the essentials.",
+    description: "Share who you are and why Xolace matters. Quick & essential.",
   },
   {
     number: "02",
     title: "Get Accepted",
-    description: "We look for care, not credentials. If it's a fit, you're in.",
+    description: "We look for heart, not credentials. If it fits, you're in.",
   },
   {
     number: "03",
     title: "Get Trained",
-    description:
-      "A short onboarding covers what Xolace is, what ambassadors actually do, and the safety & ethics every ambassador follows.",
+    description: "Short onboarding covering your role, safety, and ethics.",
   },
   {
     number: "04",
     title: "Choose Your Path",
-    description:
-      "Pick the track that fits how you already show up — Creator, Community, Growth, Creative, Production, or Advocacy.",
+    description: "Pick the track matching how you already show up.",
   },
   {
     number: "05",
     title: "Complete Missions",
-    description:
-      "Take on real, hands-on missions instead of guessing what to do next.",
+    description: "Take on real hands-on tasks with clear guidance.",
   },
   {
     number: "06",
     title: "Grow With Xolace",
-    description:
-      "Build skills, gain access, and grow into new roles as you keep contributing.",
+    description: "Build skills, gain access, and expand your impact.",
   },
 ];
 
@@ -73,9 +68,15 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20"
+      className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto space-y-16">
+      {/* Subtle organic background grid / accent for Senior UI feel */}
+      <div
+        className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.25] pointer-events-none"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 max-w-6xl mx-auto space-y-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

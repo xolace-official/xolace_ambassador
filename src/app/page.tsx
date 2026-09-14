@@ -40,7 +40,7 @@ export default function Home() {
       <main className="flex items-start justify-start w-full min-h-screen bg-background text-foreground">
         <div className="flex items-start justify-start w-full flex-col bg-background">
           <HeroSection />
-          <EmpathyGraphSection />
+          {/*<EmpathyGraphSection />*/}
           <WhyAmbassadors />
           <Tracks />
           <HowItWorks />

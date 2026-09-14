@@ -9,6 +9,7 @@ import {
   Video,
 } from "lucide-react";
 import { motion } from "motion/react";
+import FloatingBubblesBg from "@/components/ui/floating-bubbles-bg";
 import { Card } from "@/components/ui/card";
 
 const containerVariants = {
@@ -73,9 +74,11 @@ export default function Tracks() {
   return (
     <section
       id="tracks"
-      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
+      className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20 overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto space-y-14">
+      <FloatingBubblesBg className="opacity-40" />
+
+      <div className="relative z-10 max-w-6xl mx-auto space-y-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -109,7 +112,7 @@ export default function Tracks() {
               const Icon = track.icon;
               return (
                 <motion.div key={track.name} variants={itemVariants}>
-                  <Card className="h-full p-7 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
+                  <Card className="h-full p-7 bg-card/90 backdrop-blur-xs border border-border/40 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300">
                     <div className="flex items-start gap-5">
                       <div className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
                         <Icon
@@ -146,7 +149,7 @@ export default function Tracks() {
               const Icon = track.icon;
               return (
                 <motion.div key={track.name} variants={itemVariants}>
-                  <Card className="h-full p-5 bg-card border border-border/30 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300 space-y-3">
+                  <Card className="h-full p-5 bg-card/90 backdrop-blur-xs border border-border/40 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-[border-color,box-shadow,transform] duration-300 space-y-3">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                       <Icon
                         aria-hidden="true"

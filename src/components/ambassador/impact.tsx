@@ -32,9 +32,9 @@ export default function Impact() {
   return (
     <section
       id="impact"
-      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
+      className="w-full pt-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
-      <div className="max-w-6xl mx-auto space-y-16">
+      <div className="max-w-6xl mx-auto space-t-16 ">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -48,7 +48,7 @@ export default function Impact() {
           <h2 className="text-4xl sm:text-5xl font-bold text-balance">
             Still early. Already real.
           </h2>
-          <p className="text-lg text-foreground/60 text-balance">
+          <p className="text-lg text-foreground/60 text-balance pb-8">
             These are actual numbers, not projections — and they grow with every
             ambassador who joins.
           </p>

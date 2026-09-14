@@ -176,7 +176,7 @@ export default function FirstMission() {
             <ShieldAlert className="w-4 h-4" /> Ambassador Readiness Test
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-foreground tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-foreground tracking-tight">
             Peer Crisis & Protocol Simulator
           </h2>
 

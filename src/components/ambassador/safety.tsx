@@ -28,9 +28,15 @@ export default function Safety() {
   return (
     <section
       id="safety"
-      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
+      className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20 overflow-hidden"
     >
-      <div className="max-w-4xl mx-auto space-y-12">
+      {/* Background ambient lighting */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 right-1/4 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -55,7 +61,7 @@ export default function Safety() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] rounded-3xl overflow-hidden border border-border/40"
+          className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] rounded-3xl overflow-hidden border border-border/40 shadow-lg"
         >
           <motion.div
             variants={containerVariants}
