@@ -9,9 +9,15 @@ export default function FirstMission() {
   return (
     <section
       id="first-mission"
-      className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20"
+      className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
-      <div className="max-w-xl mx-auto space-y-10">
+      {/* Background ambient lighting */}
+      <div
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[350px] rounded-full bg-accent/15 blur-3xl pointer-events-none"
+      />
+
+      <div className="relative z-10 max-w-xl mx-auto space-y-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -41,7 +47,7 @@ export default function FirstMission() {
             />
           </div>
 
-          <Card className="bg-[oklch(0.1649_0.0352_281.8285)] text-white border-0 rounded-3xl p-9 pt-10 text-center space-y-4">
+          <Card className="bg-[oklch(0.1649_0.0352_281.8285)] text-white border-0 rounded-3xl p-9 pt-10 text-center space-y-4 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-wide text-accent">
               Mission 01 — Locked Preview
             </p>
