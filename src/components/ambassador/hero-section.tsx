@@ -1,7 +1,11 @@
 "use client";
 
 import { motion } from "motion/react";
+import Image from "next/image";
+import { useMemo } from "react";
+import LiveEmpathyGraph from "@/components/ui/live-empathy-graph";
 import { Button } from "@/components/ui/button";
+import { OFFICIAL_AMBASSADORS } from "@/constants";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -23,10 +27,26 @@ const itemVariants = {
   },
 };
 
+/** Utility to pick N random items from array */
+function pickRandom<T>(arr: T[], count: number): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
 export default function HeroSection() {
+  // Pick exactly 3 random ambassadors for the overlapping circles display
+  const randomThreeAmbassadors = useMemo(
+    () => pickRandom(OFFICIAL_AMBASSADORS, 3),
+    [],
+  );
+
   return (
-    <section className="relative w-full overflow-hidden bg-background">
-      {/* Ambient background shapes */}
+    <section className="relative w-full overflow-hidden bg-background pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-28">
+      {/* Ambient background glowing shapes */}
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -45,9 +65,9 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-28 lg:min-h-[88vh] flex items-center">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.82fr] gap-14 lg:gap-16 items-center w-full">
-          {/* Copy */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.85fr] gap-14 lg:gap-16 items-center w-full">
+          {/* Left Column: Copy */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -101,81 +121,44 @@ export default function HeroSection() {
               </Button>
             </motion.div>
 
+            {/* Overlapping ambassador circles (3 random real ambassador photos) */}
             <motion.div
               variants={itemVariants}
               className="flex items-center gap-3 pt-2"
             >
               <div aria-hidden="true" className="flex -space-x-2.5">
-                <span className="w-8 h-8 rounded-full bg-primary/25 border-2 border-background" />
-                <span className="w-8 h-8 rounded-full bg-accent/40 border-2 border-background" />
-                <span className="w-8 h-8 rounded-full bg-secondary border-2 border-background" />
+                {randomThreeAmbassadors.map((ambassador) => (
+                  <div
+                    key={ambassador.id}
+                    className="relative w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-muted shadow-sm"
+                    title={ambassador.name}
+                  >
+                    <Image
+                      src={ambassador.image}
+                      alt={ambassador.name}
+                      fill
+                      sizes="32px"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                ))}
               </div>
               <span className="text-sm font-semibold text-foreground/55">
-                10+ ambassadors already building this.
+                {OFFICIAL_AMBASSADORS.length}+ ambassadors already building
+                this.
               </span>
             </motion.div>
           </motion.div>
 
-          {/* Collage — desktop */}
-          <div className="hidden lg:block relative h-[440px]">
-            <motion.div
-              initial={{ opacity: 0, y: 30, rotate: 0 }}
-              animate={{ opacity: 1, y: 0, rotate: -4 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="absolute top-2 left-2 w-[86%] bg-card border border-border/60 rounded-3xl p-8 shadow-xl"
-            >
-              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-3">
-                Xolace
-              </p>
-              <p className="text-2xl font-bold leading-snug text-foreground">
-                &ldquo;You&apos;re not the only one carrying this.&rdquo;
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30, rotate: 0 }}
-              animate={{ opacity: 1, y: 0, rotate: 3 }}
-              transition={{ duration: 0.7, delay: 0.45 }}
-              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg"
-            >
-              <p className="text-xl font-bold leading-snug text-foreground">
-                &ldquo;A quiet place to be human.&rdquo;
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30, rotate: 0 }}
-              animate={{ opacity: 1, y: 0, rotate: -2 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-              className="absolute bottom-2 left-8 w-[68%] bg-primary rounded-3xl p-7 shadow-xl shadow-primary/30"
-            >
-              <p className="text-lg font-bold leading-snug text-primary-foreground">
-                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Collage — mobile/tablet (same content, simplified to a stack) */}
-          <div className="flex lg:hidden flex-col gap-4 w-full">
-            <div className="bg-card border border-border/60 rounded-2xl p-6">
-              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">
-                Xolace
-              </p>
-              <p className="text-lg font-bold leading-snug text-foreground">
-                &ldquo;You&apos;re not the only one carrying this.&rdquo;
-              </p>
-            </div>
-            <div className="bg-accent/25 rounded-2xl p-6">
-              <p className="text-base font-bold leading-snug text-foreground">
-                &ldquo;A quiet place to be human.&rdquo;
-              </p>
-            </div>
-            <div className="bg-primary rounded-2xl p-6">
-              <p className="text-base font-bold leading-snug text-primary-foreground">
-                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
-              </p>
-            </div>
-          </div>
+          {/* Right Column: $3M Live Empathy Interactive Node Graph Widget */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="w-full"
+          >
+            <LiveEmpathyGraph />
+          </motion.div>
         </div>
       </div>
     </section>
