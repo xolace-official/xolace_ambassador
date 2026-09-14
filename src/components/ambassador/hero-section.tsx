@@ -3,7 +3,6 @@
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useMemo } from "react";
-import LiveEmpathyGraph from "@/components/ui/live-empathy-graph";
 import { Button } from "@/components/ui/button";
 import { OFFICIAL_AMBASSADORS } from "@/constants";
 
@@ -45,8 +44,8 @@ export default function HeroSection() {
   );
 
   return (
-    <section className="relative w-full overflow-hidden bg-background pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-28">
-      {/* Ambient background glowing shapes */}
+    <section className="relative w-full overflow-hidden bg-background">
+      {/* Original ambient background glowing shapes */}
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -65,9 +64,9 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.85fr] gap-14 lg:gap-16 items-center w-full">
-          {/* Left Column: Copy */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-28 lg:min-h-[88vh] flex items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.82fr] gap-14 lg:gap-16 items-center w-full">
+          {/* Copy */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -150,15 +149,66 @@ export default function HeroSection() {
             </motion.div>
           </motion.div>
 
-          {/* Right Column: $3M Live Empathy Interactive Node Graph Widget */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="w-full"
-          >
-            <LiveEmpathyGraph />
-          </motion.div>
+          {/* Original Right Column: Quote Collage Cards */}
+          <div className="hidden lg:block relative h-[440px]">
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: -4 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="absolute top-2 left-2 w-[86%] bg-card border border-border/60 rounded-3xl p-8 shadow-xl"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-3">
+                Xolace
+              </p>
+              <p className="text-2xl font-bold leading-snug text-foreground">
+                &ldquo;You&apos;re not the only one carrying this.&rdquo;
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: 3 }}
+              transition={{ duration: 0.7, delay: 0.45 }}
+              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg"
+            >
+              <p className="text-xl font-bold leading-snug text-foreground">
+                &ldquo;A quiet place to be human.&rdquo;
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: -2 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+              className="absolute bottom-2 left-8 w-[68%] bg-primary rounded-3xl p-7 shadow-xl shadow-primary/30"
+            >
+              <p className="text-lg font-bold leading-snug text-primary-foreground">
+                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Collage — mobile/tablet */}
+          <div className="flex lg:hidden flex-col gap-4 w-full">
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">
+                Xolace
+              </p>
+              <p className="text-lg font-bold leading-snug text-foreground">
+                &ldquo;You&apos;re not the only one carrying this.&rdquo;
+              </p>
+            </div>
+            <div className="bg-accent/25 rounded-2xl p-6">
+              <p className="text-base font-bold leading-snug text-foreground">
+                &ldquo;A quiet place to be human.&rdquo;
+              </p>
+            </div>
+            <div className="bg-primary rounded-2xl p-6">
+              <p className="text-base font-bold leading-snug text-primary-foreground">
+                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
