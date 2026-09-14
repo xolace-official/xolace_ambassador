@@ -1,70 +1,70 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
-import { Nunito, PT_Sans } from "next/font/google";
-import Footer from "@/components/ambassador/footer";
-import NavBar from "@/components/layout/nav-bar";
-import { Providers } from "@/components/providers";
+import { Inter } from "next/font/google";
+import ScrollProgressBar from "@/components/ui/scroll-progress-bar";
 import "./globals.css";
 
-const _nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
-const ptSans = PT_Sans({
-  variable: "--font-pt-sans",
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ambassadors.xolaceinc.com"),
-  title: {
-    default: "Xolace Ambassadors | Emotional Wellbeing & Community Champions",
-    template: "%s | Xolace Ambassadors",
-  },
+  title: "Xolace Ambassadors | Help Build a World Where People Feel Heard",
   description:
-    "Join the Xolace Ambassador program. Help build a compassionate community where emotional wellbeing is destigmatized and everyone feels heard.",
+    "Join Xolace Ambassadors on campus and in communities to champion emotional wellbeing, destigmatize mental health, and create safe spaces for authentic human connection.",
   keywords: [
     "Xolace",
     "Xolace Ambassadors",
     "Emotional Wellbeing",
-    "Mental Health Advocacy",
-    "Campus Ambassadors",
-    "Youth Community Ghana",
-    "Student Leadership",
+    "Mental Health Support",
+    "Campus Advocates",
+    "Safe Spaces",
+    "Peer Support Ghana",
   ],
-  authors: [{ name: "Xolace Inc.", url: "https://xolaceinc.com" }],
-  creator: "Xolace Inc.",
-  publisher: "Xolace Inc.",
-  applicationName: "Xolace Ambassadors",
-  icons: {
-    icon: "/logo/favicon.png",
-    apple: "/apple-icon.png",
+  authors: [{ name: "Xolace Inc", url: "https://xolaceinc.com" }],
+  creator: "Xolace Inc",
+  publisher: "Xolace Inc",
+  metadataBase: new URL("https://xolaceinc.com"),
+  alternates: {
+    canonical: "https://xolaceinc.com/ambassadors",
   },
   openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://ambassadors.xolaceinc.com",
-    siteName: "Xolace Ambassadors",
     title: "Xolace Ambassadors | Help Build a World Where People Feel Heard",
     description:
-      "Become a Xolace ambassador. Join our movement of creators, community leaders, and advocates fostering safe emotional spaces.",
+      "Join Xolace Ambassadors on campus and in communities to champion emotional wellbeing and create safe spaces.",
+    url: "https://xolaceinc.com/ambassadors",
+    siteName: "Xolace Inc",
     images: [
       {
-        url: "/why-ambassadors.png",
+        url: "https://xolaceinc.com/why-ambassadors.png",
         width: 1200,
         height: 630,
-        alt: "Xolace Ambassador Community",
+        alt: "Xolace Ambassadors Connecting",
       },
     ],
+    locale: "en_US",
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Xolace Ambassadors | Join the Movement",
+    title: "Xolace Ambassadors | Help Build a World Where People Feel Heard",
     description:
-      "Help build a world where people feel heard. Apply to become a Xolace Ambassador today.",
-    images: ["/why-ambassadors.png"],
+      "Join Xolace Ambassadors to champion emotional wellbeing and create safe spaces.",
+    images: ["https://xolaceinc.com/why-ambassadors.png"],
+    creator: "@xolaceinc",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -74,13 +74,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${_nunito.variable} ${ptSans.variable} antialiased`}>
-        <Providers>
-          <NavBar />
-          <main id="main-content">{children}</main>
-          <Footer />
-        </Providers>
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
+        <ScrollProgressBar />
+        {children}
         <Analytics />
       </body>
     </html>

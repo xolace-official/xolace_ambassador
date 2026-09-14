@@ -4,7 +4,7 @@ import { ArrowRight, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import EmpathyNetworkBg from "@/components/ui/empathy-network-bg";
+import VoiceSpotlightPlayer from "@/components/ui/voice-spotlight-player";
 import { OFFICIAL_AMBASSADORS } from "@/constants";
 
 const containerVariants = {
@@ -63,10 +63,7 @@ export default function AmbassadorStories() {
       id="stories"
       className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
-      {/* Empathy Network Background communicating peer connection */}
-      <EmpathyNetworkBg />
-
-      <div className="relative z-10 max-w-6xl mx-auto space-y-14">
+      <div className="relative z-10 max-w-6xl mx-auto space-y-16">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -112,6 +109,16 @@ export default function AmbassadorStories() {
             </motion.a>
           </div>
         </div>
+
+        {/* $3M Voices of Xolace Audio Spotlight Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true, margin: "-50px" }}
+        >
+          <VoiceSpotlightPlayer />
+        </motion.div>
 
         {featuredAmbassadors.length > 0 ? (
           <motion.div
