@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, ExternalLink, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -84,23 +84,6 @@ const NavBar = () => {
     };
   }, [isOpen, closeMenu]);
 
-  // Auto-close mobile menu on scroll (mobile only)
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerWidth < 768 && isOpen) {
-        closeMenu();
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener("scroll", handleScroll, { passive: true });
-    }
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [isOpen, closeMenu]);
-
   const pathname = usePathname();
   const router = useRouter();
 
@@ -116,6 +99,12 @@ const NavBar = () => {
     }
   };
 
+  const handleVisitPortal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    closeMenu();
+    alert("Ambassador Portal is launching soon! Stay tuned.");
+  };
+
   return (
     <>
       <a
@@ -124,67 +113,17 @@ const NavBar = () => {
       >
         Skip to main content
       </a>
-      <header className=" px-2 sm:px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full">
-        <div className="max-w-6xl mx-auto w-full py-1 px-2 flex items-center justify-between border border-border bg-muted rounded-2xl">
-          <div className="w-full flex flex-row gap-8">
+
+      {/* Full Width Edge-to-Edge Header (No top padding) */}
+      <header className="sticky top-0 z-50 left-0 w-full bg-background/95 backdrop-blur-md border-b border-border/60">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-8">
             <Link href="/">
               <XolaceLogo size="sm" priority />
             </Link>
 
-            {/* Desktop Navigation */}
-          </div>
-
-          {/* Mobile Menu Overlay */}
-          <AnimatePresence>
-            {isOpen ? (
-              <>
-                <motion.div
-                  className="fixed inset-0 z-40"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={closeMenu}
-                />
-
-                <motion.div
-                  className="fixed top-0 left-0 w-full p-6 shadow-lg z-50 bg-muted max-h-screen overflow-y-auto overscroll-contain"
-                  initial={{ y: -100, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -100, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold"></span>
-                    <button
-                      type="button"
-                      onClick={closeMenu}
-                      aria-label="Close menu"
-                      className="focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm p-1"
-                    >
-                      <X aria-hidden="true" className="w-6 h-6" />
-                    </button>
-                  </div>
-                  <div className="mt-8 flex flex-col space-y-4">
-                    {navigationData.map((item) => (
-                      <MobileNavItem
-                        key={item.label}
-                        item={item}
-                        onLinkClick={closeMenu}
-                      />
-                    ))}
-
-                    <Button onClick={scrollToApply} className="mt-4" size="lg">
-                      Apply Now
-                    </Button>
-                  </div>
-                </motion.div>
-              </>
-            ) : null}
-          </AnimatePresence>
-
-          <div className="flex flex-row gap-2 md:gap-4">
-            <nav className="md:pe-8 w-full hidden md:flex items-center justify-start space-x-6 font-semibold">
+            {/* Desktop Nav Items */}
+            <nav className="hidden md:flex items-center space-x-6 font-semibold">
               {navigationData.map((item) => (
                 <div
                   key={item.label}
@@ -215,133 +154,116 @@ const NavBar = () => {
                       {item.label}
                     </Link>
                   )}
-
-                  {/* Desktop Dropdown Menu */}
-                  <AnimatePresence>
-                    {activeDropdown === item.label && item.dropdown ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-muted rounded-xl shadow-lg border border-border py-2 z-50"
-                      >
-                        {item.dropdown.map((dropdownItem) => (
-                          <Link
-                            key={dropdownItem.label}
-                            href={dropdownItem.href}
-                            className="flex items-start gap-3 px-4 py-3 text-sm hover:bg-accent/60 transition-colors duration-150 rounded-lg mx-2"
-                          >
-                            <div className="text-primary mt-0.5 shrink-0">
-                              {dropdownItem.icon}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-medium truncate">
-                                {dropdownItem.label}
-                              </div>
-                              {dropdownItem.description ? (
-                                <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                                  {dropdownItem.description}
-                                </div>
-                              ) : null}
-                            </div>
-                          </Link>
-                        ))}
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
                 </div>
               ))}
             </nav>
-            <Button variant="default" size="sm" onClick={scrollToApply}>
+          </div>
+
+          {/* Action Buttons: Visit Portal & Apply Now */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleVisitPortal}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border-border/80 font-bold hover:bg-secondary"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-primary" />
+              Visit Portal
+            </Button>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={scrollToApply}
+              className="rounded-xl font-bold shadow-md shadow-primary/20"
+            >
               Apply Now
             </Button>
 
-            {/* Mobile menu button */}
+            {/* Mobile Menu Trigger */}
             <button
               type="button"
-              className="md:hidden p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm"
+              className="md:hidden p-2 text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-lg border border-border/50 bg-secondary/50"
               onClick={openMenu}
-              aria-label="Open menu"
+              aria-label="Open navigation menu"
             >
               <Menu aria-hidden="true" className="w-5 h-5" />
             </button>
           </div>
         </div>
       </header>
-    </>
-  );
-};
 
-function MobileNavItem({
-  item,
-  onLinkClick,
-}: {
-  item: NavItem;
-  onLinkClick: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border-b border-border last:border-b-0 pb-4 last:pb-0">
-      <button
-        type="button"
-        onClick={() => (item.dropdown ? setIsOpen(!isOpen) : null)}
-        className="flex items-center justify-between w-full text-left py-3 font-medium text-base transition-colors duration-200 min-h-11"
-      >
-        {item.dropdown ? (
-          <>
-            {item.label}
-            <ChevronDown
-              aria-hidden="true"
-              className={`w-5 h-5 transition-transform duration-200 shrink-0 ${
-                isOpen ? "rotate-180" : ""
-              }`}
-            />
-          </>
-        ) : (
-          <Link href={item.href} className="w-full" onClick={onLinkClick}>
-            {item.label}
-          </Link>
-        )}
-      </button>
-
+      {/* Mobile Menu Full Height Animated Overlay */}
       <AnimatePresence>
-        {isOpen && item.dropdown ? (
+        {isOpen ? (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
+            className="fixed inset-0 z-50 bg-background flex flex-col justify-between p-6 sm:p-8 h-screen w-screen overflow-y-auto"
+            initial={{ opacity: 0, y: "-100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="ml-4 mt-2 space-y-1">
-              {item.dropdown.map((dropdownItem) => (
+            {/* Mobile Header Bar */}
+            <div className="flex items-center justify-between pb-6 border-b border-border/50">
+              <Link href="/" onClick={closeMenu}>
+                <XolaceLogo size="sm" />
+              </Link>
+              <button
+                type="button"
+                onClick={closeMenu}
+                aria-label="Close menu"
+                className="p-2 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
+              >
+                <X aria-hidden="true" className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Mobile Navigation Links */}
+            <div className="my-auto py-8 space-y-6 flex flex-col items-start">
+              {navigationData.map((item) => (
                 <Link
-                  key={dropdownItem.label}
-                  href={dropdownItem.href}
-                  className="flex items-start gap-3 py-3 text-sm hover:bg-muted rounded-lg px-3 -mx-3 transition-colors duration-200 min-h-11"
-                  onClick={onLinkClick}
+                  key={item.label}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className="text-3xl font-extrabold text-foreground hover:text-primary transition-colors"
                 >
-                  <div className="text-primary mt-1 shrink-0">
-                    {dropdownItem.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">{dropdownItem.label}</div>
-                    {dropdownItem.description ? (
-                      <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                        {dropdownItem.description}
-                      </div>
-                    ) : null}
-                  </div>
+                  {item.label}
                 </Link>
               ))}
+
+              <button
+                type="button"
+                onClick={handleVisitPortal}
+                className="inline-flex items-center gap-2 text-2xl font-bold text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ExternalLink className="w-5 h-5" /> Visit Portal (Soon)
+              </button>
+            </div>
+
+            {/* Mobile Action Buttons */}
+            <div className="pt-6 border-t border-border/50 space-y-3">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleVisitPortal}
+                className="w-full py-3.5 rounded-2xl font-bold border-border/80"
+              >
+                <ExternalLink className="w-4 h-4 mr-2 text-primary" />
+                Visit Ambassador Portal
+              </Button>
+              <Button
+                onClick={scrollToApply}
+                size="lg"
+                className="w-full py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/25"
+              >
+                Apply Now
+              </Button>
             </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </>
   );
-}
+};
 
 export default NavBar;
