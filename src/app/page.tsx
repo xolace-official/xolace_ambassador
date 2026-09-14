@@ -2,6 +2,7 @@
 
 import AmbassadorStories from "@/components/ambassador/ambassador-stories";
 import Benefits from "@/components/ambassador/benefits";
+import EmpathyGraphSection from "@/components/ambassador/empathy-graph-section";
 import FirstMission from "@/components/ambassador/first-mission";
 import HeroSection from "@/components/ambassador/hero-section";
 import HowItWorks from "@/components/ambassador/how-it-works";
@@ -39,6 +40,7 @@ export default function Home() {
       <main className="flex items-start justify-start w-full min-h-screen bg-background text-foreground">
         <div className="flex items-start justify-start w-full flex-col bg-background">
           <HeroSection />
+          <EmpathyGraphSection />
           <WhyAmbassadors />
           <Tracks />
           <HowItWorks />
