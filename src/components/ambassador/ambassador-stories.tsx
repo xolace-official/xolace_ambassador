@@ -64,29 +64,29 @@ export default function AmbassadorStories() {
       className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
       <div className="relative z-10 max-w-6xl mx-auto space-y-12 sm:space-y-16">
-        {/* Mobile-Friendly Clean Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+        {/* Column Stacked Layout: Title Top, Shuffle & Link Row Directly Below */}
+        <div className="flex flex-col gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true, margin: "-50px" }}
-            className="max-w-2xl space-y-3"
+            className="space-y-2.5 max-w-3xl"
           >
             <p className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wide">
               Meet the Ambassadors
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-balance tracking-tight leading-snug">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
               Real people. Real reasons for showing up.
             </h2>
           </motion.div>
 
-          {/* Clean Action Bar on Mobile and Desktop */}
-          <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
+          {/* Row directly below the title */}
+          <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/40">
             <button
               type="button"
               onClick={shuffleCards}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer active:scale-95 shadow-xs"
               title="Shuffle featured ambassadors"
               aria-label="Shuffle featured ambassadors"
             >
@@ -104,7 +104,7 @@ export default function AmbassadorStories() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true, margin: "-50px" }}
               href="/ambassadors"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-primary hover:gap-2.5 transition-[gap] duration-300"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-primary hover:gap-2.5 transition-[gap] duration-300"
             >
               Meet all ambassadors
               <ArrowRight aria-hidden="true" className="w-4 h-4" />
