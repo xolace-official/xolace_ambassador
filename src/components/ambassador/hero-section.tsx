@@ -1,15 +1,17 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ArrowDown } from "lucide-react";
 import { motion } from "motion/react";
+import Image from "next/image";
+import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { OFFICIAL_AMBASSADORS } from "@/constants";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
+      staggerChildren: 0.15,
       delayChildren: 0.1,
     },
   },
@@ -20,91 +22,195 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8 },
+    transition: { duration: 0.7 },
   },
 };
 
+/** Utility to pick N random items from array */
+function pickRandom<T>(arr: T[], count: number): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, count);
+}
+
 export default function HeroSection() {
+  // Pick exactly 3 random ambassadors for the overlapping circles display
+  const randomThreeAmbassadors = useMemo(
+    () => pickRandom(OFFICIAL_AMBASSADORS, 3),
+    [],
+  );
+
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-linear-to-br from-background via-background to-secondary/30 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <section className="relative w-full overflow-hidden bg-background">
+      {/* Original ambient background glowing shapes */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+      >
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 1.2 }}
-          className="absolute -top-40 -right-20 w-80 h-80 rounded-full bg-background/30 blur-3xl"
+          className="absolute -top-44 -right-40 w-[640px] h-[640px] rounded-full bg-accent/20 blur-3xl"
         />
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 1.5, delay: 0.3 }}
-          className="absolute bottom-0 -left-40 w-96 h-96 rounded-full bg-accent/15 blur-3xl"
+          className="absolute -bottom-56 right-24 w-[520px] h-[520px] rounded-full bg-primary/10 blur-3xl"
         />
       </div>
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative z-10 max-w-4xl text-center space-y-8"
-      >
-        {/* Logo/Badge */}
-        <motion.div variants={itemVariants} className="inline-block">
-          <div className="px-4 py-2 rounded-full bg-secondary border border-border/50">
-            <p className="text-sm font-medium text-foreground">
-              Join Our Movement
-            </p>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-10 pb-20 lg:pb-28 lg:min-h-[88vh] flex items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.82fr] gap-14 lg:gap-16 items-center w-full">
+          {/* Copy */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col items-start gap-6 text-left"
+          >
+            <motion.span
+              variants={itemVariants}
+              className="inline-block px-4 py-2 rounded-full bg-accent/20 text-foreground text-xs font-bold uppercase tracking-wide"
+            >
+              Join the Movement
+            </motion.span>
+
+            <motion.h1
+              variants={itemVariants}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-balance"
+            >
+              <span className="block text-foreground">Help build a world</span>
+              <span className="block text-primary">
+                where people feel heard.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              variants={itemVariants}
+              className="text-lg text-foreground/70 max-w-md leading-relaxed font-medium"
+            >
+              Xolace Ambassadors believe emotional wellbeing shouldn&apos;t be
+              something we only talk about when things get bad. You don&apos;t
+              have to be an expert — you just have to care.
+            </motion.p>
+
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-wrap items-center gap-4 pt-2"
+            >
+              <Button
+                asChild
+                size="lg"
+                className="h-auto px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5"
+              >
+                <a href="#apply">Become an Ambassador</a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-auto px-8 py-4 rounded-2xl font-bold border-foreground/15 bg-transparent hover:bg-secondary/60"
+              >
+                <a href="#how-it-works">See How It Works</a>
+              </Button>
+            </motion.div>
+
+            {/* Overlapping ambassador circles (3 random real ambassador photos) */}
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center gap-3 pt-2"
+            >
+              <div aria-hidden="true" className="flex -space-x-2.5">
+                {randomThreeAmbassadors.map((ambassador) => (
+                  <div
+                    key={ambassador.id}
+                    className="relative w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-muted shadow-sm"
+                    title={ambassador.name}
+                  >
+                    <Image
+                      src={ambassador.image}
+                      alt={ambassador.name}
+                      fill
+                      sizes="32px"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-foreground/55">
+                {OFFICIAL_AMBASSADORS.length}+ ambassadors already building
+                this.
+              </span>
+            </motion.div>
+          </motion.div>
+
+          {/* Original Right Column: Quote Collage Cards */}
+          <div className="hidden lg:block relative h-[440px]">
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: -4 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="absolute top-2 left-2 w-[86%] bg-card border border-border/60 rounded-3xl p-8 shadow-xl"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-3">
+                Xolace
+              </p>
+              <p className="text-2xl font-bold leading-snug text-foreground">
+                &ldquo;You&apos;re not the only one carrying this.&rdquo;
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: 3 }}
+              transition={{ duration: 0.7, delay: 0.45 }}
+              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg"
+            >
+              <p className="text-xl font-bold leading-snug text-foreground">
+                &ldquo;A quiet place to be human.&rdquo;
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: 0, rotate: -2 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+              className="absolute bottom-2 left-8 w-[68%] bg-primary rounded-3xl p-7 shadow-xl shadow-primary/30"
+            >
+              <p className="text-lg font-bold leading-snug text-primary-foreground">
+                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
+              </p>
+            </motion.div>
           </div>
-        </motion.div>
 
-        {/* Main Heading */}
-        <motion.div variants={itemVariants} className="space-y-4">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl  font-bold text-balance leading-tight">
-            Become a
-            <span className="block mt-2 text-primary">Xolace Ambassador</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-foreground/70 max-w-2xl mx-auto text-balance font-light">
-            Help us reach people in their moments of need. Be part of a
-            community making mental health support accessible, compassionate,
-            and truly transformative.
-          </p>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
-          variants={itemVariants}
-          className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
-        >
-          <Button
-            asChild
-            size="lg"
-            className="px-8 py-4 font-semibold transition-[box-shadow,transform] duration-300 hover:shadow-lg transform hover:-translate-y-1"
-          >
-            <a href="#signup-form">Join the Program</a>
-          </Button>
-          <Button
-            asChild
-            variant="secondary"
-            size="lg"
-            className="px-8 py-4 font-semibold transition-[border-color] duration-300 border border-border/30 hover:border-border/60"
-          >
-            <a href="#program-details">Learn More</a>
-          </Button>
-        </motion.div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="pt-12"
-        >
-          <ArrowDown
-            aria-hidden="true"
-            className="mx-auto text-primary/60 w-5 h-5"
-          />
-        </motion.div>
-      </motion.div>
+          {/* Collage — mobile/tablet */}
+          <div className="flex lg:hidden flex-col gap-4 w-full">
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">
+                Xolace
+              </p>
+              <p className="text-lg font-bold leading-snug text-foreground">
+                &ldquo;You&apos;re not the only one carrying this.&rdquo;
+              </p>
+            </div>
+            <div className="bg-accent/25 rounded-2xl p-6">
+              <p className="text-base font-bold leading-snug text-foreground">
+                &ldquo;A quiet place to be human.&rdquo;
+              </p>
+            </div>
+            <div className="bg-primary rounded-2xl p-6">
+              <p className="text-base font-bold leading-snug text-primary-foreground">
+                &ldquo;For the moments that don&apos;t have a name yet.&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

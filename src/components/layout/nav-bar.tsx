@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
+import { Button } from "@/components/ui/button";
 
 interface DropdownItem {
   label: string;
@@ -34,6 +35,7 @@ const navigationData: NavItem[] = [
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -45,6 +47,20 @@ const NavBar = () => {
   const closeMenu = useCallback(() => {
     setIsOpen(false);
     document.body.style.overflow = "unset";
+  }, []);
+
+  // Track scroll position to dynamically change navbar background
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleMouseEnter = (label: string) => {
@@ -83,36 +99,12 @@ const NavBar = () => {
     };
   }, [isOpen, closeMenu]);
 
-  // Auto-close mobile menu on scroll (mobile only)
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerWidth < 768 && isOpen) {
-        closeMenu();
-      }
-    };
-
-    if (isOpen) {
-      window.addEventListener("scroll", handleScroll, { passive: true });
-    }
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [isOpen, closeMenu]);
-
   const pathname = usePathname();
-  const router = useRouter();
 
-  const scrollToApply = () => {
+  const handleVisitPortal = (e: React.MouseEvent) => {
+    e.preventDefault();
     closeMenu();
-    if (pathname === "/") {
-      const applySection = document.getElementById("signup-form");
-      if (applySection) {
-        applySection.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      router.push("/#signup-form");
-    }
+    alert("Ambassador Portal is launching soon! Stay tuned.");
   };
 
   return (
@@ -123,222 +115,156 @@ const NavBar = () => {
       >
         Skip to main content
       </a>
-      <header className=" px-2 sm:px-0 md:px-[5%] sticky top-2 z-50 left-0 w-full">
-        <div className="max-w-6xl mx-auto w-full py-1 px-2 flex items-center justify-between border border-border bg-muted rounded-2xl">
-          <div className="w-full flex flex-row gap-8">
-            <Link href="/">
-              <XolaceLogo size="sm" priority />
-            </Link>
 
-            {/* Desktop Navigation */}
+      {/* Full Width Edge-to-Edge Header with Dynamic Scroll Background */}
+      <header
+        className={`sticky top-0 z-50 left-0 w-full transition-all duration-300 ${
+          isScrolled
+            ? "bg-background/95 backdrop-blur-md border-b border-border/80 shadow-md py-3"
+            : "bg-background/60 backdrop-blur-sm border-b border-border/40 py-4"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Left: Brand Logo */}
+          <Link href="/" className="shrink-0">
+            <XolaceLogo size="sm" priority />
+          </Link>
 
-          </div>
-
-          {/* Mobile Menu Overlay */}
-          <AnimatePresence>
-            {isOpen ? (
-              <>
-                <motion.div
-                  className="fixed inset-0 z-40"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={closeMenu}
-                />
-
-                <motion.div
-                  className="fixed top-0 left-0 w-full p-6 shadow-lg z-50 bg-muted max-h-screen overflow-y-auto overscroll-contain"
-                  initial={{ y: -100, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -100, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold"></span>
-                    <button
-                      type="button"
-                      onClick={closeMenu}
-                      aria-label="Close menu"
-                      className="focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm p-1"
-                    >
-                      <X aria-hidden="true" className="w-6 h-6" />
-                    </button>
-                  </div>
-                  <div className="mt-8 flex flex-col space-y-4">
-                    {navigationData.map((item) => (
-                      <MobileNavItem
-                        key={item.label}
-                        item={item}
-                        onLinkClick={closeMenu}
-                      />
-                    ))}
-
-                    <Button onClick={scrollToApply} className="mt-4" size="lg">
-                      Apply Now
-                    </Button>
-                  </div>
-                </motion.div>
-              </>
-            ) : null}
-          </AnimatePresence>
-
-          <div className="flex flex-row gap-2 md:gap-4">
-            <nav className="md:pe-8 w-full hidden md:flex items-center justify-start space-x-6 font-semibold">
-              {navigationData.map((item) => (
+          {/* Right Side: Shifted Nav Links & ONLY Visit Portal Button */}
+          <div className="flex items-center gap-6 sm:gap-8">
+            {/* Desktop Nav Items Shifted to Right */}
+            <nav className="hidden md:flex items-center space-x-6 font-semibold text-sm">
+              {navigationData.map((item) => {
+                const isActive = pathname === item.href;
+                return (
                   <div
-                      key={item.label}
-                      className="relative"
-                      onMouseEnter={() =>
-                          item.dropdown && handleMouseEnter(item.label)
-                      }
-                      onMouseLeave={handleMouseLeave}
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() =>
+                      item.dropdown && handleMouseEnter(item.label)
+                    }
+                    onMouseLeave={handleMouseLeave}
                   >
                     {item.dropdown ? (
-                        <button className="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm">
-                          {item.label}
-                          <ChevronDown
-                              aria-hidden="true"
-                              className={`w-3 h-3 transition-transform duration-200 ${
-                                  activeDropdown === item.label ? "rotate-180" : ""
-                              }`}
-                          />
-                        </button>
+                      <button
+                        type="button"
+                        className="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm"
+                      >
+                        {item.label}
+                        <ChevronDown
+                          aria-hidden="true"
+                          className={`w-3 h-3 transition-transform duration-200 ${
+                            activeDropdown === item.label ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
                     ) : (
-                        <Link
-                            href={item.href}
-                            className="cursor-pointer hover:text-primary transition"
-                        >
-                          {item.label}
-                        </Link>
+                      <Link
+                        href={item.href}
+                        className={`cursor-pointer transition-colors py-1 ${
+                          isActive
+                            ? "text-primary font-bold border-b-2 border-primary"
+                            : "text-foreground/80 hover:text-primary"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
                     )}
-
-                    {/* Desktop Dropdown Menu */}
-                    <AnimatePresence>
-                      {activeDropdown === item.label && item.dropdown ? (
-                          <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                              transition={{ duration: 0.2 }}
-                              className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-72 bg-muted rounded-xl shadow-lg border border-border py-2 z-50"
-                          >
-                            {item.dropdown.map((dropdownItem) => (
-                                <Link
-                                    key={dropdownItem.label}
-                                    href={dropdownItem.href}
-                                    className="flex items-start gap-3 px-4 py-3 text-sm hover:bg-accent/60 transition-colors duration-150 rounded-lg mx-2"
-                                >
-                                  <div className="text-primary mt-0.5 shrink-0">
-                                    {dropdownItem.icon}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <div className="font-medium truncate">
-                                      {dropdownItem.label}
-                                    </div>
-                                    {dropdownItem.description ? (
-                                        <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                                          {dropdownItem.description}
-                                        </div>
-                                    ) : null}
-                                  </div>
-                                </Link>
-                            ))}
-                          </motion.div>
-                      ) : null}
-                    </AnimatePresence>
                   </div>
-              ))}
+                );
+              })}
             </nav>
-            <Button variant="default" size="sm" onClick={scrollToApply}>
-              Apply Now
-            </Button>
 
-            {/* Mobile menu button */}
-            <button
-              type="button"
-              className="md:hidden p-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-sm"
-              onClick={openMenu}
-              aria-label="Open menu"
-            >
-              <Menu aria-hidden="true" className="w-5 h-5" />
-            </button>
+            {/* ONLY Visit Portal Button on Header */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleVisitPortal}
+                className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-md shadow-primary/20 hover:scale-105 transition-transform"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Visit Portal
+              </Button>
+
+              {/* Mobile Menu Hamburger Trigger */}
+              <button
+                type="button"
+                className="md:hidden p-2.5 text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-xl border border-border/60 bg-secondary/60 hover:bg-secondary transition-colors"
+                onClick={openMenu}
+                aria-label="Open navigation menu"
+              >
+                <Menu aria-hidden="true" className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
-    </>
-  );
-};
 
-function MobileNavItem({
-  item,
-  onLinkClick,
-}: {
-  item: NavItem;
-  onLinkClick: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border-b border-border last:border-b-0 pb-4 last:pb-0">
-      <button
-        type="button"
-        onClick={() => (item.dropdown ? setIsOpen(!isOpen) : null)}
-        className="flex items-center justify-between w-full text-left py-3 font-medium text-base transition-colors duration-200 min-h-11"
-      >
-        {item.dropdown ? (
-          <>
-            {item.label}
-            <ChevronDown
-              aria-hidden="true"
-              className={`w-5 h-5 transition-transform duration-200 shrink-0 ${
-                isOpen ? "rotate-180" : ""
-              }`}
-            />
-          </>
-        ) : (
-          <Link href={item.href} className="w-full" onClick={onLinkClick}>
-            {item.label}
-          </Link>
-        )}
-      </button>
-
+      {/* Redesigned Mobile Drawer Full-Height Overlay */}
       <AnimatePresence>
-        {isOpen && item.dropdown ? (
+        {isOpen ? (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
+            className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col justify-start p-6 sm:p-8 h-screen w-screen overflow-y-auto"
+            initial={{ opacity: 0, y: "-100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="ml-4 mt-2 space-y-1">
-              {item.dropdown.map((dropdownItem) => (
-                <Link
-                  key={dropdownItem.label}
-                  href={dropdownItem.href}
-                  className="flex items-start gap-3 py-3 text-sm hover:bg-muted rounded-lg px-3 -mx-3 transition-colors duration-200 min-h-11"
-                  onClick={onLinkClick}
-                >
-                  <div className="text-primary mt-1 shrink-0">
-                    {dropdownItem.icon}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">{dropdownItem.label}</div>
-                    {dropdownItem.description ? (
-                      <div className="text-muted-foreground text-xs mt-1 line-clamp-2">
-                        {dropdownItem.description}
-                      </div>
-                    ) : null}
-                  </div>
-                </Link>
-              ))}
+            {/* Top Bar inside Drawer */}
+            <div className="flex items-center justify-between pb-6 border-b border-border/50">
+              <Link href="/" onClick={closeMenu}>
+                <XolaceLogo size="sm" />
+              </Link>
+              <button
+                type="button"
+                onClick={closeMenu}
+                aria-label="Close menu"
+                className="p-2.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer border border-border/50"
+              >
+                <X aria-hidden="true" className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Middle Nav Items */}
+            <div className="my-2 py-8 space-y-6 flex flex-col items-start w-full">
+
+              {navigationData.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={closeMenu}
+                    className={`w-full py-3 px-4 rounded-2xl text-3xl font-black transition-all flex items-center justify-between ${
+                      isActive
+                          ? "text-primary font-bold border-b-2 border-primary"
+                          : "text-foreground/80 hover:text-primary"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+            <div/>
+
+            {/* Bottom Card & CTA */}
+            <div className="pt-6 border-t border-border/50 space-y-4">
+              <Button
+                onClick={handleVisitPortal}
+                size="lg"
+                className="w-full py-4 rounded-full font-extrabold text-base shadow-xl shadow-primary/25"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                Visit Ambassador Portal
+              </Button>
             </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </>
   );
-}
+};
 
 export default NavBar;

@@ -5,12 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="974ce627-44bd-4320-a62b-ccc08896bbed" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-hero.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-hero.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/ambassador-stories.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/ambassador-stories.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/first-mission.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/first-mission.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/hero-section.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/hero-section.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/how-it-works.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/how-it-works.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/impact.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/impact.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/safety.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/safety.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/tracks.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/tracks.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/why-ambassadors.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/why-ambassadors.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supabase/.temp/cli-latest" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/.temp/cli-latest" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="215" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -38,11 +53,11 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature-navbar&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;refactor-landing-page&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;bun&quot;,
     &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
     &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Work/Aims/xolace_ambassador&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Work/Aims/xolace_ambassador/public&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -53,6 +68,10 @@
   }
 }</component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Work\Aims\xolace_ambassador\public" />
+      <recent name="C:\Users\Work\Aims\xolace_ambassador\src\app" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Work\Aims\xolace_ambassador\src\app\(pages)\ambassadors" />
       <recent name="C:\Users\Work\Aims\xolace_ambassador\src\app\(pages)\page" />
@@ -76,7 +95,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.30387.83" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.31033.133" />
       </set>
     </attachedChunks>
   </component>
@@ -94,6 +113,14 @@
       <workItem from="1770916999021" duration="373000" />
       <workItem from="1771063917530" duration="4327000" />
       <workItem from="1771147731891" duration="736000" />
+      <workItem from="1779737826240" duration="5667000" />
+      <workItem from="1779967803956" duration="2199000" />
+      <workItem from="1780042017245" duration="593000" />
+      <workItem from="1780151366841" duration="1756000" />
+      <workItem from="1780303942191" duration="318000" />
+      <workItem from="1788983193076" duration="16877000" />
+      <workItem from="1789343331114" duration="4144000" />
+      <workItem from="1789391787075" duration="2207000" />
     </task>
     <servers />
   </component>
