@@ -1,6 +1,8 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Footer from "@/components/ambassador/footer";
+import NavBar from "@/components/layout/nav-bar";
 import ScrollProgressBar from "@/components/ui/scroll-progress-bar";
 import "./globals.css";
 
@@ -77,7 +79,9 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
         <ScrollProgressBar />
-        {children}
+        <NavBar />
+        <div className="flex-1">{children}</div>
+        <Footer />
         <Analytics />
       </body>
     </html>
