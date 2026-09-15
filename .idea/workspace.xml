@@ -6,18 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="974ce627-44bd-4320-a62b-ccc08896bbed" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-hero.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-hero.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/ambassador-stories.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/ambassador-stories.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/first-mission.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/first-mission.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ambassador/hero-section.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/hero-section.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ambassador/how-it-works.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/how-it-works.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ambassador/impact.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/impact.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/safety.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/safety.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ambassador/join-program.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/join-program.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ambassador/tracks.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/tracks.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ambassador/why-ambassadors.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ambassador/why-ambassadors.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/cli-latest" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/.temp/cli-latest" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supabase/.temp/gotrue-version" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/.temp/gotrue-version" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supabase/.temp/pooler-url" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/.temp/pooler-url" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,28 +41,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;refactor-landing-page&quot;,
-    &quot;javascript.preferred.runtime.type.id&quot;: &quot;bun&quot;,
-    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
-    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Work/Aims/xolace_ambassador/public&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;bun&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Work\\Aims\\xolace_ambassador\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "somuah-refactor",
+    "javascript.preferred.runtime.type.id": "bun",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "last_opened_file_path": "C:/Users/Work/Aims/xolace_ambassador/public",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "bun",
+    "ts.external.directory.path": "C:\\Users\\Work\\Aims\\xolace_ambassador\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Work\Aims\xolace_ambassador\public" />
@@ -120,7 +116,7 @@
       <workItem from="1780303942191" duration="318000" />
       <workItem from="1788983193076" duration="16877000" />
       <workItem from="1789343331114" duration="4144000" />
-      <workItem from="1789391787075" duration="2207000" />
+      <workItem from="1789391787075" duration="8089000" />
     </task>
     <servers />
   </component>

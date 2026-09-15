@@ -89,10 +89,10 @@ export default function Tracks() {
           <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Choose Your Path
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold md:text-balance">
             You don&apos;t have to be the person who posts flyers.
           </h2>
-          <p className="text-lg text-foreground/60 text-balance">
+          <p className="text-lg text-foreground/60 md:text-balance">
             Every ambassador contributes differently. Pick the track that
             matches how you already show up in the world — you can grow into
             others as you go.

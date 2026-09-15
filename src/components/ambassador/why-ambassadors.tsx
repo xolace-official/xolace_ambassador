@@ -22,7 +22,7 @@ export default function WhyAmbassadors() {
             Why This Matters
           </span>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-foreground text-balance">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-foreground md:text-balance">
             Somebody around you is carrying something unspoken.
           </h2>
 
