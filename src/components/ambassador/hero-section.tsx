@@ -82,10 +82,10 @@ export default function HeroSection() {
 
             <motion.h1
               variants={itemVariants}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-balance"
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight md:text-balance"
             >
-              <span className="block text-foreground">Help build a world</span>
-              <span className="block text-primary">
+              <span className="md:block text-foreground">Help build a world</span>
+              <span className="ms-2 md:ms-0 md:block text-primary">
                 where people feel heard.
               </span>
             </motion.h1>
@@ -106,7 +106,7 @@ export default function HeroSection() {
               <Button
                 asChild
                 size="lg"
-                className="h-auto px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5"
+                className="w-full md:w-fit h-auto px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5"
               >
                 <a href="#apply">Become an Ambassador</a>
               </Button>
@@ -114,7 +114,7 @@ export default function HeroSection() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-auto px-8 py-4 rounded-2xl font-bold border-foreground/15 bg-transparent hover:bg-secondary/60"
+                className="w-full md:w-fit h-auto px-8 py-4 rounded-2xl font-bold border-foreground/15 bg-transparent hover:bg-secondary/60"
               >
                 <a href="#how-it-works">See How It Works</a>
               </Button>
@@ -169,8 +169,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 30, rotate: 0 }}
               animate={{ opacity: 1, y: 0, rotate: 3 }}
               transition={{ duration: 0.7, delay: 0.45 }}
-              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg"
-            >
+              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg">
               <p className="text-xl font-bold leading-snug text-foreground">
                 &ldquo;A quiet place to be human.&rdquo;
               </p>

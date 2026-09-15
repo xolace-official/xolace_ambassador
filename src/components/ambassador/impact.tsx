@@ -45,10 +45,10 @@ export default function Impact() {
           <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Your Impact
           </p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-balance">
+          <h2 className="text-4xl sm:text-5xl font-bold md:text-balance">
             Still early. Already real.
           </h2>
-          <p className="text-lg text-foreground/60 text-balance pb-8">
+          <p className="text-lg text-foreground/60 md:text-balance pb-8">
             These are actual numbers, not projections — and they grow with every
             ambassador who joins.
           </p>

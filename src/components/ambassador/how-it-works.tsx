@@ -87,8 +87,8 @@ export default function HowItWorks() {
           <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             How It Works
           </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance">
-            From curious to contributing — in six steps.
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold md:text-balance">
+            From curious to contributing - in six steps.
           </h2>
         </motion.div>
 

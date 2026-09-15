@@ -182,7 +182,7 @@ export default function JoinProgramForm() {
             <p className="text-sm font-medium text-primary uppercase tracking-wide">
               Ready?
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-balance">
+            <h2 className="text-3xl sm:text-4xl font-bold md:text-balance">
               You don&apos;t have to be an expert. You just have to care.
             </h2>
           </div>
