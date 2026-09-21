@@ -60,6 +60,7 @@ const NavBar = () => {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -99,13 +100,8 @@ const NavBar = () => {
     };
   }, [isOpen, closeMenu]);
 
-  const pathname = usePathname();
 
-  const handleVisitPortal = (e: React.MouseEvent) => {
-    e.preventDefault();
-    closeMenu();
-    alert("Ambassador Portal is launching soon! Stay tuned.");
-  };
+  const pathname = usePathname();
 
   return (
     <>
@@ -118,11 +114,10 @@ const NavBar = () => {
 
       {/* Full Width Edge-to-Edge Header with Dynamic Scroll Background */}
       <header
-        className={`sticky top-0 z-50 left-0 w-full transition-all duration-300 ${
-          isScrolled
-            ? "bg-background/95 backdrop-blur-md border-b border-border/80 shadow-md py-3"
-            : "bg-background/60 backdrop-blur-sm border-b border-border/40 py-4"
-        }`}
+        className={`sticky top-0 z-50 left-0 w-full transition-all duration-300 ${isScrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-border/80 shadow-md py-3"
+          : "bg-background/60 backdrop-blur-sm border-b border-border/40 py-4"
+          }`}
       >
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Left: Brand Logo */}
@@ -153,19 +148,17 @@ const NavBar = () => {
                         {item.label}
                         <ChevronDown
                           aria-hidden="true"
-                          className={`w-3 h-3 transition-transform duration-200 ${
-                            activeDropdown === item.label ? "rotate-180" : ""
-                          }`}
+                          className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === item.label ? "rotate-180" : ""
+                            }`}
                         />
                       </button>
                     ) : (
                       <Link
                         href={item.href}
-                        className={`cursor-pointer transition-colors py-1 ${
-                          isActive
-                            ? "text-primary font-bold border-b-2 border-primary"
-                            : "text-foreground/80 hover:text-primary"
-                        }`}
+                        className={`cursor-pointer transition-colors py-1 ${isActive
+                          ? "text-primary font-bold border-b-2 border-primary"
+                          : "text-foreground/80 hover:text-primary"
+                          }`}
                       >
                         {item.label}
                       </Link>
@@ -180,11 +173,13 @@ const NavBar = () => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={handleVisitPortal}
+                asChild
                 className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-md shadow-primary/20 hover:scale-105 transition-transform"
               >
-                <ExternalLink className="w-4 h-4" />
-                Visit Portal
+                <Link href="/login?from=landing">
+                  <ExternalLink className="w-4 h-4" />
+                  Visit Portal
+                </Link>
               </Button>
 
               {/* Mobile Menu Hamburger Trigger */}
@@ -199,70 +194,73 @@ const NavBar = () => {
             </div>
           </div>
         </div>
-      </header>
+      </header >
 
       {/* Redesigned Mobile Drawer Full-Height Overlay */}
       <AnimatePresence>
-        {isOpen ? (
-          <motion.div
-            className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col justify-start p-6 sm:p-8 h-screen w-screen overflow-y-auto"
-            initial={{ opacity: 0, y: "-100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "-100%" }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* Top Bar inside Drawer */}
-            <div className="flex items-center justify-between pb-6 border-b border-border/50">
-              <Link href="/" onClick={closeMenu}>
-                <XolaceLogo size="sm" />
-              </Link>
-              <button
-                type="button"
-                onClick={closeMenu}
-                aria-label="Close menu"
-                className="p-2.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer border border-border/50"
-              >
-                <X aria-hidden="true" className="w-6 h-6" />
-              </button>
-            </div>
+        {
+          isOpen ? (
+            <motion.div
+              className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col justify-start p-6 sm:p-8 h-screen w-screen overflow-y-auto"
+              initial={{ opacity: 0, y: "-100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "-100%" }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {/* Top Bar inside Drawer */}
+              <div className="flex items-center justify-between pb-6 border-b border-border/50">
+                <Link href="/" onClick={closeMenu}>
+                  <XolaceLogo size="sm" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  aria-label="Close menu"
+                  className="p-2.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer border border-border/50"
+                >
+                  <X aria-hidden="true" className="w-6 h-6" />
+                </button>
+              </div>
 
-            {/* Middle Nav Items */}
-            <div className="my-2 py-8 space-y-6 flex flex-col items-start w-full">
+              {/* Middle Nav Items */}
+              <div className="my-2 py-8 space-y-6 flex flex-col items-start w-full">
 
-              {navigationData.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={closeMenu}
-                    className={`w-full py-3 px-4 rounded-2xl text-3xl font-black transition-all flex items-center justify-between ${
-                      isActive
-                          ? "text-primary font-bold border-b-2 border-primary"
-                          : "text-foreground/80 hover:text-primary"
-                    }`}
-                  >
-                    <span>{item.label}</span>
+                {navigationData.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={closeMenu}
+                      className={`w-full py-3 px-4 rounded-2xl text-3xl font-black transition-all flex items-center justify-between ${isActive
+                        ? "text-primary font-bold border-b-2 border-primary"
+                        : "text-foreground/80 hover:text-primary"
+                        }`}
+                    >
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div />
+
+              {/* Bottom Card & CTA */}
+              <div className="pt-6 border-t border-border/50 space-y-4">
+                <Button
+                  size="lg"
+                  asChild
+                  className="w-full py-4 rounded-full font-extrabold text-base shadow-xl shadow-primary/25"
+                >
+                  <Link href="/login" onClick={closeMenu}>
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Visit Ambassador Portal
                   </Link>
-                );
-              })}
-            </div>
-            <div/>
-
-            {/* Bottom Card & CTA */}
-            <div className="pt-6 border-t border-border/50 space-y-4">
-              <Button
-                onClick={handleVisitPortal}
-                size="lg"
-                className="w-full py-4 rounded-full font-extrabold text-base shadow-xl shadow-primary/25"
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                Visit Ambassador Portal
-              </Button>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+                </Button>
+              </div>
+            </motion.div>
+          ) : null
+        }
+      </AnimatePresence >
     </>
   );
 };
