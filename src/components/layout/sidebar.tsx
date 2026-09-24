@@ -18,7 +18,7 @@ import {
     adminMenu,
     ambassadorMenu,
     type MenuItem,
-} from "@/features/(protected)/dashboard/menu/menu";
+} from "@/components/layout/menu";
 
 import { XolaceLogo } from "@/components/layout/xolace-logo";
 
@@ -100,7 +100,7 @@ export default function Sidebar({
                 className={`
           fixed inset-y-0 left-0 z-50
           flex h-full w-[260px] shrink-0 flex-col
-          bg-[#ebe9e2] px-2 py-2
+          bg-dashboard-background px-2 py-2
           transition-transform duration-200 ease-out
           lg:static lg:z-auto lg:w-[220px] lg:translate-x-0
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -146,8 +146,8 @@ export default function Sidebar({
                                 onClick={onClose}
                                 className={`flex h-9 items-center gap-3 rounded-md px-3 font-semibold transition-colors text-[14px]
                                     ${isActive
-                                        ? "bg-white/60 text-foreground"
-                                        : "text-foreground/70 hover:bg-black/[0.035] hover:text-foreground"
+                                        ? "bg-foreground/7 text-foreground"
+                                        : "text-foreground hover:bg-foreground/5 hover:text-foreground"
                                     }
                 `}
                             >

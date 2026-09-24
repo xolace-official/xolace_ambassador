@@ -1,15 +1,12 @@
-import { useAuth } from "@convex-dev/auth/react";
+import { useConvexAuth } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
-/**
- * Returns true if the currently authenticated user is allowed to access the
- * feature identified by `featureKey`.
- *
- * Permissions are defined per role. Admins have full access; ambassadors have a
- * curated subset. Extend the `permissions` map when new features are added.
- */
+
 export function useCanDo(featureKey: string): boolean {
-  const { user } = useAuth();
-  const role = user?.customData?.role as "admin" | "ambassador" | undefined;
+  const user = useQuery(api.users.current);
+
+  const role = user?.role as "admin" | "ambassador" | undefined;
 
   const permissions: Record<string, string[]> = {
     admin: [

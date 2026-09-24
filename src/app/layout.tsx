@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ThemedToaster } from "@/components/providers/ThemedToaster";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -76,9 +78,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
-        <ConvexClientProvider>
-          {children}
-        </ConvexClientProvider>
+        <ThemeProvider>
+          <ConvexClientProvider>
+            {children}
+            <ThemedToaster />
+          </ConvexClientProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

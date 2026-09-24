@@ -4,53 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="974ce627-44bd-4320-a62b-ccc08896bbed" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(pages)/ambassadors/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(pages)/ambassadors/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/(pages)/ambassadors.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador-showcase/ambassador-card.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-cta.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador-showcase/animated-hero.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/ambassador-stories.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/benefits.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/empathy-graph-section.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/first-mission.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/footer.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/hero-section.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/how-it-works.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/impact.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/join-program.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/safety.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/tracks.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ambassador/why-ambassadors.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/layout/nav-bar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/button.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/input.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/input.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/supabase/client.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/cli-latest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/gotrue-version" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/pooler-url" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/postgres-version" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/project-ref" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/rest-version" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/storage-migration" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/.temp/storage-version" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20260209000000_add_avatar_to_ambassadors.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20260909000000_add_application_fields_to_ambassadors.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20260909010000_add_social_platform_to_ambassadors.sql" beforeDir="false" />
-    </list>
+    <list default="true" id="974ce627-44bd-4320-a62b-ccc08896bbed" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="329" />
+    <option name="cachedIndexableFilesCount" value="322" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -152,6 +113,7 @@
       <workItem from="1789832989686" duration="86000" />
       <workItem from="1789982751155" duration="322000" />
       <workItem from="1789983109775" duration="5148000" />
+      <workItem from="1790171123089" duration="200000" />
     </task>
     <servers />
   </component>

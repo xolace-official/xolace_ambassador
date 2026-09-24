@@ -27,7 +27,7 @@ export default function DashboardShell({
     };
 
     return (
-        <div className="h-screen overflow-hidden bg-[#ebe9e2]">
+        <div className="h-screen overflow-hidden bg-dashboard-background">
             <div className="flex h-full">
                 {/* DESKTOP SIDEBAR */}
                 <Sidebar
@@ -43,7 +43,7 @@ export default function DashboardShell({
                     <TopBar onMenuClick={toggleSidebar} />
 
                     {/* PAGE CONTENT */}
-                    <div className="min-h-0 flex-1 overflow-hidden md:rounded-tl-[20px] bg-background">
+                    <div className="min-h-0 flex-1 overflow-hidden md:rounded-tl-[20px] bg-background/20">
                         <section className="h-full overflow-y-auto p-4">
                             {children}
                         </section>

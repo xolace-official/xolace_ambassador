@@ -40,6 +40,9 @@
   --font-sans: Reddit Sans, ui-sans-serif, sans-serif, system-ui;
   --font-serif: Reddit Mono, ui-monospace, monospace;
   --font-mono: Reddit Mono, ui-monospace, monospace;
+
+  --dashboard-background: #ebe9e2;
+
 }
 
 .dark {
@@ -78,6 +81,9 @@
   --font-sans: Reddit Sans, ui-sans-serif, sans-serif, system-ui;
   --font-serif: Reddit Mono, ui-monospace, monospace;
   --font-mono: Reddit Mono, ui-monospace, monospace;
+
+  --dashboard-background: #2c2c28;
+
 }
 
 @theme inline {
@@ -120,13 +126,35 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-dashboard-background: var(--dashboard-background);
+
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+
+  to {
+    clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+}
+
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: theme-reveal 500ms ease-in-out;
 }

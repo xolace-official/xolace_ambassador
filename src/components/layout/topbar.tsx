@@ -1,8 +1,10 @@
 "use client";
 
-import { Bell, Menu, User } from "lucide-react";
+import { Bell, Menu, Sun, User, Moon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useTheme } from "next-themes"
+
 
 import { Button } from "@/components/ui/button";
 
@@ -15,10 +17,24 @@ import {
   adminMenu,
   ambassadorMenu,
   type MenuItem,
-} from "@/features/(protected)/dashboard/menu/menu";
+} from "@/components/layout/menu";
 
 interface TopBarProps {
   onMenuClick: () => void;
+}
+
+const subscribeNever = () => () => { }
+
+function toggleThemeWithTransition(origin: Element, next: string, setTheme: (theme: string) => void) {
+  const rect = origin.getBoundingClientRect()
+  document.documentElement.style.setProperty("--theme-toggle-x", `${rect.left + rect.width / 2}px`)
+  document.documentElement.style.setProperty("--theme-toggle-y", `${rect.top + rect.height / 2}px`)
+
+  if (typeof document.startViewTransition !== "function") {
+    setTheme(next)
+    return
+  }
+  document.startViewTransition(() => setTheme(next))
 }
 
 export default function TopBar({ onMenuClick }: TopBarProps) {
@@ -30,6 +46,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [, role, uuid] = pathname.split("/");
+
+  const { resolvedTheme, setTheme } = useTheme()
+  // Theme is unknown until after hydration — the mounted check avoids a
+  // server/client mismatch on the icon shown.
+  const themeMounted = useSyncExternalStore(subscribeNever, () => true, () => false)
+  const isDark = themeMounted && resolvedTheme === "dark"
 
   const menuItems: MenuItem[] =
     role === "admin" ? adminMenu : ambassadorMenu;
@@ -111,6 +133,18 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
             })}
           </span>
         </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={(event) => {
+            event.preventDefault()
+            toggleThemeWithTransition(event.currentTarget as Element, isDark ? "light" : "dark", setTheme)
+          }}
+        >
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </Button>
 
         {/* Notifications */}
         <Button
