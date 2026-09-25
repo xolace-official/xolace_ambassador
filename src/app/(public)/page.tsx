@@ -1,8 +1,6 @@
-"use client";
-
+import { Suspense } from "react";
 import AmbassadorStories from "@/features/(public)/landing/components/ambassador/ambassador-stories";
 import Benefits from "@/features/(public)/landing/components/ambassador/benefits";
-import EmpathyGraphSection from "@/features/(public)/landing/components/ambassador/empathy-graph-section";
 import FirstMission from "@/features/(public)/landing/components/ambassador/first-mission";
 import HeroSection from "@/features/(public)/landing/components/ambassador/hero-section";
 import HowItWorks from "@/features/(public)/landing/components/ambassador/how-it-works";
@@ -35,19 +33,21 @@ export default function Home() {
     <>
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: static literal, no user input
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="flex items-start justify-start w-full min-h-screen bg-background text-foreground">
         <div className="flex items-start justify-start w-full flex-col bg-background">
           <HeroSection />
-          {/*<EmpathyGraphSection />*/}
           <WhyAmbassadors />
           <Tracks />
           <HowItWorks />
           <Benefits />
           <AmbassadorStories />
           <Impact />
-          <FirstMission />
+          <Suspense fallback={null}>
+            <FirstMission />
+          </Suspense>
           <Safety />
           <JoinProgramForm />
         </div>

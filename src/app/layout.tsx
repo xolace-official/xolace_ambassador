@@ -1,10 +1,11 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ThemedToaster } from "@/components/providers/ThemedToaster";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -79,10 +80,12 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
         <ThemeProvider>
-          <ConvexClientProvider>
-            {children}
-            <ThemedToaster />
-          </ConvexClientProvider>
+          <NuqsAdapter>
+            <ConvexClientProvider>
+              {children}
+              <ThemedToaster />
+            </ConvexClientProvider>
+          </NuqsAdapter>
         </ThemeProvider>
         <Analytics />
       </body>
