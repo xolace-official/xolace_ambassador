@@ -1,14 +1,21 @@
-export type Role = "admin" | "ambassador";
-
 export interface MenuItem {
   name: string;
   href: (uuid: string) => string;
   icon: React.ComponentType<{ className?: string }>;
-  featureKey: string; // used by useCanDo hook
+  /** Checked against ROLE_PERMISSIONS in `@/utils/useCanDo`. */
+  featureKey: string;
 }
 
-// Icons from lucide-react
-import { LayoutDashboard, Users, Target, LineChart, FolderOpen, MessageCircle, Trophy, FileText } from "lucide-react";
+import {
+  FileText,
+  FolderOpen,
+  LayoutDashboard,
+  LineChart,
+  MessageCircle,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
 
 export const adminMenu: MenuItem[] = [
   {
