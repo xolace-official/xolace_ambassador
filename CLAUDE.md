@@ -1,64 +1,47 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) in this repository.
 
-## Project Overview
+**Read [`AGENTS.md`](./AGENTS.md) first — it is the source of truth** for the
+stack, colour tokens, routing rules, form conventions, and the security rules
+(Convex identity/authorization). This file only covers workflow that is not in
+that document.
 
-Xolace Ambassador Program website — a Next.js 16 app for recruiting and showcasing Xolace ambassadors. Built with React 19, TypeScript, Tailwind CSS v4, and Supabase as the backend.
+## Project
+
+Xolace Ambassadors — the web portal and recruitment site for the Xolace Inc
+Ambassadors Program.
+
+- **Public site** — landing page and `/ambassadors` showcase. Mostly complete.
+- **Portal** — authenticated, role-based dashboards under
+  `src/app/(protected)/{admin,ambassador}/[uuid]/…`. Scaffolding; most feature
+  pages are still placeholders.
 
 ## Commands
 
 ```bash
-bun dev          # Start dev server (localhost:3000)
-bun run build    # Production build
-bun run lint     # Lint & format check (Biome)
-bun run format   # Auto-format code (Biome)
+bun dev            # dev server (localhost:3000)
+bun run build      # production build, also type-checks
+bun run lint       # biome check
+bun run format     # biome format --write
+npx convex dev     # push convex functions to the dev deployment
 ```
 
-Package manager is **Bun** (bun.lock present). No test framework is configured.
+## Conventions
 
-## Architecture
+- Path alias: `@/*` → `./src/*`
+- Route groups: `(public)`, `(auth)`, `(protected)` — they do not affect the URL
+- Feature components live in `src/features/<group>/<area>/<feature>/`, with
+  `pages/` and `components/` subfolders. Route files in `src/app` stay thin and
+  delegate to them.
+- Biome, not ESLint. There is no test framework configured yet.
+- Package manager is Bun.
 
-**Next.js App Router** with the `src/` directory structure:
+## Gotchas
 
-- `src/app/` — Routes and layouts (App Router file-based routing)
-  - `(pages)/` — Route group for page routes (e.g., `/ambassadors`)
-- `src/components/` — React components organized by feature
-  - `ambassador/` — Feature components (hero, benefits, join form, program details, footer)
-  - `layout/` — Layout components (navbar)
-  - `(pages)/` — Page-level composite components
-  - `ui/` — Reusable shadcn/ui primitives (Button, Card, Input, Sonner)
-- `src/lib/utils.ts` — `cn()` helper (clsx + tailwind-merge)
-- `src/utils/supabase/client.ts` — Browser-side Supabase client
-
-**Routes**: `/` (landing page), `/ambassadors` (ambassador showcase)
-
-## Tech Stack & Patterns
-
-- **Styling**: Tailwind CSS v4 with OkLCH color system, light/dark theme via CSS custom properties and `next-themes`. Fonts: Nunito (sans), PT Sans (serif).
-- **Components**: shadcn/ui (new-york style) with CVA for variants. Add new components via `npx shadcn@latest add <component>`.
-- **Animation**: Motion library (Framer Motion) — uses `whileInView` for scroll-triggered animations with stagger effects.
-- **Backend**: Supabase (browser client via `getSupabaseBrowserClient()`). Database table: `ambassadors` (name, email).
-- **Linting**: Biome (not ESLint) — 2-space indent, recommended rules + React/Next.js domains, auto-organized imports.
-- **React Compiler**: Enabled in `next.config.ts`.
-- **Images**: Remote patterns configured for `images.unsplash.com`.
-
-## Key Conventions
-
-- Path alias: `@/*` maps to `./src/*`
-- File naming: kebab-case for files, PascalCase for components
-- Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY`
-
-<!-- convex-ai-start -->
-
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
+- `CLAUDE.md` previously described a Supabase backend. That migration is done —
+  the backend is Convex. Do not reintroduce Supabase.
+- Ambassador images are still hosted in a Supabase storage bucket. Treat that as
+  legacy; new uploads should go to Convex file storage.
+- The `[uuid]` route segment is the Convex user document id, **not** the `uuid`
+  column on the `users` table. `uuid` is currently provisioned but unused.
