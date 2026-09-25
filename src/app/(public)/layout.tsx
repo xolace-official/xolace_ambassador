@@ -1,6 +1,6 @@
-import Footer from "@/features/(public)/landing/components/ambassador/footer";
 import NavBar from "@/components/layout/nav-bar";
 import ScrollProgressBar from "@/components/ui/scroll-progress-bar";
+import Footer from "@/features/(public)/landing/components/ambassador/footer";
 
 export default function PublicLayout({
   children,

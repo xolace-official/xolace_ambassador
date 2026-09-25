@@ -1,27 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "convex/react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { LogIn } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
 import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { api } from "../../../../convex/_generated/api";
-import { LogIn, LogOut } from "lucide-react";
-import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email address"),
@@ -35,6 +28,7 @@ export function LoginForm() {
   const { signIn } = useAuthActions();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [awaitingAccess, setAwaitingAccess] = useState(false);
 
   // Gets the currently authenticated user from Convex.
   const user = useQuery(api.users.current);
@@ -51,17 +45,16 @@ export function LoginForm() {
     },
   });
 
-  /**
-   * Once signIn() succeeds, Convex updates `user`.
-   * When the user is available, redirect to:
-   *
-   * /{role}/{user._id}/dashboard
-   *
-   * Example:
-   * /admin/j57abc123/dashboard
-   */
   useEffect(() => {
-    if (!user || !user.role || !user._id) {
+    if (!user || !user._id) {
+      return;
+    }
+
+    // Authenticated but not yet granted a portal role. There is no dashboard to
+    // send them to, so say so instead of leaving them on a form that will never
+    // submit again.
+    if (!user.role) {
+      setAwaitingAccess(true);
       return;
     }
 
@@ -76,12 +69,11 @@ export function LoginForm() {
         ...values,
         flow: "signIn",
       });
-
     } catch (error) {
       console.error("Login error:", error);
 
       toast.error(
-        "Sign in failed. Check your email and password and try again."
+        "Sign in failed. Check your email and password and try again.",
       );
 
       setIsSubmitting(false);
@@ -92,6 +84,20 @@ export function LoginForm() {
   // to give us the role and ID before navigating.
   if (user?.role && user?._id) {
     return null;
+  }
+
+  if (awaitingAccess) {
+    return (
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-xl border border-border/60 p-6 text-center">
+        <h2 className="font-medium text-2xl tracking-wide text-foreground">
+          You&apos;re signed in
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Your account isn&apos;t linked to an ambassador role yet. Ask a
+          program admin to grant you access, then sign in again.
+        </p>
+      </div>
+    );
   }
 
   return (

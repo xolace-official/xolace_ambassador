@@ -1,40 +1,43 @@
-"use client";
+﻿"use client";
 
-import { Bell, Menu, Sun, User, Moon } from "lucide-react";
+import { useConvexAuth } from "@convex-dev/auth/react";
+import { Bell, Menu, Moon, Sun, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { useTheme } from "next-themes"
-
-
-import { Button } from "@/components/ui/button";
-
-import {
-  useAuthActions,
-  useConvexAuth,
-} from "@convex-dev/auth/react";
-
 import {
   adminMenu,
   ambassadorMenu,
   type MenuItem,
 } from "@/components/layout/menu";
+import { Button } from "@/components/ui/button";
 
 interface TopBarProps {
   onMenuClick: () => void;
 }
 
-const subscribeNever = () => () => { }
+const subscribeNever = () => () => {};
 
-function toggleThemeWithTransition(origin: Element, next: string, setTheme: (theme: string) => void) {
-  const rect = origin.getBoundingClientRect()
-  document.documentElement.style.setProperty("--theme-toggle-x", `${rect.left + rect.width / 2}px`)
-  document.documentElement.style.setProperty("--theme-toggle-y", `${rect.top + rect.height / 2}px`)
+function toggleThemeWithTransition(
+  origin: Element,
+  next: string,
+  setTheme: (theme: string) => void,
+) {
+  const rect = origin.getBoundingClientRect();
+  document.documentElement.style.setProperty(
+    "--theme-toggle-x",
+    `${rect.left + rect.width / 2}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--theme-toggle-y",
+    `${rect.top + rect.height / 2}px`,
+  );
 
   if (typeof document.startViewTransition !== "function") {
-    setTheme(next)
-    return
+    setTheme(next);
+    return;
   }
-  document.startViewTransition(() => setTheme(next))
+  document.startViewTransition(() => setTheme(next));
 }
 
 export default function TopBar({ onMenuClick }: TopBarProps) {
@@ -47,23 +50,23 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   const [, role, uuid] = pathname.split("/");
 
-  const { resolvedTheme, setTheme } = useTheme()
-  // Theme is unknown until after hydration — the mounted check avoids a
+  const { resolvedTheme, setTheme } = useTheme();
+  // Theme is unknown until after hydration â€” the mounted check avoids a
   // server/client mismatch on the icon shown.
-  const themeMounted = useSyncExternalStore(subscribeNever, () => true, () => false)
-  const isDark = themeMounted && resolvedTheme === "dark"
+  const themeMounted = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
+  const isDark = themeMounted && resolvedTheme === "dark";
 
-  const menuItems: MenuItem[] =
-    role === "admin" ? adminMenu : ambassadorMenu;
+  const menuItems: MenuItem[] = role === "admin" ? adminMenu : ambassadorMenu;
 
   // Find the menu item that matches the current pathname.
   const currentMenuItem = menuItems.find((item) => {
     const href = item.href(uuid);
 
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`)
-    );
+    return pathname === href || pathname.startsWith(`${href}/`);
   });
 
   const pageTitle = currentMenuItem?.name ?? "Dashboard";
@@ -94,7 +97,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between pe-4 md:p-4">
-      {/* LEFT */}
       <div className="flex items-center gap-2 md:gap-4">
         <Button
           type="button"
@@ -112,9 +114,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         </h4>
       </div>
 
-      {/* RIGHT */}
       <div className="flex items-center gap-2">
-        {/* Date & Time */}
         <div className="hidden items-center gap-2 px-2 sm:flex">
           <span className="text-xs text-muted-foreground">
             {currentTime.toLocaleDateString("en-US", {
@@ -139,14 +139,17 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
           variant="ghost"
           size="icon"
           onClick={(event) => {
-            event.preventDefault()
-            toggleThemeWithTransition(event.currentTarget as Element, isDark ? "light" : "dark", setTheme)
+            event.preventDefault();
+            toggleThemeWithTransition(
+              event.currentTarget as Element,
+              isDark ? "light" : "dark",
+              setTheme,
+            );
           }}
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </Button>
 
-        {/* Notifications */}
         <Button
           type="button"
           variant="ghost"
@@ -158,7 +161,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
           <span className="absolute right-[7px] top-[7px] h-1.5 w-1.5 rounded-full bg-destructive" />
         </Button>
 
-        {/* Profile */}
         <Button
           type="button"
           variant="ghost"
