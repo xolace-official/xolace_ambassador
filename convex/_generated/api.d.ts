@@ -11,7 +11,8 @@
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
-import type * as seedRole from "../seedRole.js";
+import type * as model_auth from "../model/auth.js";
+import type * as provisioning from "../provisioning.js";
 import type * as users from "../users.js";
 import type * as utils_uuid from "../utils/uuid.js";
 
@@ -25,7 +26,8 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   auth: typeof auth;
   http: typeof http;
-  seedRole: typeof seedRole;
+  "model/auth": typeof model_auth;
+  provisioning: typeof provisioning;
   users: typeof users;
   "utils/uuid": typeof utils_uuid;
 }>;
