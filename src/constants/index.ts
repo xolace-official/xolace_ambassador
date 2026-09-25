@@ -1,4 +1,13 @@
-import { Users, Globe, Heart, Award } from "lucide-react";
+﻿import { Award, Globe, Heart, Users } from "lucide-react";
+
+// Ambassador photos are still on the old Supabase storage bucket, used here as
+// a static file host only. Migrate to Convex file storage and delete this.
+const LEGACY_IMAGE_BASE =
+  "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/";
+
+function ambassadorImage(file: string): string {
+  return `${LEGACY_IMAGE_BASE}${file}`;
+}
 
 export const STATS = [
   { icon: Users, label: "Active Ambassadors", value: "10+" },
@@ -13,8 +22,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Odoom Christopher Abuenyi",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/chris.jpeg",
+    image: ambassadorImage("chris.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "20+",
@@ -37,8 +45,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Minikon Terry Boso",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Minikon%20Terry%20Boso.jpeg",
+    image: ambassadorImage("Minikon%20Terry%20Boso.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -58,8 +65,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Antwi Richard Yeboah",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Antwi%20Richard%20Yeboah.jpeg",
+    image: ambassadorImage("Antwi%20Richard%20Yeboah.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -81,8 +87,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Boateng Ernest",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Boateng%20Ernest.jpeg",
+    image: ambassadorImage("Boateng%20Ernest.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -103,8 +108,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Jason Owusu",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/jason.jpeg",
+    image: ambassadorImage("jason.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Creative UI/UX Designer focused on building intuitive digital experiences and strategic solutions that drive growth.",
     impact: {
       peopleReached: "2+",
@@ -126,8 +130,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Magdalene Teye Mangorkuor",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Magdalene-teye.jpeg",
+    image: ambassadorImage("Magdalene-teye.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -150,8 +153,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Agbesi Prosper Kwesi",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/Prosper.jpeg",
+    image: ambassadorImage("Prosper.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -173,8 +175,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Dwamena Boahemaa Rosemary",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/rosie2.jpg",
+    image: ambassadorImage("rosie2.jpg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
@@ -197,8 +198,7 @@ export const OFFICIAL_AMBASSADORS = [
     name: "Dansowaa Erica",
     role: "Campus Ambassador",
     location: "Koforidua, Ghana",
-    image:
-      "https://qdjrwasidlmgqxakdxkl.supabase.co/storage/v1/object/public/amabassadors/erica2.jpeg",
+    image: ambassadorImage("erica2.jpeg"),
     bio: "University student dedicated to breaking mental health stigma on campus. Building safe spaces for open conversations.",
     impact: {
       peopleReached: "2+",
