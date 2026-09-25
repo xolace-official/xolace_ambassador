@@ -1,18 +1,16 @@
-"use client";
+﻿"use client";
 
-import { Heart, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
 
 export const currentYear = new Date().getFullYear();
 
 export default function Footer() {
-
   return (
-    <footer className="w-full bg-[oklch(0.1649_0.0352_281.8285)] text-primary-foreground py-16 px-4 sm:px-6 lg:px-8">
+    <footer className="w-full bg-surface-inverse text-surface-inverse-foreground py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-          {/* Brand Column */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -27,7 +25,6 @@ export default function Footer() {
             </p>
           </motion.div>
 
-          {/* Quick Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -76,7 +73,6 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Contact Column */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -98,10 +94,8 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-primary-foreground/20 my-8" />
 
-        {/* Bottom Section */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -110,7 +104,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60"
         >
           <p suppressHydrationWarning>
-            © {currentYear} Xolace. All rights reserved.
+            Â© {currentYear} Xolace. All rights reserved.
           </p>
           {/* <div className="flex items-center gap-1">
             Made with

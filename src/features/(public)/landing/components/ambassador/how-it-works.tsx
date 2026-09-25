@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 
@@ -36,7 +36,7 @@ const steps = [
 ];
 
 // Station positions along the winding path, as a % of the 1180-wide
-// viewBox and a fixed px height — mirrors the path's control points below.
+// viewBox and a fixed px height â€” mirrors the path's control points below.
 const stationPositions = [
   { xPct: 5.76, topPx: 70 },
   { xPct: 23.73, topPx: 10 },
@@ -70,7 +70,6 @@ export default function HowItWorks() {
       id="how-it-works"
       className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
-      {/* Subtle organic background grid / accent for Senior UI feel */}
       <div
         className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.25] pointer-events-none"
         aria-hidden="true"
@@ -92,7 +91,6 @@ export default function HowItWorks() {
           </h2>
         </motion.div>
 
-        {/* Desktop: winding path with stations */}
         <div className="hidden lg:block">
           <div className="relative w-full h-[156px]">
             <svg
@@ -148,7 +146,6 @@ export default function HowItWorks() {
           </ol>
         </div>
 
-        {/* Mobile/tablet: vertical stepper */}
         <motion.ol
           variants={containerVariants}
           initial="hidden"

@@ -28,6 +28,7 @@
   --chart-3: oklch(0.8442 0.1457 209.2851);
   --chart-4: oklch(0.8903 0.1739 171.269);
   --chart-5: oklch(0.9168 0.1915 101.407);
+  --shadow-color-primary: oklch(0.6726 0.2904 341.4084 / 0.8);
   --radius: 0.5rem;
   --sidebar: oklch(0.9595 0.02 286.0164);
   --sidebar-foreground: oklch(0.1649 0.0352 281.8285);
@@ -41,8 +42,22 @@
   --font-serif: Reddit Mono, ui-monospace, monospace;
   --font-mono: Reddit Mono, ui-monospace, monospace;
 
-  --dashboard-background: #ebe9e2;
+  --dashboard-background: oklch(0.9355 0.0056 96.2);
 
+  --surface-inverse: oklch(0.1649 0.0352 281.8285);
+  --surface-inverse-foreground: oklch(0.9816 0.0017 247.839);
+
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.1649 0.0352 281.8285);
+  --success-muted: oklch(0.3286 0.0611 162.48);
+
+  --warning: oklch(0.828 0.189 84.429);
+  --warning-foreground: oklch(0.1649 0.0352 281.8285);
+
+  --brand-linkedin: #0a66c2;
+  --brand-github: #1b1f23;
+  --brand-snapchat: #000000;
+  --brand-snapchat-accent: #fffc00;
 }
 
 .dark {
@@ -70,6 +85,7 @@
   --chart-3: oklch(0.8442 0.1457 209.2851);
   --chart-4: oklch(0.8903 0.1739 171.269);
   --chart-5: oklch(0.9168 0.1915 101.407);
+  --shadow-color-primary: oklch(0.6726 0.2904 341.4084 / 0.8);
   --sidebar: oklch(0.1649 0.0352 281.8285);
   --sidebar-foreground: oklch(0.9513 0.0074 260.7315);
   --sidebar-primary: oklch(0.6726 0.2904 341.4084);
@@ -82,8 +98,17 @@
   --font-serif: Reddit Mono, ui-monospace, monospace;
   --font-mono: Reddit Mono, ui-monospace, monospace;
 
-  --dashboard-background: #2c2c28;
+  --dashboard-background: oklch(0.2542 0.0056 96.2);
 
+  --surface-inverse: oklch(0.1216 0.0261 281.8285);
+  --surface-inverse-foreground: oklch(0.9513 0.0074 260.7315);
+
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.1649 0.0352 281.8285);
+  --success-muted: oklch(0.3126 0.0611 162.48);
+
+  --warning: oklch(0.828 0.189 84.429);
+  --warning-foreground: oklch(0.1649 0.0352 281.8285);
 }
 
 @theme inline {
@@ -129,6 +154,25 @@
 
   --color-dashboard-background: var(--dashboard-background);
 
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-inverse-foreground: var(--surface-inverse-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --z-header: 40;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  --color-brand-linkedin: var(--brand-linkedin);
+  --color-brand-github: var(--brand-github);
+  --color-brand-snapchat: var(--brand-snapchat);
+  --color-brand-snapchat-accent: var(--brand-snapchat-accent);
 }
 
 @layer base {
@@ -139,15 +183,32 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* `!important` is required here — components set their own durations and this
+     has to win. Covers every animation in the app. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @keyframes theme-reveal {
   from {
-    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    clip-path: circle(
+      0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%)
+    );
   }
 
   to {
-    clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    clip-path: circle(
+      150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%)
+    );
   }
 }
 

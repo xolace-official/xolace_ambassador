@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Pause, Play, Quote, Volume2 } from "lucide-react";
 import { motion } from "motion/react";
@@ -72,7 +72,6 @@ export default function VoiceSpotlightPlayer() {
         </span>
       </div>
 
-      {/* Quote Display */}
       <div className="space-y-4">
         <blockquote className="text-lg sm:text-xl font-medium text-foreground leading-relaxed italic">
           &ldquo;{activeQuote.quote}&rdquo;
@@ -84,7 +83,7 @@ export default function VoiceSpotlightPlayer() {
               {activeQuote.name}
             </span>
             <span>
-              {activeQuote.role} • {activeQuote.campus}
+              {activeQuote.role} â€¢ {activeQuote.campus}
             </span>
           </div>
           <span className="font-mono text-xs font-semibold bg-secondary px-2.5 py-1 rounded-md">
@@ -93,12 +92,11 @@ export default function VoiceSpotlightPlayer() {
         </div>
       </div>
 
-      {/* Waveform Player Bar */}
       <div className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/60 border border-border/50">
         <button
           type="button"
           onClick={togglePlay}
-          className="shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105 transition-transform focus-visible:outline-none cursor-pointer"
+          className="shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label={isPlaying ? "Pause voice quote" : "Play voice quote"}
         >
           {isPlaying ? (
@@ -108,7 +106,6 @@ export default function VoiceSpotlightPlayer() {
           )}
         </button>
 
-        {/* Animated Sound Wave Graphic */}
         <div className="flex-1 flex items-center gap-1.5 h-8">
           {[40, 65, 30, 85, 95, 45, 70, 30, 90, 60, 75, 40, 80, 50, 95, 35].map(
             (heightPct, idx) => (
@@ -119,7 +116,11 @@ export default function VoiceSpotlightPlayer() {
                 }`}
                 animate={{
                   height: isPlaying
-                    ? [`${heightPct}%`, `${(heightPct * 0.4) % 100}%`, `${heightPct}%`]
+                    ? [
+                        `${heightPct}%`,
+                        `${(heightPct * 0.4) % 100}%`,
+                        `${heightPct}%`,
+                      ]
                     : `${heightPct * 0.35}%`,
                 }}
                 transition={{
@@ -134,7 +135,6 @@ export default function VoiceSpotlightPlayer() {
         </div>
       </div>
 
-      {/* Switcher selector pills */}
       <div className="flex flex-wrap gap-2 pt-2">
         {quotes.map((q) => (
           <button
@@ -144,7 +144,7 @@ export default function VoiceSpotlightPlayer() {
               setActiveQuote(q);
               setIsPlaying(true);
             }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-[background-color,color] cursor-pointer ${
               activeQuote.id === q.id
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-secondary text-foreground/70 hover:bg-secondary/80 border border-border/50"

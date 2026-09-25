@@ -1,11 +1,10 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
-import { X } from "lucide-react";
+﻿"use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { X } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
 
 interface ImagePreviewProps {
   src: string;
@@ -49,15 +48,15 @@ export default function ImagePreview({
 
       <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[50]" />
-          <DialogPrimitive.Content className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] max-w-[90vw] max-h-[90vh] w-auto h-auto p-0 bg-transparent border-0 z-[51]">
+          <DialogPrimitive.Overlay className="fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50" />
+          <DialogPrimitive.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[90vw] max-h-[90vh] w-auto h-auto p-0 bg-transparent border-0 z-50">
             <VisuallyHidden.Root asChild>
               <DialogPrimitive.Title>{alt}</DialogPrimitive.Title>
             </VisuallyHidden.Root>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/75 focus:outline-none"
+              className="absolute right-4 top-4 z-10 rounded-full bg-background/60 p-2 text-foreground backdrop-blur-sm hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="h-6 w-6" />
               <span className="sr-only">Close</span>

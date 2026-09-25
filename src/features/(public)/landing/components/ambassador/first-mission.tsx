@@ -1,16 +1,15 @@
-"use client";
+﻿"use client";
 
 import {
   AlertTriangle,
   Award,
   CheckCircle2,
-  Lock,
   RotateCcw,
   ShieldAlert,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useQueryState } from "nuqs";
+import { createParser } from "nuqs/server";
 import { useState } from "react";
 
 interface AssessmentStage {
@@ -75,8 +74,7 @@ const assessmentStages: AssessmentStage[] = [
         isCorrect: false,
         feedback:
           "CRITICAL SAFETY VIOLATION: Peer advocates must never carry acute suicide risk alone.",
-        protocolNotice:
-          "Failure to escalate acute crisis endangers life.",
+        protocolNotice: "Failure to escalate acute crisis endangers life.",
       },
       {
         text: "Immediately activate Xolace Emergency Escalation Hotline, inform Campus Mental Health Crisis Lead, and stay on the line.",
@@ -100,8 +98,7 @@ const assessmentStages: AssessmentStage[] = [
     category: "Ambassador Honor Code",
     scenario:
       "A fellow student asks you: 'I heard Kweku was at the Xolace node crying yesterday. What happened to him?'",
-    context:
-      "Task: Select the strict ethical response regarding peer privacy.",
+    context: "Task: Select the strict ethical response regarding peer privacy.",
     options: [
       {
         text: "Tell them a little bit of what happened, but ask them not to share with others.",
@@ -121,12 +118,32 @@ const assessmentStages: AssessmentStage[] = [
   },
 ];
 
+// 1-based for humans, clamped so a hand-edited url can't index past the array.
+const parseStage = createParser<number>({
+  parse: (value) => {
+    const parsed = Number.parseInt(value, 10);
+    const index = Number.isNaN(parsed) ? 0 : parsed - 1;
+    return Math.min(Math.max(index, 0), assessmentStages.length - 1);
+  },
+  serialize: (value) => String(value + 1),
+  eq: (a, b) => a === b,
+});
+
 export default function FirstMission() {
-  const [currentStageIdx, setCurrentStageIdx] = useState(0);
+  // The stage lives in the url so a candidate can bookmark or share
+  // `?stage=2` and land mid-assessment. `selectedOption` stays local: it is a
+  // transient draft answer, not somewhere anyone should be sent.
+  const [stageParam, setStageParam] = useQueryState(
+    "stage",
+    parseStage.withDefault(0),
+  );
+
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
-  const [isAssessmentPassed, setIsAssessmentPassed] = useState(false);
+  const [_isAssessmentPassed, setIsAssessmentPassed] = useState(false);
 
+  const currentStageIdx = stageParam;
+  const setCurrentStageIdx = (idx: number) => void setStageParam(idx + 1);
   const currentStage = assessmentStages[currentStageIdx];
 
   const handleSelectOption = (idx: number) => {
@@ -172,7 +189,7 @@ export default function FirstMission() {
           viewport={{ once: true, margin: "-50px" }}
           className="max-w-3xl space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-black uppercase tracking-wider border border-rose-500/20">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-black uppercase tracking-wider border border-destructive/20">
             <ShieldAlert className="w-4 h-4" /> Ambassador Readiness Test
           </div>
 
@@ -181,68 +198,63 @@ export default function FirstMission() {
           </h2>
 
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed font-medium">
-            Xolace Ambassadors do not guess — they undergo rigorous training.
+            Xolace Ambassadors do not guess â€” they undergo rigorous training.
             Test your readiness through 3 real-world peer protocol stages.
           </p>
         </motion.div>
 
-        {/* Assessment Card Container */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="rounded-3xl bg-[oklch(0.14_0.03_280)] text-white p-6 sm:p-10 shadow-2xl border border-white/10 space-y-8"
+          className="rounded-3xl bg-surface-inverse text-surface-inverse-foreground p-6 sm:p-10 shadow-2xl border border-surface-inverse-foreground/10 space-y-8"
         >
-          {/* Header Bar: Stages Progress */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-surface-inverse-foreground/10">
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-extrabold uppercase">
                 Stage 0{currentStage.id} of 0{assessmentStages.length}
               </span>
-              <span className="text-xs font-semibold text-white/70">
+              <span className="text-xs font-semibold text-surface-inverse-foreground/70">
                 {currentStage.category}
               </span>
             </div>
 
-            {/* Stage Indicators */}
             <div className="flex items-center gap-2">
               {assessmentStages.map((stg, i) => (
                 <div
                   key={stg.id}
-                  className={`h-2 rounded-full transition-all ${
+                  className={`h-2 rounded-full transition-[width,background-color] ${
                     completedStages.includes(stg.id)
-                      ? "w-8 bg-emerald-400"
+                      ? "w-8 bg-success"
                       : i === currentStageIdx
-                      ? "w-6 bg-amber-400 animate-pulse"
-                      : "w-2 bg-white/20"
+                        ? "w-6 bg-warning animate-pulse"
+                        : "w-2 bg-surface-inverse-foreground/20"
                   }`}
                 />
               ))}
             </div>
           </div>
 
-          {/* Scenario & Task */}
           <div className="space-y-4">
-            <h3 className="text-xl sm:text-2xl font-black text-white">
+            <h3 className="text-xl sm:text-2xl font-black text-surface-inverse-foreground">
               {currentStage.title}
             </h3>
 
-            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-              <p className="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+            <div className="p-5 rounded-2xl bg-surface-inverse-foreground/5 border border-surface-inverse-foreground/10 space-y-2">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-warning">
                 Real Peer Case Scenario
               </p>
-              <p className="text-base sm:text-lg font-medium text-white/90 leading-relaxed italic">
+              <p className="text-base sm:text-lg font-medium text-surface-inverse-foreground/90 leading-relaxed italic">
                 &ldquo;{currentStage.scenario}&rdquo;
               </p>
             </div>
 
-            <p className="text-xs font-semibold text-white/70">
+            <p className="text-xs font-semibold text-surface-inverse-foreground/70">
               {currentStage.context}
             </p>
           </div>
 
-          {/* Protocol Response Options */}
           <div className="space-y-3">
             {currentStage.options.map((option, idx) => {
               const isSelected = selectedOption === idx;
@@ -251,12 +263,12 @@ export default function FirstMission() {
                   key={`opt-${currentStage.id}-${idx * 17}`}
                   type="button"
                   onClick={() => handleSelectOption(idx)}
-                  className={`w-full text-left p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                  className={`w-full text-left p-4 sm:p-5 rounded-2xl border transition-[background-color,border-color,color] cursor-pointer ${
                     isSelected
                       ? option.isCorrect
-                        ? "bg-emerald-950/70 border-emerald-400 text-white shadow-lg shadow-emerald-950/50"
-                        : "bg-rose-950/70 border-rose-500 text-white shadow-lg shadow-rose-950/50"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 text-white/90"
+                        ? "bg-success-muted border-success text-surface-inverse-foreground shadow-lg shadow-success/20"
+                        : "bg-destructive/15 border-destructive text-surface-inverse-foreground shadow-lg shadow-destructive/20"
+                      : "bg-surface-inverse-foreground/5 border-surface-inverse-foreground/10 hover:bg-surface-inverse-foreground/10 text-surface-inverse-foreground/90"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -265,9 +277,9 @@ export default function FirstMission() {
                     </p>
                     {isSelected &&
                       (option.isCorrect ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
                       ) : (
-                        <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                        <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                       ))}
                   </div>
 
@@ -275,18 +287,16 @@ export default function FirstMission() {
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
-                      className="mt-3 pt-3 border-t border-white/15 space-y-1"
+                      className="mt-3 pt-3 border-t border-surface-inverse-foreground/15 space-y-1"
                     >
                       <p
                         className={`text-xs font-bold ${
-                          option.isCorrect
-                            ? "text-emerald-300"
-                            : "text-rose-300"
+                          option.isCorrect ? "text-success" : "text-destructive"
                         }`}
                       >
                         {option.feedback}
                       </p>
-                      <p className="text-[11px] text-white/60">
+                      <p className="text-[11px] text-surface-inverse-foreground/60">
                         Notice: {option.protocolNotice}
                       </p>
                     </motion.div>
@@ -296,12 +306,11 @@ export default function FirstMission() {
             })}
           </div>
 
-          {/* Action & Certification Footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-surface-inverse-foreground/10">
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center gap-2 text-xs font-bold text-white/60 hover:text-white transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-bold text-surface-inverse-foreground/60 hover:text-surface-inverse-foreground transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Reset Assessment
             </button>
@@ -312,12 +321,12 @@ export default function FirstMission() {
                 <button
                   type="button"
                   onClick={handleNextStage}
-                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm shadow-lg hover:scale-105 transition-all"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm shadow-lg hover:scale-105 transition-transform"
                 >
-                  Proceed to Stage 0{currentStageIdx + 2} →
+                  Proceed to Stage 0{currentStageIdx + 2} â†’
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-black font-black text-sm shadow-xl animate-bounce">
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-success text-success-foreground font-black text-sm shadow-xl animate-bounce">
                   <Award className="w-5 h-5" /> Ambassador Protocol Certified!
                 </div>
               ))}

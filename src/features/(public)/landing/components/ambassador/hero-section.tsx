@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import Image from "next/image";
@@ -26,7 +26,7 @@ const itemVariants = {
   },
 };
 
-/** Utility to pick N random items from array */
+// Picks N random items from an array.
 function pickRandom<T>(arr: T[], count: number): T[] {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -45,7 +45,6 @@ export default function HeroSection() {
 
   return (
     <section className="relative w-full overflow-hidden bg-background">
-      {/* Original ambient background glowing shapes */}
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -66,7 +65,6 @@ export default function HeroSection() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-10 pb-20 lg:pb-28 lg:min-h-[88vh] flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.82fr] gap-14 lg:gap-16 items-center w-full">
-          {/* Copy */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -84,7 +82,9 @@ export default function HeroSection() {
               variants={itemVariants}
               className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight md:text-balance"
             >
-              <span className="md:block text-foreground">Help build a world</span>
+              <span className="md:block text-foreground">
+                Help build a world
+              </span>
               <span className="ms-2 md:ms-0 md:block text-primary">
                 where people feel heard.
               </span>
@@ -96,7 +96,7 @@ export default function HeroSection() {
             >
               Xolace Ambassadors believe emotional wellbeing shouldn&apos;t be
               something we only talk about when things get bad. You don&apos;t
-              have to be an expert — you just have to care.
+              have to be an expert â€” you just have to care.
             </motion.p>
 
             <motion.div
@@ -120,7 +120,6 @@ export default function HeroSection() {
               </Button>
             </motion.div>
 
-            {/* Overlapping ambassador circles (3 random real ambassador photos) */}
             <motion.div
               variants={itemVariants}
               className="flex items-center gap-3 pt-2"
@@ -149,7 +148,6 @@ export default function HeroSection() {
             </motion.div>
           </motion.div>
 
-          {/* Original Right Column: Quote Collage Cards */}
           <div className="hidden lg:block relative h-[440px]">
             <motion.div
               initial={{ opacity: 0, y: 30, rotate: 0 }}
@@ -169,7 +167,8 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 30, rotate: 0 }}
               animate={{ opacity: 1, y: 0, rotate: 3 }}
               transition={{ duration: 0.7, delay: 0.45 }}
-              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg">
+              className="absolute top-[210px] right-0 w-[78%] bg-accent/25 rounded-3xl p-8 shadow-lg"
+            >
               <p className="text-xl font-bold leading-snug text-foreground">
                 &ldquo;A quiet place to be human.&rdquo;
               </p>
@@ -187,7 +186,6 @@ export default function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Collage — mobile/tablet */}
           <div className="flex lg:hidden flex-col gap-4 w-full">
             <div className="bg-card border border-border/60 rounded-2xl p-6">
               <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">

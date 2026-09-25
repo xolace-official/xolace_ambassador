@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { GraduationCap, KeyRound, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
@@ -58,7 +58,6 @@ export default function Benefits() {
       className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20"
     >
       <div className="max-w-4xl mx-auto space-y-14">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -74,7 +73,6 @@ export default function Benefits() {
           </h2>
         </motion.div>
 
-        {/* Feature rows */}
         <div>
           {benefits.map((benefit) => {
             const Icon = benefit.icon;
@@ -121,7 +119,6 @@ export default function Benefits() {
           })}
         </div>
 
-        {/* Opportunities statement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

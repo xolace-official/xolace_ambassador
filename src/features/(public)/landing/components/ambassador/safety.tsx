@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Check, XCircle } from "lucide-react";
 import { motion } from "motion/react";
@@ -30,7 +30,6 @@ export default function Safety() {
       id="safety"
       className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20 scroll-mt-20 overflow-hidden"
     >
-      {/* Background ambient lighting */}
       <div
         aria-hidden="true"
         className="absolute top-0 right-1/4 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"
@@ -112,8 +111,8 @@ export default function Safety() {
           viewport={{ once: true, margin: "-50px" }}
           className="text-center font-semibold text-foreground"
         >
-          This isn&apos;t a footnote — it&apos;s mandatory onboarding for every
-          ambassador.
+          This isn&apos;t a footnote â€” it&apos;s mandatory onboarding for
+          every ambassador.
         </motion.p>
       </div>
     </section>

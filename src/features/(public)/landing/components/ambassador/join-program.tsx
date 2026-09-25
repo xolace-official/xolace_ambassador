@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Coolshape } from "coolshapes-react";
 import { Camera, Check } from "lucide-react";
@@ -56,15 +56,14 @@ const initialFormData = {
 };
 
 const reassurances = [
-  "We read every application — no bots, no filters.",
+  "We read every application â€” no bots, no filters.",
   "You'll hear back within a few days, either way.",
-  "Onboarding starts right after — no waiting around.",
+  "Onboarding starts right after â€” no waiting around.",
 ];
 
 export default function JoinProgramForm() {
-
   const [formData, setFormData] = useState(initialFormData);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [_avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
@@ -108,7 +107,7 @@ export default function JoinProgramForm() {
 
     try {
       // Synthetic submission mimicking a generic API/Convex mutation delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       setSubmitted(true);
       setIsLoading(false);
@@ -140,7 +139,6 @@ export default function JoinProgramForm() {
       />
 
       <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
-        {/* Left: header + reassurance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -171,7 +169,6 @@ export default function JoinProgramForm() {
           </div>
         </motion.div>
 
-        {/* Right: form card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -229,7 +226,6 @@ export default function JoinProgramForm() {
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Avatar Upload */}
                 <div className="flex items-center gap-3 pb-1">
                   <button
                     type="button"
@@ -250,13 +246,13 @@ export default function JoinProgramForm() {
                       </span>
                     )}
                     {avatarPreview && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="w-4 h-4 text-white" />
+                      <span className="absolute inset-0 flex items-center justify-center bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-4 h-4 text-primary-foreground" />
                       </span>
                     )}
                   </button>
                   <span className="text-xs text-foreground/50">
-                    Optional photo — JPG, PNG or WebP, max 5 MB
+                    Optional photo â€” JPG, PNG or WebP, max 5 MB
                   </span>
                   <input
                     ref={fileInputRef}
@@ -267,7 +263,6 @@ export default function JoinProgramForm() {
                   />
                 </div>
 
-                {/* Name + Email */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label
@@ -283,7 +278,7 @@ export default function JoinProgramForm() {
                       autoComplete="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Your name…"
+                      placeholder="Your nameâ€¦"
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
@@ -303,14 +298,13 @@ export default function JoinProgramForm() {
                       spellCheck={false}
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="you@example.com…"
+                      placeholder="you@example.comâ€¦"
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
                   </div>
                 </div>
 
-                {/* Location + School/Community */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label
@@ -326,7 +320,7 @@ export default function JoinProgramForm() {
                       autoComplete="address-level2"
                       value={formData.location}
                       onChange={handleChange}
-                      placeholder="City, country…"
+                      placeholder="City, countryâ€¦"
                       required
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
@@ -347,13 +341,12 @@ export default function JoinProgramForm() {
                       name="schoolOrCommunity"
                       value={formData.schoolOrCommunity}
                       onChange={handleChange}
-                      placeholder="Your school or community…"
+                      placeholder="Your school or communityâ€¦"
                       className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                     />
                   </div>
                 </div>
 
-                {/* Social Handle + Track */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label
@@ -392,7 +385,7 @@ export default function JoinProgramForm() {
                             ? SOCIAL_HANDLE_PLACEHOLDERS[
                                 formData.socialPlatform as (typeof SOCIAL_PLATFORMS)[number]
                               ]
-                            : "Your handle…"
+                            : "Your handleâ€¦"
                         }
                         className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                       />
@@ -413,7 +406,7 @@ export default function JoinProgramForm() {
                         id="track"
                         className="w-full bg-background border border-border/50 rounded-lg"
                       >
-                        <SelectValue placeholder="Select a track…" />
+                        <SelectValue placeholder="Select a trackâ€¦" />
                       </SelectTrigger>
                       <SelectContent>
                         {TRACKS.map((track) => (
@@ -431,7 +424,6 @@ export default function JoinProgramForm() {
                   </div>
                 </div>
 
-                {/* Why Xolace Textarea */}
                 <div className="space-y-2">
                   <label
                     htmlFor="why-xolace"
@@ -444,20 +436,19 @@ export default function JoinProgramForm() {
                     name="whyXolace"
                     value={formData.whyXolace}
                     onChange={handleChange}
-                    placeholder="What draws you to this? No perfect answer needed…"
+                    placeholder="What draws you to this? No perfect answer neededâ€¦"
                     required
                     rows={3}
                     className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
                   />
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
                   className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-[background-color,transform,opacity] duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                 >
-                  {isLoading ? "Joining…" : "Join the Program"}
+                  {isLoading ? "Joiningâ€¦" : "Join the Program"}
                 </button>
 
                 <p className="text-xs text-foreground/50 text-center">

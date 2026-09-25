@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 import Image from "next/image";
@@ -10,7 +10,6 @@ export default function WhyAmbassadors() {
       className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
     >
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        {/* Left Column: Concise Text */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -28,8 +27,8 @@ export default function WhyAmbassadors() {
 
           <p className="text-base sm:text-lg text-foreground/75 leading-relaxed">
             Xolace creates safe spaces for the feelings too quiet or heavy to
-            put into words — making it normal to speak the true thing before it
-            becomes a crisis.
+            put into words â€” making it normal to speak the true thing before
+            it becomes a crisis.
           </p>
 
           <div className="border-l-4 border-primary bg-primary/5 rounded-r-2xl p-4 sm:p-5 text-base sm:text-lg font-semibold text-foreground">
@@ -38,7 +37,6 @@ export default function WhyAmbassadors() {
           </div>
         </motion.div>
 
-        {/* Right Column: Visual Image Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}

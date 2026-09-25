@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Activity, MapPin, Radio, Users } from "lucide-react";
 import { motion } from "motion/react";
@@ -87,16 +87,17 @@ export default function LiveEmpathyGraph() {
         </div>
       </div>
 
-      {/* Interactive Map Visual */}
       <div className="relative w-full h-[280px] sm:h-[320px] rounded-2xl bg-secondary/30 border border-border/40 overflow-hidden">
-        {/* Subtle grid lines background */}
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-20 pointer-events-none"
         />
 
-        {/* Connecting SVG beams */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, parent is aria-hidden
+          role="presentation"
+        >
           {campusNodes.map((from, idx) => {
             const next = campusNodes[(idx + 1) % campusNodes.length];
             return (
@@ -116,7 +117,6 @@ export default function LiveEmpathyGraph() {
           })}
         </svg>
 
-        {/* Interactive Nodes */}
         {campusNodes.map((node) => {
           const isSelected = selectedNode.id === node.id;
           return (
@@ -124,21 +124,20 @@ export default function LiveEmpathyGraph() {
               key={node.id}
               type="button"
               onClick={() => setSelectedNode(node)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 group focus-visible:outline-none cursor-pointer"
+              className="absolute -translate-x-1/2 -translate-y-1/2 group cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-label={`${node.name} campus`}
               style={{ left: `${node.xPct}%`, top: `${node.yPct}%` }}
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
             >
               <div className="relative flex items-center justify-center">
-                {/* Ripple ring */}
                 <span
-                  className={`absolute w-10 h-10 rounded-full transition-all duration-300 ${
+                  className={`absolute w-10 h-10 rounded-full transition-[background-color,box-shadow,transform] duration-300 ${
                     isSelected
                       ? "bg-primary/30 animate-ping opacity-75"
                       : "bg-primary/10 group-hover:bg-primary/20"
                   }`}
                 />
-                {/* Core dot badge */}
                 <div
                   className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors ${
                     isSelected
@@ -150,9 +149,8 @@ export default function LiveEmpathyGraph() {
                 </div>
               </div>
 
-              {/* Tooltip Label */}
               <span
-                className={`absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-md transition-all ${
+                className={`absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-md transition-[background-color,color,opacity] ${
                   isSelected
                     ? "bg-primary text-primary-foreground opacity-100"
                     : "bg-card text-foreground border border-border/60 opacity-80 group-hover:opacity-100"
@@ -165,7 +163,6 @@ export default function LiveEmpathyGraph() {
         })}
       </div>
 
-      {/* Selected Node Details Card */}
       <motion.div
         key={selectedNode.id}
         initial={{ opacity: 0, y: 10 }}

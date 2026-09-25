@@ -1,12 +1,7 @@
-"use client";
+﻿"use client";
 
 import { motion } from "motion/react";
 
-/**
- * EmpathyNetworkBg communicates Xolace's purpose:
- * Connecting isolated individuals into a compassionate peer support network.
- * Node connections represent active listening signals flowing between people.
- */
 export default function EmpathyNetworkBg({
   className = "",
 }: {
@@ -37,6 +32,10 @@ export default function EmpathyNetworkBg({
     { from: 8, to: 9 },
   ];
 
+  // Looked up by id rather than `find(...)!`, so a typo in `connections` skips
+  // the edge instead of throwing during render.
+  const nodesById = new Map(connectionNodes.map((n) => [n.id, n]));
+
   return (
     <div
       aria-hidden="true"
@@ -47,14 +46,19 @@ export default function EmpathyNetworkBg({
         viewBox="0 0 1200 480"
         preserveAspectRatio="none"
         fill="none"
+        // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, parent is aria-hidden
+        role="presentation"
       >
-        {/* Connecting peer paths */}
         {connections.map((conn, index) => {
-          const fromNode = connectionNodes.find((n) => n.id === conn.from)!;
-          const toNode = connectionNodes.find((n) => n.id === conn.to)!;
+          const fromNode = nodesById.get(conn.from);
+          const toNode = nodesById.get(conn.to);
+
+          if (!fromNode || !toNode) {
+            return null;
+          }
+
           return (
             <g key={`${conn.from}-${conn.to}`}>
-              {/* Interconnection stroke */}
               <line
                 x1={fromNode.x}
                 y1={fromNode.y}
@@ -66,7 +70,6 @@ export default function EmpathyNetworkBg({
                 strokeDasharray="4 6"
               />
 
-              {/* Animated empathy signal pulse moving along connection */}
               <motion.circle
                 r="3"
                 fill="var(--color-primary)"
@@ -91,10 +94,8 @@ export default function EmpathyNetworkBg({
           );
         })}
 
-        {/* Empathy nodes (Peer connection points) */}
         {connectionNodes.map((node) => (
           <g key={node.id}>
-            {/* Outer halo ripple */}
             <motion.circle
               cx={node.x}
               cy={node.y}
@@ -113,7 +114,6 @@ export default function EmpathyNetworkBg({
               }}
             />
 
-            {/* Inner node dot */}
             <circle
               cx={node.x}
               cy={node.y}

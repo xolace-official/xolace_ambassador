@@ -21,7 +21,8 @@ export default function EmpathyGraphSection() {
             Active Campus Advocate Network
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Explore live ambassador hubs and peer connections active across Ghana campuses.
+            Explore live ambassador hubs and peer connections active across
+            Ghana campuses.
           </p>
         </motion.div>
 
