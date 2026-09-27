@@ -142,11 +142,13 @@ export default function AdminSubmissionDetail({
 
   if (submission === null) {
     return (
-      <EmptyState
-        icon={FileCheck2}
-        title="Submission not found"
-        description="This contribution may have been removed, or the link may be incorrect."
-      />
+      <div className="space-y-4">
+        <EmptyState
+          icon={FileCheck2}
+          title="Submission not found"
+          description="This contribution may have been removed, or the link may be incorrect."
+        />
+      </div>
     );
   }
 
@@ -155,7 +157,7 @@ export default function AdminSubmissionDetail({
 
     try {
       await reviewContribution({
-        contributionId: submission._id,
+        contributionId: submission.id,
         status: values.decision,
         reviewNote: reviewNote || undefined,
       });
@@ -178,8 +180,8 @@ export default function AdminSubmissionDetail({
   }
 
   return (
-    <div className="w-full space-y-5 pb-12">
-      <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
+    <div className="grid w-full gap-5 pb-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:p-7 lg:col-span-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{kindLabel[submission.kind]}</Badge>
@@ -187,9 +189,9 @@ export default function AdminSubmissionDetail({
               {statusLabel[submission.status]}
             </Badge>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight text-balance text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-foreground sm:text-3xl">
             {submission.missionTitle ?? submission.title}
-          </h2>
+          </h1>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2">
               <UserRound aria-hidden="true" className="size-4" />
@@ -213,7 +215,8 @@ export default function AdminSubmissionDetail({
         {submission.status === "pending" ? (
           <Button
             type="button"
-            className="w-fit shrink-0 self-end sm:self-auto"
+            size="sm"
+            className=" w-fit shrink-0 self-end sm:self-auto"
             onClick={() => setReviewOpen(true)}
           >
             Review submission
@@ -221,26 +224,29 @@ export default function AdminSubmissionDetail({
         ) : null}
       </header>
 
-      <Card className="gap-0 border-border p-5 sm:p-6">
+      <Card className="gap-0 border-border p-5 sm:p-6 lg:col-start-1 lg:row-start-2">
         <h2 className="text-lg font-semibold text-foreground">
           Ambassador response
         </h2>
         {submission.note ? (
-          <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-foreground/85">
-            {submission.note}
-          </p>
+          <div className="mt-4 min-w-0 rounded-lg border border-border bg-muted/20 p-4 sm:p-5">
+            <h3 className="text-sm font-medium text-foreground">Overview</h3>
+            <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-foreground/85">
+              {submission.note}
+            </p>
+          </div>
         ) : null}
         {submission.responses?.length ? (
-          <dl className="mt-4 divide-y divide-border border-y border-border">
+          <dl className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
             {submission.responses.map((response) => (
               <div
                 key={response.fieldKey}
-                className="grid gap-1 py-3 sm:grid-cols-[minmax(10rem,0.4fr)_minmax(0,1fr)] sm:gap-4"
+                className="min-w-0 rounded-lg border border-border p-4 sm:p-5"
               >
-                <dt className="text-sm font-medium text-foreground">
+                <dt className="break-words text-sm font-semibold text-foreground">
                   {response.label}
                 </dt>
-                <dd className="whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
+                <dd className="mt-2 min-w-0 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
                   {response.value || "No response provided."}
                 </dd>
               </div>
@@ -248,7 +254,7 @@ export default function AdminSubmissionDetail({
           </dl>
         ) : null}
         {submission.quantity !== undefined ? (
-          <div className="mt-4 border-t border-border pt-4">
+          <div className="mt-4 rounded-lg border border-border p-4 sm:p-5">
             <p className="text-sm font-medium text-foreground">
               Reported quantity
             </p>
@@ -272,14 +278,30 @@ export default function AdminSubmissionDetail({
           </div>
         ) : null}
         {!submission.note &&
-        !submission.responses?.length &&
-        submission.quantity === undefined &&
-        !submission.link ? (
+          !submission.responses?.length &&
+          submission.quantity === undefined &&
+          !submission.link ? (
           <p className="mt-3 text-sm text-muted-foreground">
             No response details were included.
           </p>
         ) : null}
       </Card>
+
+      {submission.status === "pending" ? (
+        <Card className="gap-3 border-border p-5 sm:p-6 lg:col-start-2 lg:row-start-2">
+          <Badge className="w-fit bg-warning text-warning-foreground">
+            Awaiting review
+          </Badge>
+          <h2 className="text-base font-semibold text-foreground">Next step</h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Review the ambassador’s response and evidence, then approve it,
+            request changes, or reject the submission.
+          </p>
+          <p className="border-t border-border pt-3 text-xs leading-5 text-muted-foreground">
+            Request changes keeps the mission open for a revised submission.
+          </p>
+        </Card>
+      ) : null}
 
       {submission.status === "pending" ? (
         <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
@@ -381,7 +403,7 @@ export default function AdminSubmissionDetail({
           </DialogContent>
         </Dialog>
       ) : (
-        <Card className="gap-2 border-border p-5 sm:p-6">
+        <Card className="gap-3 border-border p-5 sm:p-6 lg:col-start-2 lg:row-start-2">
           <h2 className="font-semibold text-foreground">Review outcome</h2>
           {submission.reviewNote ? (
             <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">

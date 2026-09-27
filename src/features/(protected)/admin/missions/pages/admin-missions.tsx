@@ -14,6 +14,7 @@ import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { FeatureComingSoon } from "@/components/shared/feature-coming-soon";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,19 +87,10 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
   const [section, setSection] = useQueryState("section", parseSection);
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <PageDescription
-          page={
-            section === "submissions"
-              ? "adminSubmissions"
-              : section === "impact"
-                ? "adminImpact"
-                : "adminMissions"
-          }
-          className="max-w-2xl"
-        />
-        <Button asChild className="w-full sm:w-auto">
+    <div className="flex flex-col gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <PageDescription page="adminMissions" className="max-w-2xl" />
+        <Button asChild className="ml-auto w-fit self-end" size="sm">
           <Link href={`/admin/${uuid}/missions/new`}>
             <Plus aria-hidden="true" />
             New mission
@@ -116,11 +108,10 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
             type="button"
             aria-current={section === value ? "page" : undefined}
             onClick={() => void setSection(value)}
-            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              section === value
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${section === value
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
           >
             {value === "impact" ? "Impact" : value}
           </button>
@@ -132,7 +123,10 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
       ) : section === "submissions" ? (
         <AdminSubmissions uuid={uuid} />
       ) : (
-        <AdminSubmissions mode="impact" uuid={uuid} />
+        <FeatureComingSoon
+          title="Impact overview"
+          description="The impact overview will appear here when its reporting view is ready."
+        />
       )}
     </div>
   );
@@ -168,7 +162,7 @@ function MissionListing({ uuid }: { uuid: string }) {
         <p className="text-sm text-muted-foreground">
           {results.length} {results.length === 1 ? "mission" : "missions"} shown
         </p>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <div className="flex flex-row gap-2 sm:w-auto">
           <Select
             value={track}
             onValueChange={(value) => {
@@ -219,8 +213,8 @@ function MissionListing({ uuid }: { uuid: string }) {
       </div>
 
       {pageStatus === "LoadingFirstPage" ? (
-        <div className="grid gap-5 lg:grid-cols-2">
-          {["one", "two", "three"].map((key) => (
+        <div className="grid gap-5 md:grid-cols-2">
+          {["one", "two", "three", "four", "five", "six"].map((key) => (
             <div
               key={key}
               aria-hidden="true"
@@ -246,15 +240,15 @@ function MissionListing({ uuid }: { uuid: string }) {
           }
         />
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           {results.map((mission) => (
             <Card
               key={mission._id}
-              className="group flex h-full flex-col gap-0 border-border p-0"
+              className="group relative h-full gap-0 overflow-hidden border-border py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-within:border-primary/50"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+              <div className="flex items-center justify-between gap-3 px-5 pt-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">
+                  <Badge className="border-border bg-transparent text-foreground/80">
                     {MISSION_CATEGORY_LABELS[mission.track]}
                   </Badge>
                   <Badge className={statusStyle[mission.status]}>
@@ -266,15 +260,17 @@ function MissionListing({ uuid }: { uuid: string }) {
                 </span>
               </div>
 
-              <div className="flex-1 px-5 py-5">
-                <h2 className="text-xl font-semibold leading-snug text-card-foreground">
+              <div className="px-5 py-3">
+                <h2 className="h-10 line-clamp-2 overflow-hidden text-base font-semibold leading-5 tracking-tight text-card-foreground">
                   {mission.title}
                 </h2>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                <p className="mt-2 h-10 line-clamp-2 overflow-hidden text-pretty text-sm leading-5 text-foreground/70">
                   {mission.summary}
                 </p>
-                <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                  <span className="capitalize">{mission.difficulty}</span>
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                  <span className="capitalize">
+                    {mission.difficulty} mission
+                  </span>
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays aria-hidden="true" className="size-4" />
                     Due {deadlineFormat.format(new Date(mission.endsAt))}
@@ -282,9 +278,9 @@ function MissionListing({ uuid }: { uuid: string }) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-1 text-xs text-muted-foreground">
-                  <span className="flex min-w-0 items-center gap-2">
+              <div className="mt-auto flex flex-row justify-between border-t border-border px-5 py-2">
+                <div className="flex min-w-0 flex-col justify-center gap-1 text-xs text-muted-foreground">
+                  <span className="flex min-w-0 items-center gap-1.5">
                     <UserRound
                       aria-hidden="true"
                       className="size-3.5 shrink-0"
@@ -312,7 +308,8 @@ function MissionListing({ uuid }: { uuid: string }) {
         </div>
       )}
 
-      {pageStatus === "CanLoadMore" || pageStatus === "LoadingMore" ? (
+      {results.length > 6 &&
+        (pageStatus === "CanLoadMore" || pageStatus === "LoadingMore") ? (
         <div className="flex justify-center">
           <Button
             variant="outline"

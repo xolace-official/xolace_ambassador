@@ -58,8 +58,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   );
   const isDark = themeMounted && resolvedTheme === "dark";
 
-  // Anything outside the portal has no nav, so it gets no title lookup and no
-  // back button rather than a wrong one.
   const role: PortalRole | null =
     roleSegment === "admin" || roleSegment === "ambassador"
       ? roleSegment
@@ -79,6 +77,32 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   const pageTitle = current?.name ?? parent?.name ?? "Dashboard";
 
+  function getParentHref() {
+    if (!parent) return pathname;
+    if (role !== "admin" || !pathname.includes("/missions/submissions/")) {
+      return parent.href;
+    }
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const section =
+      currentParams.get("section") === "impact" ? "impact" : "submissions";
+    const returnParams = new URLSearchParams({ section });
+    const submissionStatus = currentParams.get("submissionStatus");
+
+    if (
+      section === "submissions" &&
+      submissionStatus &&
+      ["all", "pending", "approved", "rejected", "declined"].includes(
+        submissionStatus,
+      ) &&
+      submissionStatus !== "all"
+    ) {
+      returnParams.set("submissionStatus", submissionStatus);
+    }
+
+    return `${parent.href}?${returnParams.toString()}`;
+  }
+
   // Keep the displayed time updated.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -96,7 +120,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   async function handleProfile() {
     try {
-      //await signOut();
       router.push("/profile");
     } catch (error) {
       console.error("Navigation failed:", error);
@@ -104,63 +127,48 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between pe-4 md:p-4">
+    <header className="flex h-14 shrink-0 items-center justify-between px-4 md:p-4">
       <div className="flex items-center gap-2 md:gap-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onMenuClick}
-          aria-label="Open sidebar"
-          className="h-9 w-9 rounded-full text-muted-foreground lg:hidden"
-        >
-          <Menu className="h-[18px] w-[18px] stroke-[1.7]" />
-        </Button>
+        {parent ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => router.push(getParentHref())}
+            aria-label={`Back to ${parent.name}`}
+            className="h-9 w-9 rounded-full border border-border bg-muted text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            aria-label="Open sidebar"
+            className="h-9 w-9 rounded-full text-muted-foreground lg:hidden"
+          >
+            <Menu className="h-[18px] w-[18px] stroke-[1.7]" />
+          </Button>
+        )}
 
         {parent ? (
           <Button
             asChild
             variant="outline"
             size="icon"
-            className="size-9 shrink-0 rounded-full border-border bg-card text-foreground "
+            className="hidden h-9 w-9 shrink-0 rounded-full border border-border bg-muted text-muted-foreground hover:bg-muted hover:text-foreground lg:inline-flex"
           >
             <Link
               href={parent.href}
               aria-label={`Back to ${parent.name}`}
               onClick={(event) => {
-                if (
-                  role !== "admin" ||
-                  !pathname.includes("/missions/submissions/")
-                ) {
-                  return;
+                const parentHref = getParentHref();
+                if (parentHref !== parent.href) {
+                  event.preventDefault();
+                  router.push(parentHref);
                 }
-
-                event.preventDefault();
-                const currentParams = new URLSearchParams(
-                  window.location.search,
-                );
-                const section =
-                  currentParams.get("section") === "impact"
-                    ? "impact"
-                    : "submissions";
-                const returnParams = new URLSearchParams({ section });
-                const submissionStatus = currentParams.get("submissionStatus");
-                if (
-                  section === "submissions" &&
-                  submissionStatus &&
-                  [
-                    "all",
-                    "pending",
-                    "approved",
-                    "rejected",
-                    "declined",
-                  ].includes(submissionStatus) &&
-                  submissionStatus !== "all"
-                ) {
-                  returnParams.set("submissionStatus", submissionStatus);
-                }
-
-                router.push(`${parent.href}?${returnParams.toString()}`);
               }}
             >
               <ArrowLeft aria-hidden="true" className="size-4" />

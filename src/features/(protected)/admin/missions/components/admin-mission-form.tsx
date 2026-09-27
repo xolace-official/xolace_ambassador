@@ -135,11 +135,14 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
   }
 
   return (
-    <Card className="border-border p-5 sm:p-8">
+    <Card className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-xl sm:border-border sm:bg-card sm:p-8 sm:shadow-sm">
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="space-y-8">
-            <section aria-labelledby="mission-content-heading">
+          <div className="order-2 space-y-8 lg:order-1">
+            <section
+              aria-labelledby="mission-content-heading"
+              className="border-b border-border pb-6 last:border-0 last:pb-0 lg:border-0 lg:pb-0"
+            >
               <div className="mb-5">
                 <h2
                   id="mission-content-heading"
@@ -200,7 +203,10 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
               </FieldGroup>
             </section>
 
-            <section aria-labelledby="mission-response-heading">
+            <section
+              aria-labelledby="mission-response-heading"
+              className="border-b border-border pb-6 last:border-0 last:pb-0 lg:border-0 lg:pb-0"
+            >
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2
@@ -242,7 +248,7 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
                   {responseFields.map((responseField, index) => (
                     <div
                       key={responseField.id}
-                      className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end"
+                      className="grid gap-3 border-t border-border py-4 first:border-t-0 first:pt-0 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end sm:rounded-lg sm:border sm:p-4 sm:first:border-t sm:first:pt-4"
                     >
                       <Field
                         data-invalid={!!errors.submissionFields?.[index]?.label}
@@ -327,7 +333,10 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
               )}
             </section>
 
-            <section aria-labelledby="mission-schedule-heading">
+            <section
+              aria-labelledby="mission-schedule-heading"
+              className="border-b border-border pb-6 last:border-0 last:pb-0 lg:border-0 lg:pb-0"
+            >
               <div className="mb-5">
                 <h2
                   id="mission-schedule-heading"
@@ -357,8 +366,11 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
             </section>
           </div>
 
-          <aside className="space-y-6">
-            <section aria-labelledby="mission-setup-heading">
+          <aside className="order-1 space-y-6 lg:order-2">
+            <section
+              className="border-b border-border pb-6 lg:border-0 lg:pb-0"
+              aria-labelledby="mission-setup-heading"
+            >
               <div className="mb-5">
                 <h2
                   id="mission-setup-heading"
@@ -486,7 +498,12 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
         </div>
 
         <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
-          <Button type="submit" size="lg" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full sm:w-auto"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Creating mission…" : "Create mission"}
           </Button>
         </div>

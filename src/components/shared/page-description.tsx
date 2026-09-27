@@ -5,8 +5,6 @@ const descriptions = {
     "Manage ambassador activities and contributions, from mission briefs to submitted work and outcomes.",
   adminSubmissions:
     "Review ambassador work and impact reports as they come in.",
-  adminImpact:
-    "Explore approved contributions that show how ambassadors are making a difference across program tracks.",
   ambassadorMissions:
     "Choose a mission, make your contribution, and grow with Xolace.",
   createMission:
@@ -20,7 +18,7 @@ type PageDescriptionProps = {
 
 export function PageDescription({ page, className }: PageDescriptionProps) {
   return (
-    <p className={cn("text-sm leading-6 sm:text-base", className)}>
+    <p className={cn("text-sm leading-6 sm:text-sm", className)}>
       {descriptions[page]}
     </p>
   );

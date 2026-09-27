@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, BookOpenCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
@@ -32,17 +32,6 @@ import { toMission } from "../mission-mapper";
 
 const ALL = "all";
 const PAGE_SIZE = 6;
-const DESKTOP_PAGE_SIZE = 9;
-
-function subscribeToWideScreen(onChange: () => void) {
-  const media = window.matchMedia("(min-width: 1280px)");
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
-function getWideScreenSnapshot() {
-  return window.matchMedia("(min-width: 1280px)").matches;
-}
 
 type MissionFilter = MissionCategory | typeof ALL;
 
@@ -74,12 +63,7 @@ export default function AmbassadorMissions() {
   // Frozen at mount. Passing a live `Date.now()` would change the query key on
   // every render and refetch in a loop.
   const [now] = useState(() => Date.now());
-  const isWideScreen = useSyncExternalStore(
-    subscribeToWideScreen,
-    getWideScreenSnapshot,
-    () => false,
-  );
-  const pageSize = isWideScreen ? DESKTOP_PAGE_SIZE : PAGE_SIZE;
+  const pageSize = PAGE_SIZE;
 
   const [track, setTrack] = useQueryState("track", parseMissionFilter);
   const [status, setStatus] = useQueryState("status", parseStatusFilter);
@@ -211,7 +195,7 @@ export default function AmbassadorMissions() {
         )}
       </div>
 
-      {rows !== undefined && visibleMissions.length > pageSize ? (
+      {rows !== undefined && visibleMissions.length > PAGE_SIZE ? (
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground" aria-live="polite">
             Showing {(currentPage - 1) * pageSize + 1}–
@@ -282,7 +266,7 @@ export default function AmbassadorMissions() {
 function MissionGridSkeleton() {
   return (
     <>
-      {["a", "b", "c"].map((key) => (
+      {["a", "b", "c", "d", "e", "f"].map((key) => (
         <div
           key={key}
           aria-hidden

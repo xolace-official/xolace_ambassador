@@ -108,11 +108,10 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
                 href={href}
                 onClick={onClose}
                 className={`flex h-9 items-center gap-3 rounded-md px-3 font-semibold transition-colors text-[14px]
-                                    ${
-                                      isActive
-                                        ? "bg-foreground/7 text-foreground"
-                                        : "text-foreground hover:bg-foreground/5 hover:text-foreground"
-                                    }
+                                    ${isActive
+                    ? "bg-foreground/7 text-foreground"
+                    : "text-foreground hover:bg-foreground/5 hover:text-foreground"
+                  }
                 `}
               >
                 <item.icon className="h-4 w-4 shrink-0 stroke-[1.8]" />
@@ -144,7 +143,7 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
                 key={item.name}
                 href={href}
                 onClick={onClose}
-                className="mt-3 flex h-9 items-center gap-3 rounded-md px-3 text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
+                className="mt-1 flex h-8 items-center gap-3 rounded-md px-3 text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
               >
                 <Icon
                   className="h-4 w-4 shrink-0 stroke-[1.8]"
@@ -158,7 +157,7 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="mt-3 flex h-9 w-full items-center gap-3 rounded-md px-3 text-left text-destructive/80 transition-colors hover:bg-foreground/5 hover:text-destructive"
+            className="mt-1 flex h-8 w-full items-center gap-3 rounded-md px-3 text-left text-destructive/80 transition-colors hover:bg-foreground/5 hover:text-destructive"
           >
             <LogOut
               className="h-4 w-4 shrink-0 stroke-[1.8]"
