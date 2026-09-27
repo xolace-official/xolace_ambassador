@@ -1,12 +1,16 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpenCheck, Target } from "lucide-react";
+import Link from "next/link";
 import { useQueryState } from "nuqs";
-import { parseAsStringLiteral } from "nuqs/server";
-import { useMemo, useState } from "react";
+import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { PageDescription } from "@/components/shared/page-description";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -27,6 +31,18 @@ import { MissionStats } from "../components/mission-stats";
 import { toMission } from "../mission-mapper";
 
 const ALL = "all";
+const PAGE_SIZE = 6;
+const DESKTOP_PAGE_SIZE = 9;
+
+function subscribeToWideScreen(onChange: () => void) {
+  const media = window.matchMedia("(min-width: 1280px)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function getWideScreenSnapshot() {
+  return window.matchMedia("(min-width: 1280px)").matches;
+}
 
 type MissionFilter = MissionCategory | typeof ALL;
 
@@ -58,9 +74,19 @@ export default function AmbassadorMissions() {
   // Frozen at mount. Passing a live `Date.now()` would change the query key on
   // every render and refetch in a loop.
   const [now] = useState(() => Date.now());
+  const isWideScreen = useSyncExternalStore(
+    subscribeToWideScreen,
+    getWideScreenSnapshot,
+    () => false,
+  );
+  const pageSize = isWideScreen ? DESKTOP_PAGE_SIZE : PAGE_SIZE;
 
   const [track, setTrack] = useQueryState("track", parseMissionFilter);
   const [status, setStatus] = useQueryState("status", parseStatusFilter);
+  const [requestedPage, setPage] = useQueryState(
+    "missionPage",
+    parseAsInteger.withDefault(1).withOptions({ clearOnDefault: true }),
+  );
 
   const trackArg = track === ALL ? undefined : track;
 
@@ -74,19 +100,24 @@ export default function AmbassadorMissions() {
   const visibleMissions = all.filter(
     (mission) => status === ALL || mission.status === status,
   );
+  const pageCount = Math.max(1, Math.ceil(visibleMissions.length / pageSize));
+  const currentPage = Math.min(Math.max(requestedPage, 1), pageCount);
+  const pageMissions = visibleMissions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   const isFiltered = track !== ALL || status !== ALL;
 
   function clearFilters() {
     void setTrack(ALL);
     void setStatus(ALL);
+    void setPage(1);
   }
 
   return (
-    <div className="w-full" >
-      <p className="text-sm leading-6 text-foreground/70">
-        Choose a mission, make your contribution, and grow with Xolace.
-      </p>
+    <div className="w-full">
+      <PageDescription page="ambassadorMissions" />
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <MissionStats missions={all} />
@@ -97,6 +128,7 @@ export default function AmbassadorMissions() {
             onValueChange={(value) => {
               if (isMissionFilter(value)) {
                 void setTrack(value);
+                void setPage(1);
               }
             }}
           >
@@ -124,6 +156,7 @@ export default function AmbassadorMissions() {
             onValueChange={(value) => {
               if (isStatusFilter(value)) {
                 void setStatus(value);
+                void setPage(1);
               }
             }}
           >
@@ -168,7 +201,7 @@ export default function AmbassadorMissions() {
             }
           />
         ) : (
-          visibleMissions.map((mission: Mission) => (
+          pageMissions.map((mission: Mission) => (
             <MissionCard
               key={mission.id}
               mission={mission}
@@ -177,6 +210,71 @@ export default function AmbassadorMissions() {
           ))
         )}
       </div>
+
+      {rows !== undefined && visibleMissions.length > pageSize ? (
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            Showing {(currentPage - 1) * pageSize + 1}–
+            {Math.min(currentPage * pageSize, visibleMissions.length)} of{" "}
+            {visibleMissions.length} missions
+          </p>
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-11"
+              disabled={currentPage === 1}
+              onClick={() => void setPage(currentPage - 1)}
+            >
+              <ArrowLeft aria-hidden="true" />
+              Previous
+            </Button>
+            <span className="px-2 text-sm tabular-nums text-muted-foreground">
+              {currentPage} / {pageCount}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-11"
+              disabled={currentPage === pageCount}
+              onClick={() => void setPage(currentPage + 1)}
+            >
+              Next
+              <ArrowRight aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {user?._id ? (
+        <Card className="mt-8 flex flex-col gap-4 border-border bg-muted/30 p-5 sm:flex-row sm:items-center sm:p-6">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <BookOpenCheck aria-hidden="true" className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-semibold text-foreground">
+              Looking for a place to start?
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Explore practical guides and resources to help you choose your
+              next contribution.
+            </p>
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto"
+          >
+            <Link href={`/ambassador/${user._id}/resources`}>
+              Explore resources
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+        </Card>
+      ) : null}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { MissionSubmissionField } from "@/types/missions.type";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { MissionSubmissionForm } from "./mission-submission-form";
 
@@ -27,9 +28,13 @@ const responsivePanel =
 
 export function MissionSubmitDialog({
   missionId,
+  missionTitle,
+  submissionFields,
   label,
 }: {
   missionId: Id<"missions">;
+  missionTitle: string;
+  submissionFields?: MissionSubmissionField[];
   label: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +42,7 @@ export function MissionSubmitDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="shrink-0">
+        <Button className="w-full">
           <Send aria-hidden="true" />
           {label}
         </Button>
@@ -45,10 +50,10 @@ export function MissionSubmitDialog({
 
       <DialogContent className={responsivePanel}>
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Submit your contribution</DialogTitle>
+          <DialogTitle>{label}</DialogTitle>
           <DialogDescription>
-            An admin reviews every submission. Points land in your total once
-            it&apos;s approved.
+            Share your work for “{missionTitle}”. An admin reviews your
+            contribution, and points are added after approval.
           </DialogDescription>
         </DialogHeader>
 
@@ -58,6 +63,7 @@ export function MissionSubmitDialog({
         <div className="max-h-[65vh] overflow-y-auto overscroll-contain px-6 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:max-h-[70vh]">
           <MissionSubmissionForm
             missionId={missionId}
+            submissionFields={submissionFields}
             onSubmitted={() => setOpen(false)}
           />
         </div>

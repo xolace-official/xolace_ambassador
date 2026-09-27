@@ -12,6 +12,7 @@ const SUBMISSION_STATUS: Record<Submission["status"], MissionProgressStatus> = {
   pending: "submitted",
   approved: "approved",
   rejected: "rejected",
+  declined: "declined",
 };
 
 // The document and the card view model disagree on two field names on purpose:

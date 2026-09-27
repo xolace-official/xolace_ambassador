@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarDays } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
@@ -13,70 +13,64 @@ const deadlineFormat = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
-interface MissionCardProps {
+export function MissionCard({
+  mission,
+  href,
+}: {
   mission: Mission;
   href: string;
-}
-
-export function MissionCard({ mission, href }: MissionCardProps) {
+}) {
   return (
-    <Card className="group relative h-full cursor-pointer gap-0 border-border py-0 transition-colors hover:border-primary/50 focus-within:border-primary/50">
-      <div className="flex items-start justify-between gap-3 px-5 pt-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <MissionTrackBadge track={mission.category} />
-
-          {mission.status !== "available" && (
-            <MissionStatus status={mission.status} />
-          )}
-        </div>
-
-        <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-          {mission.points}
-          <span className="ml-1 font-normal text-foreground/60">pts</span>
-        </p>
+    <Card className="group relative h-full gap-0 overflow-hidden border-border py-0 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-within:border-primary/50">
+      <div className="flex items-center justify-between gap-3 px-5 pt-5">
+        <MissionTrackBadge track={mission.category} />
+        <MissionStatus status={mission.status} />
       </div>
 
-      <h2 className="px-5 pt-4 text-base font-semibold tracking-tight text-balance text-card-foreground">
-        {/* Stretched link: one tab stop per card, accessible name is the title
-            only, and the whole surface is clickable. */}
-        <Link
-          href={href}
-          className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          {mission.title}
-        </Link>
-      </h2>
+      <div className="px-5 pt-4">
+        <h2 className="text-lg font-semibold leading-snug tracking-tight text-card-foreground">
+          <Link
+            href={href}
+            className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            {mission.title}
+          </Link>
+        </h2>
+        <MissionDescription text={mission.summary} lines={2} className="pt-2" />
+      </div>
 
-      {/* `summary` is the short card line; the full `description` lives on the
-          detail page. The clamp is a safety net for a badly written summary,
-          not the mechanism that keeps cards even. */}
-      <MissionDescription
-        text={mission.summary}
-        lines={2}
-        className="px-5 pt-2 pb-5"
-      />
-
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-xs text-foreground/55">
-        <span className="flex min-w-0 flex-wrap items-center gap-x-2">
-          <span className="capitalize">{mission.difficulty}</span>
-
-          <span aria-hidden="true">·</span>
-
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays aria-hidden="true" className="size-3.5" />
-            Ends{" "}
-            <time dateTime={new Date(mission.endsAt).toISOString()}>
-              {deadlineFormat.format(new Date(mission.endsAt))}
-            </time>
+      <div className="mt-2 flex flex-row justify-between border-t border-border px-5 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <ArrowUpRight aria-hidden="true" className="size-4" />
           </span>
-        </span>
+          <span className="min-w-0 text-sm">
+            <span className="block font-semibold tabular-nums text-foreground">
+              {mission.points} pts
+            </span>
+          </span>
+        </div>
 
-        <span className="flex shrink-0 items-center gap-1 font-medium text-foreground">
-          View
-          <ArrowUpRight
-            aria-hidden="true"
-            className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-          />
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <CalendarDays aria-hidden="true" className="size-4" />
+          </span>
+          <span className="min-w-0 text-sm">
+            <span className="text-xs text-muted-foreground">
+              Due {deadlineFormat.format(new Date(mission.endsAt))}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between border-t border-border bg-muted/30 px-5 py-3 text-xs text-muted-foreground">
+        <span className="inline-flex min-w-0 items-center gap-1.5 capitalize">
+          <Clock3 aria-hidden="true" className="size-3.5 shrink-0" />
+          {mission.difficulty} mission
+        </span>
+        <span className="shrink-0 font-medium text-foreground transition-colors group-hover:text-primary">
+          View brief{" "}
+          <ArrowUpRight aria-hidden="true" className="ml-1 inline size-3.5" />
         </span>
       </div>
     </Card>
