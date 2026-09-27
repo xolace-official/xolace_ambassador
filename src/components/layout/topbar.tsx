@@ -112,7 +112,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
           size="icon"
           onClick={onMenuClick}
           aria-label="Open sidebar"
-          className="h-9 w-9 rounded-full text-muted-foreground hover:bg-muted lg:hidden"
+          className="h-9 w-9 rounded-full text-muted-foreground lg:hidden"
         >
           <Menu className="h-[18px] w-[18px] stroke-[1.7]" />
         </Button>
@@ -122,15 +122,52 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
             asChild
             variant="outline"
             size="icon"
-            className="size-9 shrink-0 rounded-full border-border bg-card text-foreground hover:bg-muted"
+            className="size-9 shrink-0 rounded-full border-border bg-card text-foreground "
           >
-            <Link href={parent.href} aria-label={`Back to ${parent.name}`}>
+            <Link
+              href={parent.href}
+              aria-label={`Back to ${parent.name}`}
+              onClick={(event) => {
+                if (
+                  role !== "admin" ||
+                  !pathname.includes("/missions/submissions/")
+                ) {
+                  return;
+                }
+
+                event.preventDefault();
+                const currentParams = new URLSearchParams(
+                  window.location.search,
+                );
+                const section =
+                  currentParams.get("section") === "impact"
+                    ? "impact"
+                    : "submissions";
+                const returnParams = new URLSearchParams({ section });
+                const submissionStatus = currentParams.get("submissionStatus");
+                if (
+                  section === "submissions" &&
+                  submissionStatus &&
+                  [
+                    "all",
+                    "pending",
+                    "approved",
+                    "rejected",
+                    "declined",
+                  ].includes(submissionStatus) &&
+                  submissionStatus !== "all"
+                ) {
+                  returnParams.set("submissionStatus", submissionStatus);
+                }
+
+                router.push(`${parent.href}?${returnParams.toString()}`);
+              }}
+            >
               <ArrowLeft aria-hidden="true" className="size-4" />
             </Link>
           </Button>
         ) : null}
 
-        {/* The page's single h1 — the content area must not repeat it. */}
         <h1 className="truncate text-sm font-semibold uppercase tracking-wide">
           {pageTitle}
         </h1>

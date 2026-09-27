@@ -15,6 +15,26 @@ export const trackValidator = v.union(
 
 const track = trackValidator;
 
+const missionSubmissionFieldTypeValidator = v.union(
+  v.literal("short_text"),
+  v.literal("long_text"),
+  v.literal("url"),
+  v.literal("number"),
+);
+
+const missionSubmissionFieldValidator = v.object({
+  key: v.string(),
+  label: v.string(),
+  type: missionSubmissionFieldTypeValidator,
+  required: v.boolean(),
+});
+
+const contributionResponseValidator = v.object({
+  fieldKey: v.string(),
+  label: v.string(),
+  value: v.string(),
+});
+
 export default defineSchema({
   // Convex Auth writes to `authSessions`, `authAccounts`, `authRefreshTokens`,
   // `authVerificationCodes`, `authVerifiers` and `authRateLimits` on every
@@ -183,6 +203,7 @@ export default defineSchema({
     startsAt: v.number(),
     endsAt: v.number(),
     createdBy: v.id("users"),
+    submissionFields: v.optional(v.array(missionSubmissionFieldValidator)),
   })
     .index("by_status", ["status"])
     .index("by_slug", ["slug"])
@@ -213,10 +234,12 @@ export default defineSchema({
     title: v.string(),
     note: v.optional(v.string()),
     link: v.optional(v.string()),
+    responses: v.optional(v.array(contributionResponseValidator)),
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
       v.literal("rejected"),
+      v.literal("declined"),
     ),
     awardedPoints: v.optional(v.number()),
     reviewedBy: v.optional(v.id("users")),
