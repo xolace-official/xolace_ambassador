@@ -23,7 +23,7 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params }: { params: Params }) {
-  const { missionId } = await params;
+  const { missionId, uuid } = await params;
 
-  return <MissionDetail missionId={missionId} />;
+  return <MissionDetail missionId={missionId} uuid={uuid} />;
 }
