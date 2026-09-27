@@ -57,7 +57,12 @@ export default defineSchema({
   )
     .index("uuid", ["uuid"])
     .index("email", ["email"])
-    .index("phone", ["phone"]),
+    .index("phone", ["phone"])
+    .index("by_role", ["role"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["role"],
+    }),
 
   // ---------------------------------------------------------------------------
   // Program configuration — admin-editable, so thresholds and point values can
@@ -355,5 +360,9 @@ export default defineSchema({
     reviewNote: v.optional(v.string()),
   })
     .index("by_status", ["status"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["status"],
+    }),
 });

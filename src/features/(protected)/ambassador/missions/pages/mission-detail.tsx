@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import {
-  ArrowLeft,
   CalendarDays,
   Clock3,
   ShieldCheck,
@@ -59,7 +58,6 @@ export function MissionDetail({
   const [now] = useState(() => Date.now());
 
   const row = useQuery(api.missions.get, { missionId, now });
-  const backHref = `/ambassador/${uuid}/missions`;
 
   if (row === undefined) {
     return (
@@ -96,13 +94,6 @@ export function MissionDetail({
           title="Mission not found"
           description="This mission may have closed, or the link may be wrong."
         />
-        <Link
-          href={backHref}
-          className="mx-auto mt-5 flex min-h-11 w-fit items-center gap-2 rounded-md px-3 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          Back to missions
-        </Link>
       </div>
     );
   }

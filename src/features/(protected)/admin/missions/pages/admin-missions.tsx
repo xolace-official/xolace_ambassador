@@ -87,7 +87,7 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
   const [section, setSection] = useQueryState("section", parseSection);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <PageDescription page="adminMissions" className="max-w-2xl" />
         <Button asChild className="ml-auto w-fit self-end" size="sm">

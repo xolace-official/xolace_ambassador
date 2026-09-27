@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { LogOut, ShieldCheck, Sparkles, UserPlus, X } from "lucide-react";
+import { LogOut, ShieldCheck, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { InviteDialog } from "@/components/layout/invite-dialog";
@@ -108,10 +108,11 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
                 href={href}
                 onClick={onClose}
                 className={`flex h-9 items-center gap-3 rounded-md px-3 font-semibold transition-colors text-[14px]
-                                    ${isActive
-                    ? "bg-foreground/7 text-foreground"
-                    : "text-foreground hover:bg-foreground/5 hover:text-foreground"
-                  }
+                                    ${
+                                      isActive
+                                        ? "bg-foreground/7 text-foreground"
+                                        : "text-foreground hover:bg-foreground/5 hover:text-foreground"
+                                    }
                 `}
               >
                 <item.icon className="h-4 w-4 shrink-0 stroke-[1.8]" />
@@ -123,14 +124,11 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
         </nav>
 
         <div className="mt-auto pt-4 font-semibold text-[14px]">
-          <div className="flex items-center gap-3 px-3 text-foreground/80">
-            <UserPlus
-              className="h-4 w-4 shrink-0 stroke-[1.8]"
-              aria-hidden="true"
-            />
+          <div className="mt-1">
             <InviteDialog
               triggerLabel={inviteLabel(role)}
               onOpen={() => onClose()}
+              triggerVariant="sidebar"
             />
           </div>
 

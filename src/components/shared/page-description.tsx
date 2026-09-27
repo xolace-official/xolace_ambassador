@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const descriptions = {
+  adminAmbassadors: "Review applications and manage active ambassadors.",
   adminMissions:
     "Manage ambassador activities and contributions, from mission briefs to submitted work and outcomes.",
   adminSubmissions:

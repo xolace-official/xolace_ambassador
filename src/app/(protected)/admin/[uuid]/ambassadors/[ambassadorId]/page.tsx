@@ -1,31 +1,27 @@
-import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { FeatureComingSoon } from "@/components/shared/feature-coming-soon";
+import AdminAmbassadorDetail from "@/features/(protected)/admin/ambassadors/pages/admin-ambassador-detail";
 import { portalMetadata } from "@/lib/metadata";
 
 type Params = Promise<{ ambassadorId: string }>;
 
-// TODO: resolve the real title once profile data exists.
-export async function generateMetadata({
-  params,
-}: {
-  params: Params;
-}): Promise<Metadata> {
-  const { ambassadorId } = await params;
-
-  return portalMetadata({
-    title: "Ambassador",
-    description: `Progress, submissions and activity for ${ambassadorId}.`,
-  });
-}
+export const metadata = portalMetadata({
+  title: "Ambassador overview",
+  description: "Review an ambassador’s profile, activity and impact.",
+});
 
 export default async function Page({ params }: { params: Params }) {
   const { ambassadorId } = await params;
-
   return (
-    <FeatureComingSoon
-      title="Ambassador profile"
-      description={`Progress, submissions and activity for ${ambassadorId}.`}
-    />
+    <Suspense
+      fallback={
+        <div
+          aria-hidden="true"
+          className="h-72 animate-pulse rounded-xl border border-border bg-card"
+        />
+      }
+    >
+      <AdminAmbassadorDetail ambassadorId={ambassadorId} />
+    </Suspense>
   );
 }

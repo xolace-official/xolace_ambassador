@@ -1,5 +1,6 @@
 "use client";
 
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,9 +20,11 @@ import { Label } from "@/components/ui/label";
 export function InviteDialog({
   triggerLabel,
   onOpen,
+  triggerVariant = "default",
 }: {
   triggerLabel: string;
   onOpen?: () => void;
+  triggerVariant?: "default" | "sidebar";
 }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -37,20 +40,29 @@ export function InviteDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button
+        <Button
           type="button"
-          className="text-left text-foreground/80 transition-colors hover:text-foreground"
+          size="sm"
+          className={
+            triggerVariant === "sidebar"
+              ? "h-8 w-full justify-start px-4 text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+              : undefined
+          }
+          variant={triggerVariant === "sidebar" ? "ghost" : "default"}
         >
+          {triggerVariant === "sidebar" ? (
+            <UserPlus aria-hidden="true" className="size-4 shrink-0" />
+          ) : null}
           {triggerLabel}
-        </button>
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Send an invite</DialogTitle>
           <DialogDescription>
-            Invite someone to the Xolace Ambassadors program. They&apos;ll get
-            an email to set up their portal access.
+            Prepare an email invitation in your mail app. Portal access still
+            needs to be provisioned by an admin.
           </DialogDescription>
         </DialogHeader>
 
@@ -59,10 +71,11 @@ export function InviteDialog({
           <Input
             id="invite-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="you@example.com…"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
+            required
           />
         </div>
 
@@ -76,10 +89,15 @@ export function InviteDialog({
           </Button>
           <Button
             type="button"
-            onClick={() => setOpen(false)}
-            disabled={!email}
+            disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+            onClick={() => {
+              const body =
+                "Hi,\n\nWe would love to invite you to join the Xolace Ambassadors program. Reply to this email and we will help you get started.\n\nLearn more at xolaceinc.com.";
+              window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent("Xolace Ambassador Program")}&body=${encodeURIComponent(body)}`;
+              setOpen(false);
+            }}
           >
-            Send invite
+            Open email app
           </Button>
         </DialogFooter>
       </DialogContent>

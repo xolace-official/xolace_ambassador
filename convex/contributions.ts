@@ -210,6 +210,14 @@ export const submit = mutation({
     // so a caller cannot submit work as somebody else.
     const user = await requireRole(ctx);
 
+    const ambassadorProfile = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+    if (ambassadorProfile !== null && ambassadorProfile.status !== "active") {
+      throw new AuthError(404, "Not found.");
+    }
+
     const mission = await ctx.db.get(args.missionId);
 
     // 404 rather than a refusal, so a probe cannot tell a closed mission from

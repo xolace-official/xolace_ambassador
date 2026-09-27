@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
-import { Coolshape } from "coolshapes-react";
-import { Camera, Check } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "convex/react";
+import { Check } from "lucide-react";
 import { motion } from "motion/react";
-import Image from "next/image";
-import { useRef, useState } from "react";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,16 +17,38 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { api } from "../../../../../../convex/_generated/api";
+
+const applicationSchema = z.object({
+  name: z.string().trim().min(2, "Enter at least 2 characters.").max(120),
+  email: z.email({ error: "Enter a valid email address." }),
+  location: z.string().trim().min(2, "Enter your city and country.").max(120),
+  schoolOrCommunity: z.string().max(160),
+  socialPlatform: z.string().max(80),
+  socialHandle: z.string().max(100),
+  track: z.enum(
+    ["creator", "community", "growth", "creative", "production", "advocacy"],
+    {
+      error: "Choose a track.",
+    },
+  ),
+  whyXolace: z
+    .string()
+    .trim()
+    .min(20, "Write at least 20 characters.")
+    .max(4000),
+});
+
+type ApplicationForm = z.infer<typeof applicationSchema>;
 
 const TRACKS = [
-  "Creator",
-  "Community",
-  "Growth",
-  "Creative",
-  "Production",
-  "Advocacy",
+  "creator",
+  "community",
+  "growth",
+  "creative",
+  "production",
+  "advocacy",
 ] as const;
-
 const SOCIAL_PLATFORMS = [
   "LinkedIn",
   "X",
@@ -32,136 +56,94 @@ const SOCIAL_PLATFORMS = [
   "Instagram",
   "Reddit",
 ] as const;
-
-const SOCIAL_HANDLE_PLACEHOLDERS: Record<
-  (typeof SOCIAL_PLATFORMS)[number],
-  string
-> = {
-  LinkedIn: "your-profile-slug",
-  X: "@yourhandle",
-  TikTok: "@yourhandle",
-  Instagram: "@yourhandle",
-  Reddit: "u/yourhandle",
-};
-
-const initialFormData = {
+const initialFormData: ApplicationForm = {
   name: "",
   email: "",
   location: "",
   schoolOrCommunity: "",
   socialPlatform: "",
   socialHandle: "",
-  track: "",
+  track: "creator",
   whyXolace: "",
 };
 
 const reassurances = [
-  "We read every application â€” no bots, no filters.",
-  "You'll hear back within a few days, either way.",
-  "Onboarding starts right after â€” no waiting around.",
+  "We read every application — no bots, no filters.",
+  "You’ll hear back within a few days, either way.",
+  "Onboarding starts right after — no waiting around.",
 ];
 
 export default function JoinProgramForm() {
-  const [formData, setFormData] = useState(initialFormData);
-  const [_avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState(false);
-  const [trackError, setTrackError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const submitApplication = useMutation(api.applications.submit);
+  const [submitted, setSubmitted] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ApplicationForm>({
+    resolver: zodResolver(applicationSchema),
+    defaultValues: initialFormData,
+  });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTrackChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, track: value }));
-    setTrackError(false);
-  };
-
-  const handleSocialPlatformChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, socialPlatform: value }));
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!formData.track) {
-      setTrackError(true);
-      return;
-    }
-
-    setIsLoading(true);
-
+  async function onSubmit(values: ApplicationForm) {
+    setError(null);
     try {
-      // Synthetic submission mimicking a generic API/Convex mutation delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
+      await submitApplication({
+        name: values.name,
+        email: values.email,
+        location: values.location,
+        school: values.schoolOrCommunity || undefined,
+        socialPlatform: values.socialPlatform || undefined,
+        socialHandle: values.socialHandle || undefined,
+        trackInterest: values.track,
+        whyXolace: values.whyXolace,
+      });
       setSubmitted(true);
-      setIsLoading(false);
-
-      setTimeout(() => {
-        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        setFormData(initialFormData);
-        setAvatarFile(null);
-        setAvatarPreview(null);
-        setSubmitted(false);
-        setTrackError(false);
-      }, 5000);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      setError(true);
-      setIsLoading(false);
-      setTimeout(() => setError(false), 3000);
+      reset(initialFormData);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not submit your application. Please try again.",
+      );
     }
-  };
+  }
 
   return (
     <section
       id="apply"
-      className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
+      className="relative w-full overflow-hidden bg-background px-4 py-20 scroll-mt-20 sm:px-6 lg:px-8"
     >
       <div
         aria-hidden="true"
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-accent/15 blur-3xl pointer-events-none"
+        className="pointer-events-none absolute -top-32 left-1/2 size-[500px] -translate-x-1/2 rounded-full bg-accent/15 blur-3xl"
       />
-
-      <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
-          className="lg:pt-6 space-y-8"
+          className="space-y-8 lg:pt-6"
         >
           <div className="space-y-3">
-            <p className="text-sm font-medium text-primary uppercase tracking-wide">
+            <p className="text-sm font-medium uppercase tracking-wide text-primary">
               Ready?
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold md:text-balance">
-              You don&apos;t have to be an expert. You just have to care.
+            <h2 className="text-3xl font-bold md:text-balance sm:text-4xl">
+              You don’t have to be an expert. You just have to care.
             </h2>
           </div>
-
           <div className="space-y-4">
             {reassurances.map((text, index) => (
               <div key={text} className="flex items-start gap-3.5">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                   {index + 1}
                 </span>
-                <span className="text-foreground/70 text-sm leading-relaxed pt-0.5">
+                <span className="pt-0.5 text-sm leading-relaxed text-foreground/70">
                   {text}
                 </span>
               </div>
@@ -175,283 +157,203 @@ export default function JoinProgramForm() {
           transition={{ duration: 0.4, delay: 0.1 }}
           viewport={{ once: true, margin: "-50px" }}
         >
-          <Card className="p-6 sm:p-8 bg-card border border-border/40 rounded-3xl shadow-xl">
+          <Card className="rounded-3xl border border-border/40 bg-card p-6 shadow-xl sm:p-8">
             {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-4 py-6"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/20"
-                >
-                  <Check className="w-8 h-8 text-accent" />
-                </motion.div>
+              <div aria-live="polite" className="space-y-4 py-6 text-center">
+                <span className="inline-flex size-16 items-center justify-center rounded-full bg-accent/20">
+                  <Check aria-hidden="true" className="size-8 text-accent" />
+                </span>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    You're In!
+                  <h3 className="text-xl font-semibold">
+                    Application received
                   </h3>
-                  <p className="text-sm text-foreground/60">
-                    You will receive an email within a few hours for next steps.
-                    Welcome to the Xolace family.
+                  <p className="text-sm text-muted-foreground">
+                    Thanks for applying. Our team will review your details and
+                    follow up.
                   </p>
                 </div>
-              </motion.div>
-            ) : error ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-4 py-6"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/20"
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  onClick={() => setSubmitted(false)}
                 >
-                  <Coolshape type="triangle" index={9} size={100} noise />
-                </motion.div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    Something went wrong
-                  </h3>
-                  <p className="text-sm text-foreground/60">
-                    Please check your connection and try again, or email us at
-                    ambassadors@xolaceinc.com.
-                  </p>
-                </div>
-              </motion.div>
+                  Submit another application
+                </button>
+              </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex items-center gap-3 pb-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="relative w-14 h-14 shrink-0 rounded-full border-2 border-dashed border-border/60 hover:border-primary transition-colors overflow-hidden bg-muted group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    aria-label="Upload profile photo"
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Full name"
+                    id="full-name"
+                    error={errors.name?.message}
                   >
-                    {avatarPreview ? (
-                      <Image
-                        src={avatarPreview}
-                        alt="Profile preview"
-                        fill
-                        className="object-cover"
+                    {(fieldProps) => (
+                      <Input
+                        id="full-name"
+                        autoComplete="name"
+                        placeholder="Your name…"
+                        {...fieldProps}
+                        {...register("name")}
                       />
-                    ) : (
-                      <span className="flex items-center justify-center w-full h-full text-foreground/40 group-hover:text-primary transition-colors">
-                        <Camera className="w-5 h-5" />
-                      </span>
                     )}
-                    {avatarPreview && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="w-4 h-4 text-primary-foreground" />
-                      </span>
+                  </Field>
+                  <Field
+                    label="Email address"
+                    id="email"
+                    error={errors.email?.message}
+                  >
+                    {(fieldProps) => (
+                      <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        spellCheck={false}
+                        placeholder="you@example.com…"
+                        {...fieldProps}
+                        {...register("email")}
+                      />
                     )}
-                  </button>
-                  <span className="text-xs text-foreground/50">
-                    Optional photo â€” JPG, PNG or WebP, max 5 MB
-                  </span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    onChange={handleAvatarChange}
-                  />
+                  </Field>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="full-name"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Full Name
-                    </label>
-                    <Input
-                      id="full-name"
-                      type="text"
-                      name="name"
-                      autoComplete="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Your nameâ€¦"
-                      required
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="email"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Email Address
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      name="email"
-                      autoComplete="email"
-                      spellCheck={false}
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="you@example.comâ€¦"
-                      required
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Location"
+                    id="location"
+                    error={errors.location?.message}
+                  >
+                    {(fieldProps) => (
+                      <Input
+                        id="location"
+                        autoComplete="address-level2"
+                        placeholder="City, country…"
+                        {...fieldProps}
+                        {...register("location")}
+                      />
+                    )}
+                  </Field>
+                  <Field
+                    label="School / Community (optional)"
+                    id="school-or-community"
+                    error={errors.schoolOrCommunity?.message}
+                  >
+                    {(fieldProps) => (
+                      <Input
+                        id="school-or-community"
+                        placeholder="Your school or community…"
+                        {...fieldProps}
+                        {...register("schoolOrCommunity")}
+                      />
+                    )}
+                  </Field>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <label
-                      htmlFor="location"
-                      className="text-sm font-medium text-foreground"
+                      htmlFor="social-platform"
+                      className="text-sm font-medium"
                     >
-                      Location
-                    </label>
-                    <Input
-                      id="location"
-                      type="text"
-                      name="location"
-                      autoComplete="address-level2"
-                      value={formData.location}
-                      onChange={handleChange}
-                      placeholder="City, countryâ€¦"
-                      required
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="school-or-community"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      School / Community{" "}
-                      <span className="text-foreground/40 font-normal">
-                        (optional)
-                      </span>
-                    </label>
-                    <Input
-                      id="school-or-community"
-                      type="text"
-                      name="schoolOrCommunity"
-                      value={formData.schoolOrCommunity}
-                      onChange={handleChange}
-                      placeholder="Your school or communityâ€¦"
-                      className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="social-handle"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Social Handle{" "}
-                      <span className="text-foreground/40 font-normal">
-                        (optional)
-                      </span>
+                      Social handle (optional)
                     </label>
                     <div className="flex gap-2">
-                      <Select
-                        value={formData.socialPlatform}
-                        onValueChange={handleSocialPlatformChange}
-                      >
-                        <SelectTrigger className="w-[112px] shrink-0 bg-background border border-border/50 rounded-lg">
-                          <SelectValue placeholder="Platform" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SOCIAL_PLATFORMS.map((platform) => (
-                            <SelectItem key={platform} value={platform}>
-                              {platform}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        control={control}
+                        name="socialPlatform"
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger
+                              id="social-platform"
+                              className="w-32 shrink-0"
+                            >
+                              <SelectValue placeholder="Platform" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SOCIAL_PLATFORMS.map((platform) => (
+                                <SelectItem key={platform} value={platform}>
+                                  {platform}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                       <Input
-                        id="social-handle"
-                        type="text"
-                        name="socialHandle"
-                        value={formData.socialHandle}
-                        onChange={handleChange}
-                        placeholder={
-                          formData.socialPlatform
-                            ? SOCIAL_HANDLE_PLACEHOLDERS[
-                                formData.socialPlatform as (typeof SOCIAL_PLATFORMS)[number]
-                              ]
-                            : "Your handleâ€¦"
-                        }
-                        className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
+                        aria-label="Social handle"
+                        placeholder="Your handle…"
+                        {...register("socialHandle")}
                       />
                     </div>
+                    <FieldError
+                      id="social-handle-error"
+                      message={errors.socialHandle?.message}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label
-                      htmlFor="track"
-                      className="text-sm font-medium text-foreground"
-                    >
+                    <label htmlFor="track" className="text-sm font-medium">
                       Track
                     </label>
-                    <Select
-                      value={formData.track}
-                      onValueChange={handleTrackChange}
-                    >
-                      <SelectTrigger
-                        id="track"
-                        className="w-full bg-background border border-border/50 rounded-lg"
-                      >
-                        <SelectValue placeholder="Select a trackâ€¦" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TRACKS.map((track) => (
-                          <SelectItem key={track} value={track}>
-                            {track}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {trackError && (
-                      <p className="text-xs text-destructive">
-                        Please select a track.
-                      </p>
-                    )}
+                    <Controller
+                      control={control}
+                      name="track"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="track" className="w-full">
+                            <SelectValue placeholder="Select a track…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRACKS.map((track) => (
+                              <SelectItem
+                                key={track}
+                                value={track}
+                                className="capitalize"
+                              >
+                                {track}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError
+                      id="track-error"
+                      message={errors.track?.message}
+                    />
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="why-xolace"
-                    className="text-sm font-medium text-foreground"
-                  >
-                    Why Xolace?
-                  </label>
-                  <Textarea
-                    id="why-xolace"
-                    name="whyXolace"
-                    value={formData.whyXolace}
-                    onChange={handleChange}
-                    placeholder="What draws you to this? No perfect answer neededâ€¦"
-                    required
-                    rows={3}
-                    className="bg-background border border-border/50 rounded-lg placeholder:text-foreground/40"
-                  />
-                </div>
-
+                <Field
+                  label="Why Xolace?"
+                  id="why-xolace"
+                  error={errors.whyXolace?.message}
+                >
+                  {(fieldProps) => (
+                    <Textarea
+                      id="why-xolace"
+                      rows={3}
+                      placeholder="What draws you to this? No perfect answer needed…"
+                      {...fieldProps}
+                      {...register("whyXolace")}
+                    />
+                  )}
+                </Field>
+                {error ? (
+                  <p role="alert" className="text-sm text-destructive">
+                    {error}
+                  </p>
+                ) : null}
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-[background-color,transform,opacity] duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
+                  disabled={isSubmitting}
+                  className="min-h-11 w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Joiningâ€¦" : "Join the Program"}
+                  {isSubmitting ? "Submitting…" : "Join the Program"}
                 </button>
-
-                <p className="text-xs text-foreground/50 text-center">
+                <p className="text-center text-xs text-muted-foreground">
                   We respect your privacy. No spam, ever.
                 </p>
               </form>
@@ -461,4 +363,41 @@ export default function JoinProgramForm() {
       </div>
     </section>
   );
+}
+
+function Field({
+  label,
+  id,
+  error,
+  children,
+}: {
+  label: string;
+  id: string;
+  error?: string;
+  children: (fieldProps: {
+    "aria-describedby"?: string;
+    "aria-invalid": boolean;
+  }) => React.ReactNode;
+}) {
+  const errorId = `${id}-error`;
+  return (
+    <div className="space-y-2">
+      <label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </label>
+      {children({
+        "aria-describedby": error ? errorId : undefined,
+        "aria-invalid": Boolean(error),
+      })}
+      <FieldError id={errorId} message={error} />
+    </div>
+  );
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  return message ? (
+    <p id={id} className="text-xs text-destructive">
+      {message}
+    </p>
+  ) : null;
 }
