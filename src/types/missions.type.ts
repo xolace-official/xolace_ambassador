@@ -31,6 +31,7 @@ export type MissionProgressStatus =
   | "under_review"
   | "approved"
   | "rejected"
+  | "declined"
   | "expired";
 
 export const MISSION_STATUS_LABELS: Record<MissionProgressStatus, string> = {
@@ -40,6 +41,7 @@ export const MISSION_STATUS_LABELS: Record<MissionProgressStatus, string> = {
   under_review: "Under review",
   approved: "Completed",
   rejected: "Needs revision",
+  declined: "Rejected",
   expired: "Expired",
 };
 
@@ -50,6 +52,7 @@ export const MISSION_STATUSES = [
   "under_review",
   "approved",
   "rejected",
+  "declined",
   "expired",
 ] as const satisfies readonly MissionProgressStatus[];
 
@@ -60,6 +63,29 @@ export const MISSION_DIFFICULTIES = [
 ] as const;
 
 export type MissionDifficulty = (typeof MISSION_DIFFICULTIES)[number];
+
+export const MISSION_SUBMISSION_FIELD_TYPES = [
+  "short_text",
+  "long_text",
+  "url",
+  "number",
+] as const;
+
+export type MissionSubmissionFieldType =
+  (typeof MISSION_SUBMISSION_FIELD_TYPES)[number];
+
+export interface MissionSubmissionField {
+  key: string;
+  label: string;
+  type: MissionSubmissionFieldType;
+  required: boolean;
+}
+
+export interface MissionSubmissionResponse {
+  fieldKey: string;
+  label: string;
+  value: string;
+}
 
 export interface Mission {
   id: string;
