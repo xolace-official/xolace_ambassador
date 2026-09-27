@@ -1,3 +1,17 @@
+import {
+  CircleHelp,
+  FileText,
+  FolderOpen,
+  LayoutDashboard,
+  LineChart,
+  MessageCircle,
+  Settings,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
+import type { PortalRole } from "@/types/portal.type";
+
 export interface MenuItem {
   name: string;
   href: (uuid: string) => string;
@@ -6,16 +20,30 @@ export interface MenuItem {
   featureKey: string;
 }
 
-import {
-  FileText,
-  FolderOpen,
-  LayoutDashboard,
-  LineChart,
-  MessageCircle,
-  Target,
-  Trophy,
-  Users,
-} from "lucide-react";
+export interface Destination {
+  name: string;
+  href: string;
+}
+
+// Settings and Help sit in the sidebar footer, not the main nav. The topbar
+// needs them alongside the main menu to tell a real destination from a child
+// page, so they are defined here rather than privately inside the sidebar.
+export const UTILITY_MENU = [
+  { name: "Settings", slug: "settings", icon: Settings },
+  { name: "Help", slug: "help", icon: CircleHelp },
+] as const;
+
+export function allDestinations(role: PortalRole, uuid: string): Destination[] {
+  const menuItems: MenuItem[] = role === "admin" ? adminMenu : ambassadorMenu;
+
+  return [
+    ...menuItems.map((item) => ({ name: item.name, href: item.href(uuid) })),
+    ...UTILITY_MENU.map((item) => ({
+      name: item.name,
+      href: `/${role}/${uuid}/${item.slug}`,
+    })),
+  ];
+}
 
 export const adminMenu: MenuItem[] = [
   {

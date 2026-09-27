@@ -1,49 +1,25 @@
 import { Badge } from "@/components/ui/badge";
 import type { MissionProgressStatus } from "@/types/missions.type";
+import { MISSION_STATUS_LABELS } from "@/types/missions.type";
 
-const statusConfig: Record<
-  MissionProgressStatus,
-  { label: string; className: string }
-> = {
-  available: {
-    label: "Available",
-    className: "bg-secondary text-secondary-foreground",
-  },
-  in_progress: {
-    label: "In progress",
-    className: "bg-accent text-accent-foreground",
-  },
-  submitted: {
-    label: "Submitted",
-    className: "bg-secondary text-secondary-foreground",
-  },
-  under_review: {
-    label: "Under review",
-    className: "bg-secondary text-secondary-foreground",
-  },
-  approved: {
-    label: "Completed",
-    className: "bg-accent text-accent-foreground",
-  },
-  rejected: {
-    label: "Needs revision",
-    className: "bg-destructive text-destructive-foreground",
-  },
-  expired: {
-    label: "Expired",
-    className: "bg-muted text-muted-foreground",
-  },
+// These are the design system's own fill/foreground token pairs, so contrast is
+// defined once in globals.css rather than guessed per call site. A neutral
+// `bg-secondary` is deliberately avoided — it resolves to the same value as
+// `bg-card` in dark mode, which made the badge disappear.
+const statusClass: Record<MissionProgressStatus, string> = {
+  available: "bg-muted text-foreground",
+  in_progress: "bg-accent text-accent-foreground",
+  submitted: "bg-warning text-warning-foreground",
+  under_review: "bg-warning text-warning-foreground",
+  approved: "bg-success text-success-foreground",
+  rejected: "bg-destructive text-destructive-foreground",
+  expired: "border-border bg-transparent text-foreground/60",
 };
 
 export function MissionStatus({ status }: { status: MissionProgressStatus }) {
-  const config = statusConfig[status];
-
   return (
-    <Badge
-      variant="secondary"
-      className={`border-0 font-medium ${config.className}`}
-    >
-      {config.label}
+    <Badge variant="secondary" className={statusClass[status]}>
+      {MISSION_STATUS_LABELS[status]}
     </Badge>
   );
 }

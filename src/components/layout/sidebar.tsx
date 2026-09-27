@@ -1,15 +1,7 @@
 ﻿"use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import {
-  CircleHelp,
-  LogOut,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { LogOut, ShieldCheck, Sparkles, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { InviteDialog } from "@/components/layout/invite-dialog";
@@ -17,6 +9,7 @@ import {
   adminMenu,
   ambassadorMenu,
   type MenuItem,
+  UTILITY_MENU,
 } from "@/components/layout/menu";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
 
@@ -26,21 +19,6 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const bottomMenuItems = [
-  {
-    name: "Settings",
-    icon: Settings,
-    getHref: (role: SidebarProps["role"], uuid: string) =>
-      `/${role}/${uuid}/settings`,
-  },
-  {
-    name: "Help",
-    icon: CircleHelp,
-    getHref: (role: SidebarProps["role"], uuid: string) =>
-      `/${role}/${uuid}/help`,
-  },
-] as const;
 
 const inviteLabel = (role: SidebarProps["role"]) =>
   role === "admin" ? "Invite your team" : "Share invite link";
@@ -157,9 +135,9 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
             />
           </div>
 
-          {bottomMenuItems.map((item) => {
+          {UTILITY_MENU.map((item) => {
             const Icon = item.icon;
-            const href = item.getHref(role, uuid);
+            const href = `/${role}/${uuid}/${item.slug}`;
 
             return (
               <Link

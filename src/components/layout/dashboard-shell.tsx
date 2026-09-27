@@ -41,8 +41,10 @@ export default function DashboardShell({
         <main className="flex min-w-0 flex-1 flex-col">
           <TopBar onMenuClick={toggleSidebar} />
 
-          <div className="min-h-0 flex-1 overflow-hidden md:rounded-tl-[20px] bg-background/20">
-            <section className="h-full overflow-y-auto p-4">{children}</section>
+          <div className="min-h-0 flex-1 overflow-hidden md:rounded-tl-[20px] bg-background/50 dark:bg-background/20">
+            <section className="h-full overflow-y-auto p-4 md:p-8">
+              {children}
+            </section>
           </div>
         </main>
       </div>

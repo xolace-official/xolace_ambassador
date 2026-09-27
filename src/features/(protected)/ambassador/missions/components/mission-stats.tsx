@@ -1,37 +1,39 @@
-interface MissionStatsProps {
-  available: number;
-  active: number;
-  underReview: number;
-  completed: number;
-}
+import type { Mission } from "@/types/missions.type";
 
-export function MissionStats({
-  available,
-  active,
-  underReview,
-  completed,
-}: MissionStatsProps) {
-  const stats = [
-    { label: "Available", value: available },
-    { label: "Active", value: active },
-    { label: "Under review", value: underReview },
-    { label: "Completed", value: completed },
-  ];
+const STATUS_TALLY: {
+  label: string;
+  statuses: Mission["status"][];
+}[] = [
+  { label: "available", statuses: ["available"] },
+  { label: "in progress", statuses: ["in_progress"] },
+  { label: "under review", statuses: ["under_review"] },
+  { label: "completed", statuses: ["approved"] },
+];
+
+// Derived from the list rather than passed in, so the numbers can never
+// contradict the missions underneath them.
+export function MissionStats({ missions }: { missions: Mission[] }) {
+  const shown = STATUS_TALLY.map((entry) => ({
+    label: entry.label,
+    value: missions.filter((mission) => entry.statuses.includes(mission.status))
+      .length,
+  })).filter((entry) => entry.value > 0);
+
+  if (shown.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="rounded-2xl border border-border bg-card p-4 sm:p-5"
-        >
-          <p className="text-sm text-muted-foreground">{stat.label}</p>
-
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-card-foreground">
-            {stat.value}
-          </p>
-        </div>
+    <p className="text-sm text-foreground/70">
+      {shown.map((entry, index) => (
+        <span key={entry.label}>
+          {index > 0 && <span aria-hidden="true"> · </span>}
+          <span className="font-medium tabular-nums text-foreground">
+            {entry.value}
+          </span>{" "}
+          {entry.label}
+        </span>
       ))}
-    </div>
+    </p>
   );
 }

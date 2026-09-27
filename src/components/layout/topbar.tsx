@@ -1,16 +1,14 @@
 ﻿"use client";
 
 import { useConvexAuth } from "@convex-dev/auth/react";
-import { Bell, Menu, Moon, Sun, User } from "lucide-react";
+import { ArrowLeft, Bell, Menu, Moon, Sun, User } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import {
-  adminMenu,
-  ambassadorMenu,
-  type MenuItem,
-} from "@/components/layout/menu";
+import { allDestinations } from "@/components/layout/menu";
 import { Button } from "@/components/ui/button";
+import type { PortalRole } from "@/types/portal.type";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -48,7 +46,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const [, role, uuid] = pathname.split("/");
+  const [, roleSegment, uuid] = pathname.split("/");
 
   const { resolvedTheme, setTheme } = useTheme();
   // Theme is unknown until after hydration â€” the mounted check avoids a
@@ -60,16 +58,26 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   );
   const isDark = themeMounted && resolvedTheme === "dark";
 
-  const menuItems: MenuItem[] = role === "admin" ? adminMenu : ambassadorMenu;
+  // Anything outside the portal has no nav, so it gets no title lookup and no
+  // back button rather than a wrong one.
+  const role: PortalRole | null =
+    roleSegment === "admin" || roleSegment === "ambassador"
+      ? roleSegment
+      : null;
 
-  // Find the menu item that matches the current pathname.
-  const currentMenuItem = menuItems.find((item) => {
-    const href = item.href(uuid);
+  const destinations = role ? allDestinations(role, uuid) : [];
 
-    return pathname === href || pathname.startsWith(`${href}/`);
-  });
+  // An exact hit is a page the sidebar links to, so it needs no back button.
+  const current = destinations.find((item) => item.href === pathname);
 
-  const pageTitle = currentMenuItem?.name ?? "Dashboard";
+  // A prefix hit is a child page — a mission detail, say. It borrows the
+  // parent's title, and back points at the parent rather than at history, which
+  // would be a dead end on a direct load.
+  const parent = destinations.find((item) =>
+    pathname.startsWith(`${item.href}/`),
+  );
+
+  const pageTitle = current?.name ?? parent?.name ?? "Dashboard";
 
   // Keep the displayed time updated.
   useEffect(() => {
@@ -109,9 +117,23 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
           <Menu className="h-[18px] w-[18px] stroke-[1.7]" />
         </Button>
 
-        <h4 className="text-sm font-semibold uppercase tracking-wide">
+        {parent ? (
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 rounded-full border-border bg-card text-foreground hover:bg-muted"
+          >
+            <Link href={parent.href} aria-label={`Back to ${parent.name}`}>
+              <ArrowLeft aria-hidden="true" className="size-4" />
+            </Link>
+          </Button>
+        ) : null}
+
+        {/* The page's single h1 — the content area must not repeat it. */}
+        <h1 className="truncate text-sm font-semibold uppercase tracking-wide">
           {pageTitle}
-        </h4>
+        </h1>
       </div>
 
       <div className="flex items-center gap-2">

@@ -1,8 +1,17 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CalendarDays } from "lucide-react";
 import Link from "next/link";
+
+import { Card } from "@/components/ui/card";
 import type { Mission } from "@/types/missions.type";
-import { MissionDeadline } from "./mission-deadline";
+import { MissionDescription } from "./mission-description";
 import { MissionStatus } from "./mission-status";
+import { MissionTrackBadge } from "./mission-track-badge";
+
+const deadlineFormat = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
 
 interface MissionCardProps {
   mission: Mission;
@@ -11,49 +20,65 @@ interface MissionCardProps {
 
 export function MissionCard({ mission, href }: MissionCardProps) {
   return (
-    <article className="group rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-sm sm:p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {mission.category}
-          </p>
+    <Card className="group relative h-full cursor-pointer gap-0 border-border py-0 transition-colors hover:border-primary/50 focus-within:border-primary/50">
+      <div className="flex items-start justify-between gap-3 px-5 pt-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <MissionTrackBadge track={mission.category} />
 
-          <h2 className="mt-2 text-lg font-semibold tracking-tight text-card-foreground">
-            {mission.title}
-          </h2>
+          {mission.status !== "available" && (
+            <MissionStatus status={mission.status} />
+          )}
         </div>
 
-        <MissionStatus status={mission.status} />
+        <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+          {mission.points}
+          <span className="ml-1 font-normal text-foreground/60">pts</span>
+        </p>
       </div>
 
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-        {mission.description}
-      </p>
-
-      <div className="mt-6 flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-sm font-medium text-foreground">
-            {mission.points} points
-          </span>
-
-          <span className="text-sm capitalize text-muted-foreground">
-            {mission.difficulty}
-          </span>
-
-          <MissionDeadline endsAt={mission.endsAt} />
-        </div>
-
+      <h2 className="px-5 pt-4 text-base font-semibold tracking-tight text-balance text-card-foreground">
+        {/* Stretched link: one tab stop per card, accessible name is the title
+            only, and the whole surface is clickable. */}
         <Link
           href={href}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          View mission
+          {mission.title}
+        </Link>
+      </h2>
+
+      {/* `summary` is the short card line; the full `description` lives on the
+          detail page. The clamp is a safety net for a badly written summary,
+          not the mechanism that keeps cards even. */}
+      <MissionDescription
+        text={mission.summary}
+        lines={2}
+        className="px-5 pt-2 pb-5"
+      />
+
+      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-xs text-foreground/55">
+        <span className="flex min-w-0 flex-wrap items-center gap-x-2">
+          <span className="capitalize">{mission.difficulty}</span>
+
+          <span aria-hidden="true">·</span>
+
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays aria-hidden="true" className="size-3.5" />
+            Ends{" "}
+            <time dateTime={new Date(mission.endsAt).toISOString()}>
+              {deadlineFormat.format(new Date(mission.endsAt))}
+            </time>
+          </span>
+        </span>
+
+        <span className="flex shrink-0 items-center gap-1 font-medium text-foreground">
+          View
           <ArrowUpRight
             aria-hidden="true"
-            className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
           />
-        </Link>
+        </span>
       </div>
-    </article>
+    </Card>
   );
 }
