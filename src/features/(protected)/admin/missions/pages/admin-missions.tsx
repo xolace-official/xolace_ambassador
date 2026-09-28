@@ -14,7 +14,7 @@ import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { FeatureComingSoon } from "@/components/shared/feature-coming-soon";
+import AdminImpact from "./admin-impact";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,10 +108,11 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
             type="button"
             aria-current={section === value ? "page" : undefined}
             onClick={() => void setSection(value)}
-            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${section === value
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              section === value
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
           >
             {value === "impact" ? "Impact" : value}
           </button>
@@ -123,10 +124,7 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
       ) : section === "submissions" ? (
         <AdminSubmissions uuid={uuid} />
       ) : (
-        <FeatureComingSoon
-          title="Impact overview"
-          description="The impact overview will appear here when its reporting view is ready."
-        />
+        <AdminImpact />
       )}
     </div>
   );
@@ -309,7 +307,7 @@ function MissionListing({ uuid }: { uuid: string }) {
       )}
 
       {results.length > 6 &&
-        (pageStatus === "CanLoadMore" || pageStatus === "LoadingMore") ? (
+      (pageStatus === "CanLoadMore" || pageStatus === "LoadingMore") ? (
         <div className="flex justify-center">
           <Button
             variant="outline"
