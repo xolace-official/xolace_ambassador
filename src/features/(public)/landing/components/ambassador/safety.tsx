@@ -111,7 +111,7 @@ export default function Safety() {
           viewport={{ once: true, margin: "-50px" }}
           className="text-center font-semibold text-foreground"
         >
-          This isn&apos;t a footnote â€” it&apos;s mandatory onboarding for
+          This isn&apos;t a footnote — it&apos;s mandatory onboarding for
           every ambassador.
         </motion.p>
       </div>
