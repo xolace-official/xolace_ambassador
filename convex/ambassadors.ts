@@ -331,6 +331,31 @@ export const adminGet = query({
   },
 });
 
+export const getTotals = query({
+  args: { userId: v.id("users") },
+  returns: v.union(
+    v.object({
+      points: v.number(),
+      levelRank: v.number(),
+      contributionsApproved: v.number(),
+      missionsCompleted: v.number(),
+      peopleReached: v.number(),
+      installs: v.number(),
+      referrals: v.number(),
+      contentCount: v.number(),
+      eventCount: v.number(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const totals = await ctx.db
+      .query("ambassadorTotals")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
+    return totals;
+  },
+});
+
 export const adminSetStatus = mutation({
   args: {
     ambassadorId: v.id("users"),

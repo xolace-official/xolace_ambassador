@@ -2,6 +2,13 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getSessionUser, requireUser } from "./model/auth";
 
+export const getMe = query({
+  args: {},
+  handler: async (ctx) => {
+    return await getSessionUser(ctx);
+  },
+});
+
 // The session probe: returns null when signed out rather than throwing, so the
 // client can render the login form and the signed-out shell.
 export const current = query({
