@@ -10,8 +10,12 @@ const descriptions = {
     "Choose a mission, make your contribution, and grow with Xolace.",
   ambassadorImpact:
     "Track your contributions, people reached, and the impact you've made through the program.",
+  ambassadorResources:
+    "Brand kit, templates, campaign assets and guides for representing Xolace.",
   createMission:
     "Give ambassadors a focused task, a clear brief, and a safe way to make a meaningful contribution.",
+  adminResources:
+    "Manage brand kit, templates, campaign assets, videos and guides for ambassadors.",
 } as const;
 
 type PageDescriptionProps = {
