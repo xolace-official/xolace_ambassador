@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsString, parseAsStringLiteral } from "nuqs/server";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { InviteDialog } from "@/components/layout/invite-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/table";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 const PEOPLE_TABS = ["ambassadors", "applications"] as const;
 const parsePeopleTab = parseAsStringLiteral(PEOPLE_TABS)
@@ -204,7 +205,7 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
             <TableRow key={application._id}>
               <TableCell className="max-w-56">
                 <Link
-                  href={`/admin/${uuid}/ambassadors/applications/${application._id}`}
+                  href={`/admin/${uuid}/ambassadors/applications/${application._id}?view=applications`}
                   className="block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {application.name}
@@ -228,7 +229,7 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
               <TableCell className="text-right">
                 <Button asChild size="sm" variant="ghost" className="min-h-11">
                   <Link
-                    href={`/admin/${uuid}/ambassadors/applications/${application._id}`}
+                    href={`/admin/${uuid}/ambassadors/applications/${application._id}?view=applications`}
                     aria-label={`View ${application.name}'s application`}
                   >
                     View
@@ -422,7 +423,7 @@ function AmbassadorActions({
   status,
   href,
 }: {
-  ambassadorId: string;
+  ambassadorId: Id<"users">;
   name: string;
   status: "active" | "paused" | "suspended";
   href: string;
@@ -514,7 +515,7 @@ function ApplicationStatus({
         ? "bg-muted text-muted-foreground"
         : "bg-warning text-warning-foreground";
 
-  return <Badge className={className}>{label}</Badge>;
+  return <Badge className={`capitalize ${className}`}>{label}</Badge>;
 }
 
 function AmbassadorStatus({
@@ -529,7 +530,7 @@ function AmbassadorStatus({
         ? "bg-destructive text-destructive-foreground"
         : "bg-warning text-warning-foreground";
 
-  return <Badge className={className}>{status}</Badge>;
+  return <Badge className={`capitalize ${className}`}>{status}</Badge>;
 }
 
 function usePeopleSearch() {

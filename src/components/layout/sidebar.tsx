@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { LogOut, ShieldCheck, Sparkles, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { InviteDialog } from "@/components/layout/invite-dialog";
 import {
   adminMenu,
@@ -36,6 +36,7 @@ const roleMeta = {
 
 export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { signOut } = useAuthActions();
 
   const menuItems: MenuItem[] = role === "admin" ? adminMenu : ambassadorMenu;
@@ -97,10 +98,15 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
 
         <nav className="space-y-1">
           {menuItems.map((item) => {
-            const href = item.href(uuid);
+            const baseHref = item.href(uuid);
+            const viewParam = searchParams.get("view");
+            const href =
+              viewParam && baseHref === `/admin/${uuid}/ambassadors`
+                ? `${baseHref}?view=${viewParam}`
+                : baseHref;
 
             const isActive =
-              pathname === href || pathname.startsWith(`${href}/`);
+              pathname === baseHref || pathname.startsWith(`${baseHref}/`);
 
             return (
               <Link
