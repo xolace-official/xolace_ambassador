@@ -9,6 +9,9 @@ export const metadata: Metadata = portalMetadata({
     "Brand kit, templates, campaign assets, videos and guides for ambassadors.",
 });
 
-export default function Page() {
-  return <AdminResources />;
+type Params = Promise<{ uuid: string }>;
+
+export default async function Page({ params }: { params: Params }) {
+  const { uuid } = await params;
+  return <AdminResources uuid={uuid} />;
 }
