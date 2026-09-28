@@ -1,12 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "convex/react";
-import { Check } from "lucide-react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { ArrowLeft, ArrowRight, Camera, Check, Plus, X } from "lucide-react";
 import { motion } from "motion/react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,18 +21,41 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "../../../../../../convex/_generated/api";
 
+const SOCIAL_PLATFORMS = [
+  { key: "x", label: "X", placeholder: "Your X handle or link…" },
+  {
+    key: "linkedin",
+    label: "LinkedIn",
+    placeholder: "Your LinkedIn profile link…",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    placeholder: "Your Instagram handle…",
+  },
+  { key: "tiktok", label: "TikTok", placeholder: "Your TikTok handle…" },
+  {
+    key: "youtube",
+    label: "YouTube",
+    placeholder: "Your YouTube channel link…",
+  },
+  { key: "github", label: "GitHub", placeholder: "Your GitHub profile link…" },
+  {
+    key: "snapchat",
+    label: "Snapchat",
+    placeholder: "Your Snapchat username…",
+  },
+  { key: "reddit", label: "Reddit", placeholder: "Your Reddit username…" },
+] as const;
+
 const applicationSchema = z.object({
   name: z.string().trim().min(2, "Enter at least 2 characters.").max(120),
   email: z.email({ error: "Enter a valid email address." }),
   location: z.string().trim().min(2, "Enter your city and country.").max(120),
   schoolOrCommunity: z.string().max(160),
-  socialPlatform: z.string().max(80),
-  socialHandle: z.string().max(100),
   track: z.enum(
     ["creator", "community", "growth", "creative", "production", "advocacy"],
-    {
-      error: "Choose a track.",
-    },
+    { error: "Choose a track." },
   ),
   whyXolace: z
     .string()
@@ -41,6 +66,15 @@ const applicationSchema = z.object({
 
 type ApplicationForm = z.infer<typeof applicationSchema>;
 
+const initialFormData = {
+  name: "",
+  email: "",
+  location: "",
+  schoolOrCommunity: "",
+  track: "creator" as const,
+  whyXolace: "",
+};
+
 const TRACKS = [
   "creator",
   "community",
@@ -49,67 +83,210 @@ const TRACKS = [
   "production",
   "advocacy",
 ] as const;
-const SOCIAL_PLATFORMS = [
-  "LinkedIn",
-  "X",
-  "TikTok",
-  "Instagram",
-  "Reddit",
-] as const;
-const initialFormData: ApplicationForm = {
-  name: "",
-  email: "",
-  location: "",
-  schoolOrCommunity: "",
-  socialPlatform: "",
-  socialHandle: "",
-  track: "creator",
-  whyXolace: "",
-};
+
+const steps = ["About You", "Social Profiles", "Your Interest"] as const;
 
 const reassurances = [
   "We read every application — no bots, no filters.",
-  "You’ll hear back within a few days, either way.",
+  "You'll hear back within 24 hours, either way.",
   "Onboarding starts right after — no waiting around.",
 ];
 
 export default function JoinProgramForm() {
   const submitApplication = useMutation(api.applications.submit);
+  const requestUploadUrl = useAction(api.applications.requestUploadUrl);
+  const [currentStep, setCurrentStep] = React.useState(0);
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [imageError, setImageError] = React.useState<string | null>(null);
+  const [socials, setSocials] = React.useState<Map<string, string>>(new Map());
   const [submitted, setSubmitted] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const {
     register,
     control,
     handleSubmit,
-    reset,
+    trigger,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ApplicationForm>({
     resolver: zodResolver(applicationSchema),
     defaultValues: initialFormData,
   });
 
-  async function onSubmit(values: ApplicationForm) {
+  const email = watch("email");
+  const emailExists = useQuery(
+    api.applications.checkEmailExists,
+    email?.includes("@") ? { email } : "skip",
+  );
+
+  function toggleSocial(platform: string) {
+    setSocials((prev) => {
+      const next = new Map(prev);
+      if (next.has(platform)) {
+        next.delete(platform);
+      } else if (next.size < 6) {
+        next.set(platform, "");
+      }
+      return next;
+    });
+  }
+
+  function updateSocial(platform: string, value: string) {
+    setSocials((prev) => new Map(prev).set(platform, value));
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("Image must be under 5 MB.");
+      return;
+    }
+    setImageError(null);
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleStepNext() {
+    const fieldsToValidate: (keyof ApplicationForm)[][] = [
+      ["name", "email", "location"],
+      [],
+      ["track", "whyXolace"],
+    ];
+    const fields = fieldsToValidate[currentStep];
+    if (fields.length > 0) {
+      const valid = await trigger(fields);
+      if (!valid) return;
+    }
+    if (currentStep === 0 && !imageFile) {
+      setImageError("A profile photo is required.");
+      return;
+    }
+    if (currentStep === 1) {
+      const hasSocial = [...socials.values()].some((v) => v.trim().length > 0);
+      if (!hasSocial) {
+        setError("Add at least one social profile.");
+        return;
+      }
+    }
     setError(null);
+    setCurrentStep((s) => Math.min(s + 1, 2));
+  }
+
+  function handleStepBack() {
+    setError(null);
+    setCurrentStep((s) => Math.max(s - 1, 0));
+  }
+
+  async function onSubmit(values: ApplicationForm) {
+    if (!imageFile) {
+      setImageError("A profile photo is required.");
+      setCurrentStep(0);
+      return;
+    }
+    const hasSocial = [...socials.values()].some((v) => v.trim().length > 0);
+    if (!hasSocial) {
+      setError("Add at least one social profile.");
+      setCurrentStep(1);
+      return;
+    }
+    if (emailExists) {
+      setError("An application with this email is already on file.");
+      setCurrentStep(0);
+      return;
+    }
+
+    setError(null);
+    setUploadingImage(true);
+
+    let imageStorageId: string | undefined;
     try {
+      const uploadUrl = await requestUploadUrl();
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": imageFile.type },
+        body: imageFile,
+      });
+      if (!response.ok) throw new Error("Upload failed.");
+      const { storageId } = (await response.json()) as { storageId: string };
+      imageStorageId = storageId;
+    } catch {
+      setError("Could not upload your photo. Please try again.");
+      setUploadingImage(false);
+      return;
+    }
+
+    try {
+      const socialsArray = [...socials.entries()]
+        .filter(([, handle]) => handle.trim().length > 0)
+        .map(([platform, handle]) => ({ platform, handle: handle.trim() }));
+
       await submitApplication({
         name: values.name,
         email: values.email,
         location: values.location,
         school: values.schoolOrCommunity || undefined,
-        socialPlatform: values.socialPlatform || undefined,
-        socialHandle: values.socialHandle || undefined,
+        socials: socialsArray,
         trackInterest: values.track,
         whyXolace: values.whyXolace,
+        image: imageStorageId as never,
       });
+      toast.success("Application submitted successfully!");
       setSubmitted(true);
-      reset(initialFormData);
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
           : "Could not submit your application. Please try again.",
       );
+    } finally {
+      setUploadingImage(false);
     }
+  }
+
+  if (submitted) {
+    return (
+      <section
+        id="apply"
+        className="relative w-full overflow-hidden bg-background px-4 py-20 scroll-mt-20 sm:px-6 lg:px-8"
+      >
+        <div className="relative mx-auto max-w-2xl">
+          <Card className="rounded-3xl border border-border/40 bg-card p-8 shadow-xl sm:p-12">
+            <div aria-live="polite" className="space-y-6 text-center">
+              <span className="inline-flex size-16 items-center justify-center rounded-full bg-accent/20">
+                <Check aria-hidden="true" className="size-8 text-accent" />
+              </span>
+              <div className="space-y-3">
+                <h2 className="text-2xl font-semibold">Application received</h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Thank you for applying to the Xolace Ambassadors Program. Our
+                  team will review your application and get back to you within
+                  24 hours.
+                </p>
+                <p className="text-sm font-medium text-primary">
+                  Please check your email — we&apos;ll reach out soon.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -134,7 +311,7 @@ export default function JoinProgramForm() {
               Ready?
             </p>
             <h2 className="text-3xl font-bold md:text-balance sm:text-4xl">
-              You don’t have to be an expert. You just have to care.
+              You don&apos;t have to be an expert. You just have to care.
             </h2>
           </div>
           <div className="space-y-4">
@@ -158,139 +335,268 @@ export default function JoinProgramForm() {
           viewport={{ once: true, margin: "-50px" }}
         >
           <Card className="rounded-3xl border border-border/40 bg-card p-6 shadow-xl sm:p-8">
-            {submitted ? (
-              <div aria-live="polite" className="space-y-4 py-6 text-center">
-                <span className="inline-flex size-16 items-center justify-center rounded-full bg-accent/20">
-                  <Check aria-hidden="true" className="size-8 text-accent" />
-                </span>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold">
-                    Application received
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Thanks for applying. Our team will review your details and
-                    follow up.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                  onClick={() => setSubmitted(false)}
-                >
-                  Submit another application
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field
-                    label="Full name"
-                    id="full-name"
-                    error={errors.name?.message}
-                  >
-                    {(fieldProps) => (
-                      <Input
-                        id="full-name"
-                        autoComplete="name"
-                        placeholder="Your name…"
-                        {...fieldProps}
-                        {...register("name")}
-                      />
-                    )}
-                  </Field>
-                  <Field
-                    label="Email address"
-                    id="email"
-                    error={errors.email?.message}
-                  >
-                    {(fieldProps) => (
-                      <Input
-                        id="email"
-                        type="email"
-                        autoComplete="email"
-                        spellCheck={false}
-                        placeholder="you@example.com…"
-                        {...fieldProps}
-                        {...register("email")}
-                      />
-                    )}
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Field
-                    label="Location"
-                    id="location"
-                    error={errors.location?.message}
-                  >
-                    {(fieldProps) => (
-                      <Input
-                        id="location"
-                        autoComplete="address-level2"
-                        placeholder="City, country…"
-                        {...fieldProps}
-                        {...register("location")}
-                      />
-                    )}
-                  </Field>
-                  <Field
-                    label="School / Community (optional)"
-                    id="school-or-community"
-                    error={errors.schoolOrCommunity?.message}
-                  >
-                    {(fieldProps) => (
-                      <Input
-                        id="school-or-community"
-                        placeholder="Your school or community…"
-                        {...fieldProps}
-                        {...register("schoolOrCommunity")}
-                      />
-                    )}
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="social-platform"
-                      className="text-sm font-medium"
+            <nav
+              aria-label="Application progress"
+              className="mb-6 flex w-full items-center justify-between gap-2"
+            >
+              {steps.map((label, index) => (
+                <React.Fragment key={label}>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span
+                      className={`flex size-10 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                        index <= currentStep
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
                     >
-                      Social handle (optional)
-                    </label>
-                    <div className="flex gap-2">
-                      <Controller
-                        control={control}
-                        name="socialPlatform"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger
-                              id="social-platform"
-                              className="w-32 shrink-0"
-                            >
-                              <SelectValue placeholder="Platform" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SOCIAL_PLATFORMS.map((platform) => (
-                                <SelectItem key={platform} value={platform}>
-                                  {platform}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      {index < currentStep ? (
+                        <Check aria-hidden="true" className="size-4" />
+                      ) : (
+                        index + 1
+                      )}
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${
+                        index <= currentStep
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  {index < steps.length - 1 ? (
+                    <div
+                      aria-hidden="true"
+                      className={`h-px flex-1 ${
+                        index < currentStep ? "bg-primary" : "bg-border"
+                      }`}
+                    />
+                  ) : null}
+                </React.Fragment>
+              ))}
+            </nav>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {currentStep === 0 ? (
+                <div className="space-y-5">
+                  <div className="flex items-start gap-4">
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="group relative flex size-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-border bg-muted transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="Upload profile photo (required)"
+                      >
+                        {imagePreview ? (
+                          <>
+                            <img
+                              src={imagePreview}
+                              alt="Profile preview"
+                              className="size-full object-cover"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Camera
+                                aria-hidden="true"
+                                className="size-5 text-white"
+                              />
+                            </span>
+                          </>
+                        ) : (
+                          <Camera
+                            aria-hidden="true"
+                            className="size-6 text-muted-foreground"
+                          />
                         )}
-                      />
-                      <Input
-                        aria-label="Social handle"
-                        placeholder="Your handle…"
-                        {...register("socialHandle")}
+                      </button>
+                      {imagePreview ? (
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label="Remove photo"
+                        >
+                          <X aria-hidden="true" className="size-3" />
+                        </button>
+                      ) : null}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        aria-hidden="true"
+                        tabIndex={-1}
                       />
                     </div>
-                    <FieldError
-                      id="social-handle-error"
-                      message={errors.socialHandle?.message}
-                    />
+                    <div className="min-w-0 flex-1 space-y-1 pt-1">
+                      <p className="text-sm font-medium">
+                        Profile photo{" "}
+                        <span aria-hidden="true" className="text-destructive">
+                          *
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Required. A clear photo helps us put a face to your
+                        application.
+                      </p>
+                      {imageError ? (
+                        <p role="alert" className="text-xs text-destructive">
+                          {imageError}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field
+                      label="Full name"
+                      id="full-name"
+                      error={errors.name?.message}
+                    >
+                      {(fieldProps) => (
+                        <Input
+                          id="full-name"
+                          autoComplete="name"
+                          placeholder="Your name…"
+                          {...fieldProps}
+                          {...register("name")}
+                        />
+                      )}
+                    </Field>
+                    <Field
+                      label="Email address"
+                      id="email"
+                      error={errors.email?.message}
+                    >
+                      {(fieldProps) => (
+                        <div className="space-y-1">
+                          <Input
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            spellCheck={false}
+                            placeholder="you@example.com…"
+                            {...fieldProps}
+                            {...register("email")}
+                          />
+                          {emailExists ? (
+                            <p className="text-xs text-destructive">
+                              An application with this email already exists.
+                            </p>
+                          ) : null}
+                        </div>
+                      )}
+                    </Field>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field
+                      label="Location"
+                      id="location"
+                      error={errors.location?.message}
+                    >
+                      {(fieldProps) => (
+                        <Input
+                          id="location"
+                          autoComplete="address-level2"
+                          placeholder="City, country…"
+                          {...fieldProps}
+                          {...register("location")}
+                        />
+                      )}
+                    </Field>
+                    <Field
+                      label="School / Community (optional)"
+                      id="school-or-community"
+                      error={errors.schoolOrCommunity?.message}
+                    >
+                      {(fieldProps) => (
+                        <Input
+                          id="school-or-community"
+                          placeholder="Your school or community…"
+                          {...fieldProps}
+                          {...register("schoolOrCommunity")}
+                        />
+                      )}
+                    </Field>
+                  </div>
+                </div>
+              ) : null}
+
+              {currentStep === 1 ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      Social profiles{" "}
+                      <span aria-hidden="true" className="text-destructive">
+                        *
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Select the platforms you&apos;re active on and add your
+                      handle or profile link. At least one is required.
+                    </p>
+                  </div>
+                  <fieldset className="flex flex-wrap gap-2 border-0 p-0 m-0">
+                    <legend className="sr-only">Social platforms</legend>
+                    {SOCIAL_PLATFORMS.map((platform) => {
+                      const isSelected = socials.has(platform.key);
+                      return (
+                        <button
+                          key={platform.key}
+                          type="button"
+                          onClick={() => toggleSocial(platform.key)}
+                          aria-pressed={isSelected}
+                          className={`flex min-h-8 items-center gap-1 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            isSelected
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                          }`}
+                        >
+                          {isSelected ? (
+                            <Check aria-hidden="true" className="size-3.5" />
+                          ) : (
+                            <Plus aria-hidden="true" className="size-3.5" />
+                          )}
+                          {platform.label}
+                        </button>
+                      );
+                    })}
+                  </fieldset>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[...socials.entries()]
+                      .filter(([key]) =>
+                        SOCIAL_PLATFORMS.some((p) => p.key === key),
+                      )
+                      .map(([key]) => {
+                        const platform = SOCIAL_PLATFORMS.find(
+                          (p) => p.key === key,
+                        );
+                        if (!platform) return null;
+                        return (
+                          <div key={key} className="space-y-2">
+                            <label
+                              htmlFor={`social-${key}`}
+                              className="text-sm font-medium"
+                            >
+                              {platform.label} handle or link
+                            </label>
+                            <Input
+                              id={`social-${key}`}
+                              placeholder={platform.placeholder}
+                              value={socials.get(key) ?? ""}
+                              onChange={(e) => updateSocial(key, e.target.value)}
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ) : null}
+
+              {currentStep === 2 ? (
+                <div className="space-y-5">
                   <div className="space-y-2">
                     <label htmlFor="track" className="text-sm font-medium">
                       Track
@@ -325,39 +631,68 @@ export default function JoinProgramForm() {
                       message={errors.track?.message}
                     />
                   </div>
+                  <Field
+                    label="Why Xolace?"
+                    id="why-xolace"
+                    error={errors.whyXolace?.message}
+                  >
+                    {(fieldProps) => (
+                      <Textarea
+                        id="why-xolace"
+                        rows={4}
+                        placeholder="What draws you to this? No perfect answer needed…"
+                        {...fieldProps}
+                        {...register("whyXolace")}
+                      />
+                    )}
+                  </Field>
                 </div>
-                <Field
-                  label="Why Xolace?"
-                  id="why-xolace"
-                  error={errors.whyXolace?.message}
-                >
-                  {(fieldProps) => (
-                    <Textarea
-                      id="why-xolace"
-                      rows={3}
-                      placeholder="What draws you to this? No perfect answer needed…"
-                      {...fieldProps}
-                      {...register("whyXolace")}
-                    />
-                  )}
-                </Field>
-                {error ? (
-                  <p role="alert" className="text-sm text-destructive">
-                    {error}
-                  </p>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="min-h-11 w-full rounded-lg bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting ? "Submitting…" : "Join the Program"}
-                </button>
-                <p className="text-center text-xs text-muted-foreground">
-                  We respect your privacy. No spam, ever.
+              ) : null}
+
+              {error ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
                 </p>
-              </form>
-            )}
+              ) : null}
+
+              <div className="flex items-center gap-2 pt-2">
+                {currentStep > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleStepBack}
+                    size="sm"
+                    className="h-9 w-24"
+                  >
+                    <ArrowLeft aria-hidden="true" className="size-3.5" />
+                    Back
+                  </Button>
+                ) : null}
+                {currentStep < 2 ? (
+                  <Button
+                    type="button"
+                    onClick={handleStepNext}
+                    size="sm"
+                    className="h-9 w-24"
+                  >
+                    Next
+                    <ArrowRight aria-hidden="true" className="size-3.5" />
+                  </Button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || uploadingImage || emailExists}
+                    className="h-9 w-full rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {uploadingImage
+                      ? "Uploading…"
+                      : isSubmitting
+                        ? "Submitting…"
+                        : "Join the Program"}
+                  </button>
+                )}
+              </div>
+            </form>
           </Card>
         </motion.div>
       </div>
