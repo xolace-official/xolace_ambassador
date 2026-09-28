@@ -14,6 +14,7 @@ import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as contributions from "../contributions.js";
 import type * as http from "../http.js";
+import type * as impact from "../impact.js";
 import type * as missions from "../missions.js";
 import type * as model_auth from "../model/auth.js";
 import type * as programConfig from "../programConfig.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   contributions: typeof contributions;
   http: typeof http;
+  impact: typeof impact;
   missions: typeof missions;
   "model/auth": typeof model_auth;
   programConfig: typeof programConfig;

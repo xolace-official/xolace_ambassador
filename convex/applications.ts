@@ -3,8 +3,9 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { AuthError, requireAdmin } from "./model/auth";
 import { trackValidator } from "./schema";
 
@@ -15,6 +16,11 @@ const applicationStatusValidator = v.union(
   v.literal("rejected"),
 );
 
+const socialValidator = v.object({
+  platform: v.string(),
+  handle: v.string(),
+});
+
 const applicationValidator = v.object({
   _id: v.id("applications"),
   _creationTime: v.number(),
@@ -22,10 +28,10 @@ const applicationValidator = v.object({
   email: v.string(),
   location: v.string(),
   school: v.optional(v.string()),
-  socialPlatform: v.optional(v.string()),
-  socialHandle: v.optional(v.string()),
+  socials: v.optional(v.array(socialValidator)),
   whyXolace: v.string(),
   trackInterest: trackValidator,
+  image: v.optional(v.id("_storage")),
   status: applicationStatusValidator,
   reviewNote: v.optional(v.string()),
   reviewedAt: v.optional(v.number()),
@@ -39,15 +45,30 @@ function toApplication(application: Doc<"applications">) {
     email: application.email,
     location: application.location,
     school: application.school,
-    socialPlatform: application.socialPlatform,
-    socialHandle: application.socialHandle,
+    socials: application.socials,
     whyXolace: application.whyXolace,
     trackInterest: application.trackInterest,
+    image: application.image,
     status: application.status,
     reviewNote: application.reviewNote,
     reviewedAt: application.reviewedAt,
   };
 }
+
+export const generateUploadUrl = internalMutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const requestUploadUrl = action({
+  args: {},
+  handler: async (ctx): Promise<string> => {
+    return await ctx.runMutation(internal.applications.generateUploadUrl);
+  },
+});
 
 export const submit = mutation({
   args: {
@@ -55,10 +76,10 @@ export const submit = mutation({
     email: v.string(),
     location: v.string(),
     school: v.optional(v.string()),
-    socialPlatform: v.optional(v.string()),
-    socialHandle: v.optional(v.string()),
+    socials: v.array(socialValidator),
     whyXolace: v.string(),
     trackInterest: trackValidator,
+    image: v.id("_storage"),
   },
   returns: v.id("applications"),
   handler: async (ctx, args) => {
@@ -66,8 +87,10 @@ export const submit = mutation({
     const email = args.email.trim().toLowerCase();
     const location = args.location.trim();
     const school = args.school?.trim();
-    const socialPlatform = args.socialPlatform?.trim();
-    const socialHandle = args.socialHandle?.trim();
+    const socials = args.socials.map((s) => ({
+      platform: s.platform.trim(),
+      handle: s.handle.trim(),
+    }));
     const whyXolace = args.whyXolace.trim();
 
     if (name.length < 2 || name.length > 120) {
@@ -82,11 +105,16 @@ export const submit = mutation({
     if (school && school.length > 160) {
       throw new Error("Keep the school or community under 160 characters.");
     }
-    if (socialPlatform && socialPlatform.length > 80) {
-      throw new Error("Choose a valid social platform.");
+    if (socials.length === 0) {
+      throw new Error("Add at least one social profile.");
     }
-    if (socialHandle && socialHandle.length > 100) {
-      throw new Error("Keep the social handle under 100 characters.");
+    for (const social of socials) {
+      if (!social.platform || social.platform.length > 80) {
+        throw new Error("Choose a valid social platform.");
+      }
+      if (!social.handle || social.handle.length > 200) {
+        throw new Error("Keep each social handle under 200 characters.");
+      }
     }
     if (whyXolace.length < 20 || whyXolace.length > 4000) {
       throw new Error("Write between 20 and 4,000 characters about Xolace.");
@@ -106,10 +134,10 @@ export const submit = mutation({
       email,
       location,
       school: school || undefined,
-      socialPlatform: socialPlatform || undefined,
-      socialHandle: socialHandle || undefined,
+      socials,
       whyXolace,
       trackInterest: args.trackInterest,
+      image: args.image,
       status: "new",
     });
   },
@@ -164,6 +192,29 @@ export const adminGet = query({
     if (id === null) return null;
     const application = await ctx.db.get(id);
     return application === null ? null : toApplication(application);
+  },
+});
+
+export const adminGetImageUrl = query({
+  args: { storageId: v.id("_storage") },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
+export const checkEmailExists = query({
+  args: { email: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("applications")
+      .withIndex("by_email", (q) =>
+        q.eq("email", args.email.trim().toLowerCase()),
+      )
+      .first();
+    return existing !== null;
   },
 });
 

@@ -345,10 +345,20 @@ export default defineSchema({
     email: v.string(),
     location: v.string(),
     school: v.optional(v.string()),
+    socials: v.optional(
+      v.array(
+        v.object({
+          platform: v.string(),
+          handle: v.string(),
+        }),
+      ),
+    ),
+    // Deprecated: replaced by socials. Kept for existing rows.
     socialPlatform: v.optional(v.string()),
     socialHandle: v.optional(v.string()),
     whyXolace: v.string(),
     trackInterest: track,
+    image: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("new"),
       v.literal("reviewing"),
