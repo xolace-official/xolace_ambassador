@@ -8,6 +8,8 @@ const descriptions = {
     "Review ambassador work and impact reports as they come in.",
   ambassadorMissions:
     "Choose a mission, make your contribution, and grow with Xolace.",
+  ambassadorImpact:
+    "Track your contributions, people reached, and the impact you've made through the program.",
   createMission:
     "Give ambassadors a focused task, a clear brief, and a safe way to make a meaningful contribution.",
 } as const;
