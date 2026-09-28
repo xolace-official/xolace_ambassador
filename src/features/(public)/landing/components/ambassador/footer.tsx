@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
 
@@ -81,13 +80,9 @@ export default function Footer() {
             className="space-y-4"
           >
             <h4 className="font-semibold">Get in Touch</h4>
-            <a
-              href="mailto:ambassadors@xolaceinc.com"
-              className="inline-flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-            >
-              <Mail aria-hidden="true" className="w-4 h-4" />
+            <p className="text-sm text-primary-foreground/70">
               ambassadors@xolaceinc.com
-            </a>
+            </p>
             <p className="text-xs text-primary-foreground/60">
               Questions? We'd love to hear from you.
             </p>
