@@ -153,11 +153,13 @@ export default function AdminSubmissionDetail({
   }
 
   async function submitReview(values: ReviewValues) {
+    if (submission == null) return;
+
     const reviewNote = values.reviewNote.trim();
 
     try {
       await reviewContribution({
-        contributionId: submission.id,
+        contributionId: submission._id,
         status: values.decision,
         reviewNote: reviewNote || undefined,
       });
@@ -278,9 +280,9 @@ export default function AdminSubmissionDetail({
           </div>
         ) : null}
         {!submission.note &&
-          !submission.responses?.length &&
-          submission.quantity === undefined &&
-          !submission.link ? (
+        !submission.responses?.length &&
+        submission.quantity === undefined &&
+        !submission.link ? (
           <p className="mt-3 text-sm text-muted-foreground">
             No response details were included.
           </p>
