@@ -14,7 +14,7 @@ interface TopBarProps {
   onMenuClick: () => void;
 }
 
-const subscribeNever = () => () => {};
+const subscribeNever = () => () => { };
 
 function toggleThemeWithTransition(
   origin: Element,
@@ -127,7 +127,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between px-4 md:p-4">
+    <header className="flex h-12 shrink-0 items-center justify-between px-4 md:p-4">
       <div className="flex items-center gap-2 md:gap-4">
         {parent ? (
           <Button
@@ -141,16 +141,14 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
             <ArrowLeft aria-hidden="true" className="size-4" />
           </Button>
         ) : (
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
             onClick={onMenuClick}
             aria-label="Open sidebar"
-            className="h-9 w-9 rounded-full text-muted-foreground lg:hidden"
+            className="h-9 w-6 rounded-full text-muted-foreground lg:hidden"
           >
             <Menu className="h-[18px] w-[18px] stroke-[1.7]" />
-          </Button>
+          </button>
         )}
 
         {parent ? (

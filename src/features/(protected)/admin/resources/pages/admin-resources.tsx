@@ -63,9 +63,9 @@ export default function AdminResources({ uuid }: { uuid: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex gap-4 flex-row items-start justify-between">
         <PageDescription page="adminResources" className="max-w-2xl" />
-        <Button onClick={openCreate} size="sm" className="shrink-0">
+        <Button onClick={openCreate} size="sm" className="shrink-0 w-fit">
           <Plus aria-hidden="true" />
           New resource
         </Button>
