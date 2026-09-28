@@ -189,6 +189,53 @@ export const adminReview = mutation({
   },
 });
 
+export const listForUser = query({
+  args: {
+    userId: v.id("users"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("contributions"),
+      _creationTime: v.number(),
+      ambassadorId: v.id("users"),
+      missionId: v.optional(v.id("missions")),
+      kind: v.string(),
+      title: v.string(),
+      note: v.optional(v.string()),
+      link: v.optional(v.string()),
+      responses: v.optional(
+        v.array(
+          v.object({
+            fieldKey: v.string(),
+            label: v.string(),
+            value: v.string(),
+          }),
+        ),
+      ),
+      quantity: v.optional(v.number()),
+      status: v.string(),
+      awardedPoints: v.optional(v.number()),
+      reviewedBy: v.optional(v.id("users")),
+      reviewedAt: v.optional(v.number()),
+      reviewNote: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const user = await requireRole(ctx);
+    if (user._id !== args.userId) {
+      throw new AuthError(403, "Forbidden.");
+    }
+    const all = await ctx.db
+      .query("contributions")
+      .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", args.userId))
+      .order("desc")
+      .collect();
+    const limit = Math.min(args.limit ?? 50, 200);
+    return all.slice(0, limit);
+  },
+});
+
 export const submit = mutation({
   args: {
     missionId: v.id("missions"),
