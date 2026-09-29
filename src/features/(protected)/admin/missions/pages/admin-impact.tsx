@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { Activity, Award, TrendingUp, Users } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -12,14 +13,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, Award, TrendingUp, Users } from "lucide-react";
 import { PageDescription } from "@/components/shared/page-description";
-import { ImpactStatsGrid } from "../../../ambassador/impact/components/impact-stats-grid";
-import { ImpactSkeleton } from "../../../ambassador/impact/components/impact-skeleton";
+import { api } from "../../../../../../convex/_generated/api";
 import { ImpactChartCard } from "../../../ambassador/impact/components/impact-chart-card";
 import { ImpactChartTooltip } from "../../../ambassador/impact/components/impact-chart-tooltip";
-
-import { api } from "../../../../../../convex/_generated/api";
+import { ImpactSkeleton } from "../../../ambassador/impact/components/impact-skeleton";
+import { ImpactStatsGrid } from "../../../ambassador/impact/components/impact-stats-grid";
 
 const kindLabel: Record<string, string> = {
   mission_submission: "Mission submissions",
@@ -46,11 +45,7 @@ export default function AdminImpact() {
   const byKind = useQuery(api.impact.adminByKind);
   const timeline = useQuery(api.impact.adminTimeline);
 
-  if (
-    stats === undefined ||
-    byKind === undefined ||
-    timeline === undefined
-  ) {
+  if (stats === undefined || byKind === undefined || timeline === undefined) {
     return <ImpactSkeleton />;
   }
 
