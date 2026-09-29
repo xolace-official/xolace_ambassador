@@ -1,18 +1,15 @@
 "use client";
 
 import { usePaginatedQuery } from "convex/react";
-import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import { api } from "../../../../../../convex/_generated/api";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
-import {
-  ResourceFormDialog,
-  type ResourceForm,
-} from "../components/resource-form-dialog";
-import { ResourceListItem } from "../components/resource-list-item";
+import { Button } from "@/components/ui/button";
+import { api } from "../../../../../../convex/_generated/api";
 import { ResourceDeleteDialog } from "../components/resource-delete-dialog";
+import { ResourceListItem } from "../components/resource-list-item";
 import { ResourceListSkeleton } from "../components/resource-list-skeleton";
 
 const PAGE_SIZE = 10;
@@ -23,51 +20,17 @@ export default function AdminResources({ uuid }: { uuid: string }) {
     {},
     { initialNumItems: PAGE_SIZE },
   );
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingResource, setEditingResource] = useState<
-    ResourceForm | undefined
-  >(undefined);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  function openCreate() {
-    setEditingId(null);
-    setEditingResource(undefined);
-    setDialogOpen(true);
-  }
-
-  function openEdit(resource: {
-    _id: string;
-    title: string;
-    description: string;
-    category: string;
-    kind: string;
-    url?: string;
-    track?: string;
-    published: boolean;
-    sortOrder: number;
-  }) {
-    setEditingId(resource._id);
-    setEditingResource({
-      title: resource.title,
-      description: resource.description,
-      category: resource.category as ResourceForm["category"],
-      kind: resource.kind as "link" | "file",
-      url: resource.url ?? "",
-      track: resource.track as ResourceForm["track"],
-      published: resource.published,
-      sortOrder: resource.sortOrder,
-    });
-    setDialogOpen(true);
-  }
 
   return (
     <div className="space-y-5">
       <div className="flex gap-4 flex-row items-start justify-between">
         <PageDescription page="adminResources" className="max-w-2xl" />
-        <Button onClick={openCreate} size="sm" className="shrink-0 w-fit">
-          <Plus aria-hidden="true" />
-          New resource
+        <Button asChild size="sm" className="shrink-0 w-fit">
+          <Link href={`/admin/${uuid}/resources/new`}>
+            <Plus aria-hidden="true" />
+            New resource
+          </Link>
         </Button>
       </div>
 
@@ -77,7 +40,12 @@ export default function AdminResources({ uuid }: { uuid: string }) {
         <EmptyState
           title="No resources yet"
           description="Create your first resource to share with ambassadors."
-          action={{ label: "Create resource", onClick: openCreate }}
+          action={{
+            label: "Create resource",
+            onClick: () => {
+              window.location.href = `/admin/${uuid}/resources/new`;
+            },
+          }}
         />
       ) : (
         <>
@@ -87,7 +55,6 @@ export default function AdminResources({ uuid }: { uuid: string }) {
                 key={resource._id}
                 uuid={uuid}
                 resource={resource}
-                onEdit={() => openEdit(resource)}
                 onDelete={() => setDeleteId(resource._id)}
               />
             ))}
@@ -96,6 +63,7 @@ export default function AdminResources({ uuid }: { uuid: string }) {
             <div className="flex justify-center">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => loadMore(PAGE_SIZE)}
                 disabled={status === "LoadingMore"}
               >
@@ -112,14 +80,6 @@ export default function AdminResources({ uuid }: { uuid: string }) {
           ) : null}
         </>
       )}
-
-      <ResourceFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        editingId={editingId}
-        onSaved={() => setDialogOpen(false)}
-        defaultValues={editingResource}
-      />
 
       <ResourceDeleteDialog
         resourceId={deleteId}
