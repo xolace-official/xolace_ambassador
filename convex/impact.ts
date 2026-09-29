@@ -47,9 +47,7 @@ export const adminByKind = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const contributions = await ctx.db
-      .query("contributions")
-      .collect();
+    const contributions = await ctx.db.query("contributions").collect();
     const approved = contributions.filter((c) => c.status === "approved");
 
     const byKind = new Map<string, number>();
@@ -106,8 +104,10 @@ export const adminTimeline = query({
 
     const missionStarts = missions.map((m) => m.startsAt);
     const missionEnds = missions.map((m) => m.endsAt);
-    const minDate = missionStarts.length > 0 ? Math.min(...missionStarts) : Date.now();
-    const maxDate = missionEnds.length > 0 ? Math.max(...missionEnds) : Date.now();
+    const minDate =
+      missionStarts.length > 0 ? Math.min(...missionStarts) : Date.now();
+    const maxDate =
+      missionEnds.length > 0 ? Math.max(...missionEnds) : Date.now();
 
     return {
       dateRange: { min: minDate, max: maxDate },
