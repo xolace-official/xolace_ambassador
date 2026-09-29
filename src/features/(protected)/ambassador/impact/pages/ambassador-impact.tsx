@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useSessionUser } from "@/hooks/use-session-user";
+import { Activity, Award, TrendingUp, Users } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -13,15 +13,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, Award, TrendingUp, Users } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
-import { ImpactStatsGrid } from "@/features/(protected)/ambassador/impact/components/impact-stats-grid";
-import { ImpactSkeleton } from "@/features/(protected)/ambassador/impact/components/impact-skeleton";
 import { ImpactChartCard } from "@/features/(protected)/ambassador/impact/components/impact-chart-card";
 import { ImpactChartTooltip } from "@/features/(protected)/ambassador/impact/components/impact-chart-tooltip";
-import { ContributionHistory } from "../components/contribution-history";
+import { ImpactSkeleton } from "@/features/(protected)/ambassador/impact/components/impact-skeleton";
+import { ImpactStatsGrid } from "@/features/(protected)/ambassador/impact/components/impact-stats-grid";
+import { useSessionUser } from "@/hooks/use-session-user";
 import { api } from "../../../../../../convex/_generated/api";
+import { ContributionHistory } from "../components/contribution-history";
 
 const kindLabel: Record<string, string> = {
   mission_submission: "Mission submission",
@@ -84,9 +84,9 @@ export default function AmbassadorImpact() {
         acc[c.kind] =
           (acc[c.kind] ?? 0) +
           (c.kind === "people_reached" ||
-            c.kind === "app_install" ||
-            c.kind === "referral"
-            ? c.quantity ?? 1
+          c.kind === "app_install" ||
+          c.kind === "referral"
+            ? (c.quantity ?? 1)
             : 1);
       }
       return acc;
@@ -103,7 +103,11 @@ export default function AmbassadorImpact() {
 
   const stats = [
     { label: "Points earned", value: totals?.points ?? 0, icon: Award },
-    { label: "Missions completed", value: totals?.missionsCompleted ?? 0, icon: Activity },
+    {
+      label: "Missions completed",
+      value: totals?.missionsCompleted ?? 0,
+      icon: Activity,
+    },
     { label: "People reached", value: totalPeopleReached, icon: Users },
     { label: "Referrals", value: totalReferrals, icon: TrendingUp },
   ];
@@ -122,9 +126,16 @@ export default function AmbassadorImpact() {
           emptyDescription="Your points history will appear here once you start contributing."
         >
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={timeline} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <AreaChart
+              data={timeline}
+              margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11 }}
+                stroke="var(--muted-foreground)"
+              />
               <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
               <Tooltip content={<ImpactChartTooltip />} />
               <Area
@@ -146,12 +157,27 @@ export default function AmbassadorImpact() {
           emptyDescription="Your contribution breakdown will appear here once approved."
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={byKind} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <BarChart
+              data={byKind}
+              margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="kind" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" allowDecimals={false} />
+              <XAxis
+                dataKey="kind"
+                tick={{ fontSize: 11 }}
+                stroke="var(--muted-foreground)"
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                stroke="var(--muted-foreground)"
+                allowDecimals={false}
+              />
               <Tooltip content={<ImpactChartTooltip />} />
-              <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="count"
+                fill="var(--primary)"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </ImpactChartCard>
