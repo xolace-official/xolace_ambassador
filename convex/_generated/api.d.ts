@@ -20,6 +20,7 @@ import type * as missions from "../missions.js";
 import type * as model_auth from "../model/auth.js";
 import type * as programConfig from "../programConfig.js";
 import type * as provisioning from "../provisioning.js";
+import type * as reports from "../reports.js";
 import type * as resources from "../resources.js";
 import type * as rewards from "../rewards.js";
 import type * as seed from "../seed.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   "model/auth": typeof model_auth;
   programConfig: typeof programConfig;
   provisioning: typeof provisioning;
+  reports: typeof reports;
   resources: typeof resources;
   rewards: typeof rewards;
   seed: typeof seed;

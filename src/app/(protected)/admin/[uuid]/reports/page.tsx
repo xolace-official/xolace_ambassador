@@ -6,7 +6,7 @@ import { portalMetadata } from "@/lib/metadata";
 export const metadata: Metadata = portalMetadata({
   title: "Reports",
   description:
-    "Structured program, ambassador, mission and impact reports, with exports.",
+    "Program health, ambassador performance, mission outcomes, and exportable data.",
 });
 
 export default function Page() {

@@ -16,6 +16,8 @@ const descriptions = {
     "Give ambassadors a focused task, a clear brief, and a safe way to make a meaningful contribution.",
   adminResources:
     "Manage brand kit, templates, campaign assets, videos and guides for ambassadors.",
+  adminReports:
+    "Program health, ambassador performance, mission outcomes, and exportable data.",
   ambassadorRewards:
     "Track your points, levels, recognition, and the rewards you've earned through your contributions.",
   ambassadorLeaderboard:
