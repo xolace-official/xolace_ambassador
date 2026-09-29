@@ -85,10 +85,11 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
             type="button"
             aria-current={tab === value ? "page" : undefined}
             onClick={() => void setTab(value)}
-            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tab === value
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              tab === value
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
           >
             {value === "applications" ? "Applications" : "Ambassadors"}
           </button>
