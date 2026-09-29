@@ -122,7 +122,7 @@ export default function AdminApplicationDetail({
           </div>
         </div>
         {application.status !== "accepted" &&
-          application.status !== "rejected" ? (
+        application.status !== "rejected" ? (
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             {application.status === "new" ? (
               <Button
@@ -177,7 +177,11 @@ export default function AdminApplicationDetail({
                       {s.platform}:
                     </span>
                     <a
-                      href={s.handle.startsWith("http") ? s.handle : `https://${s.handle}`}
+                      href={
+                        s.handle.startsWith("http")
+                          ? s.handle
+                          : `https://${s.handle}`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="break-all text-primary underline-offset-4 hover:underline"
@@ -216,7 +220,13 @@ export default function AdminApplicationDetail({
   );
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+function Detail({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-w-0 border-b border-border py-2">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
