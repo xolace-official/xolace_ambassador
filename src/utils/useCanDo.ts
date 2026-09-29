@@ -19,6 +19,7 @@ export const ROLE_PERMISSIONS: Record<PortalRole, readonly string[]> = {
     "dashboard",
     "missions",
     "impact",
+    "leaderboard",
     "resources",
     "community",
     "rewards",
