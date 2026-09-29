@@ -1,6 +1,5 @@
 import { useAction } from "convex/react";
 import { toast } from "sonner";
-import { api } from "../../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { api } from "../../../../../../convex/_generated/api";
 
 interface ResourceDeleteDialogProps {
   resourceId: string | null;
@@ -46,10 +46,10 @@ export function ResourceDeleteDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => void handleDelete()}>
+          <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
             Delete
           </Button>
         </DialogFooter>
