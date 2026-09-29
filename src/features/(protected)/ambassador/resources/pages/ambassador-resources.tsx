@@ -1,69 +1,89 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { BookOpen, Download, ExternalLink, FileText, Image, Search } from "lucide-react";
+import {
+  BookOpen,
+  Clock,
+  ExternalLink,
+  FileText,
+  Image as ImageIcon,
+  PlayCircle,
+  Search,
+  Sparkles,
+} from "lucide-react";
+import Link from "next/link";
 import { useQueryState } from "nuqs";
-import { parseAsString, parseAsStringLiteral } from "nuqs/server";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { parseAsString } from "nuqs/server";
+
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
+// Consolidate into 6 primary ambassador categories
 const CATEGORIES = [
+  "playbook",
+  "videos",
   "brand_kit",
   "templates",
-  "videos",
   "campaign_assets",
-  "captions",
   "screenshots",
-  "guide",
 ] as const;
 
-const parseCategory = parseAsStringLiteral(CATEGORIES)
-  .withDefault("brand_kit")
-  .withOptions({ clearOnDefault: true });
-
-const parseSearch = parseAsString.withDefault("").withOptions({
-  clearOnDefault: true,
-});
-
 const categoryLabel: Record<string, string> = {
-  brand_kit: "Brand Kit",
-  templates: "Templates",
-  videos: "Videos",
+  playbook: "Playbooks & Guides",
+  videos: "Videos & Streams",
+  brand_kit: "Brand & Media",
+  templates: "Templates & Copy",
   campaign_assets: "Campaign Assets",
-  captions: "Captions",
-  screenshots: "Screenshots",
-  guide: "Guides",
+  screenshots: "Screenshots & UI",
+  guide: "Playbooks & Guides",
+  captions: "Templates & Copy",
 };
 
 const categoryIcon: Record<string, typeof FileText> = {
-  brand_kit: Image,
+  playbook: BookOpen,
+  videos: PlayCircle,
+  brand_kit: ImageIcon,
   templates: FileText,
-  videos: BookOpen,
-  campaign_assets: Image,
-  captions: FileText,
-  screenshots: Image,
+  campaign_assets: Sparkles,
+  screenshots: ImageIcon,
   guide: BookOpen,
+  captions: FileText,
 };
 
-export default function AmbassadorResources() {
-  const [category, setCategory] = useQueryState("category", parseCategory);
-  const [search, setSearch] = useQueryState("search", parseSearch);
+// Maps legacy category values to consolidated primary category keys
+function normalizeCategory(category: string): string {
+  if (category === "guide") return "playbook";
+  if (category === "captions") return "templates";
+  return category;
+}
+
+export default function AmbassadorResources({ uuid }: { uuid?: string }) {
+  // Default to selecting the first category pill ("playbook")
+  const [category, setCategory] = useQueryState(
+    "category",
+    parseAsString.withDefault(CATEGORIES[0]),
+  );
+  const [search, setSearch] = useQueryState(
+    "search",
+    parseAsString.withDefault(""),
+  );
   const resources = useQuery(api.resources.listPublished);
 
   if (resources === undefined) {
     return (
-      <div className="space-y-5" aria-label="Loading resources">
+      <div className="space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
               aria-hidden="true"
-              className="h-40 animate-pulse rounded-xl bg-card"
+              className="h-44 animate-pulse rounded-xl bg-card"
             />
           ))}
         </div>
@@ -72,7 +92,8 @@ export default function AmbassadorResources() {
   }
 
   const filtered = resources.filter((r) => {
-    const matchesCategory = r.category === category;
+    const normCategory = normalizeCategory(r.category);
+    const matchesCategory = normCategory === category;
     const matchesSearch =
       !search ||
       r.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -81,37 +102,42 @@ export default function AmbassadorResources() {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageDescription page="ambassadorResources" className="max-w-2xl" />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              aria-pressed={category === cat}
-              onClick={() => void setCategory(cat)}
-              className={`min-h-8 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                category === cat
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              }`}
-            >
-              {categoryLabel[cat]}
-            </button>
-          ))}
+      {/* Filter bar & Search */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          {CATEGORIES.map((cat) => {
+            const isActive = category === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => void setCategory(cat)}
+                className={`h-8 rounded-full px-3 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                {categoryLabel[cat]}
+              </button>
+            );
+          })}
         </div>
-        <div className="relative sm:w-64">
+
+        <div className="relative w-full lg:w-72">
           <Search
             aria-hidden="true"
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
           />
           <Input
             aria-label="Search resources"
-            placeholder="Search resources…"
+            placeholder="Search playbooks, guides, assets…"
             value={search}
-            onChange={(e) => void setSearch(e.target.value)}
+            onChange={(e) => void setSearch(e.target.value || null)}
             className="pl-9"
           />
         </div>
@@ -120,17 +146,17 @@ export default function AmbassadorResources() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={search ? "No resources found" : "No resources yet"}
+          title={search ? "No matching resources" : "No resources in this category"}
           description={
             search
-              ? "Try a different search or category."
-              : "Resources will appear here when admins publish them."
+              ? "Try adjusting your search terms or category selection."
+              : "Check back later for new playbooks, videos, and brand assets."
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((resource) => (
-            <ResourceCard key={resource._id} resource={resource} />
+            <ResourceCard key={resource._id} resource={resource} uuid={uuid} />
           ))}
         </div>
       )}
@@ -140,7 +166,9 @@ export default function AmbassadorResources() {
 
 function ResourceCard({
   resource,
+  uuid,
 }: {
+  uuid?: string;
   resource: {
     _id: string;
     title: string;
@@ -149,59 +177,56 @@ function ResourceCard({
     kind: string;
     url?: string;
     storageId?: Id<"_storage">;
+    assetMetadata?: {
+      estimatedReadTime?: string;
+    };
   };
 }) {
-  const downloadUrl = useQuery(
-    api.resources.getDownloadUrl,
-    resource.kind === "file" && resource.storageId
-      ? { storageId: resource.storageId }
-      : "skip",
-  );
-
   const Icon = categoryIcon[resource.category] ?? FileText;
-
-  const href =
-    resource.kind === "link"
-      ? resource.url ?? "#"
-      : downloadUrl ?? "#";
+  const detailHref = uuid
+    ? `/ambassador/${uuid}/resources/${resource._id}`
+    : "#";
 
   return (
-    <Card className="group flex flex-col gap-3 border-border p-5 transition-colors hover:border-primary/50">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Icon aria-hidden="true" className="size-5 text-primary" />
+    <Card className="group flex flex-col justify-between border-border p-5 transition-all hover:border-primary/50 hover:shadow-md">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon aria-hidden="true" className="size-5" />
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {resource.assetMetadata?.estimatedReadTime ? (
+              <Badge variant="outline" className="gap-1 text-[11px] text-muted-foreground">
+                <Clock className="size-3" />
+                {resource.assetMetadata.estimatedReadTime}
+              </Badge>
+            ) : null}
+
+            <Badge variant="outline" className="text-[11px]">
+              {categoryLabel[resource.category] ?? resource.category}
+            </Badge>
+          </div>
         </div>
-        <Badge variant="outline" className="shrink-0">
-          {categoryLabel[resource.category] ?? resource.category}
-        </Badge>
+
+        <div className="space-y-1">
+          <h3 className="line-clamp-1 text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+            {resource.title}
+          </h3>
+          <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
+            {resource.description}
+          </p>
+        </div>
       </div>
-      <div className="min-w-0 space-y-1">
-        <h3 className="truncate text-sm font-semibold text-foreground">
-          {resource.title}
-        </h3>
-        <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
-          {resource.description}
-        </p>
+
+      <div className="mt-5 border-t border-border/60 pt-3">
+        <Button asChild className="w-full justify-between" variant="secondary" size="sm">
+          <Link href={detailHref}>
+            <span>View Resource</span>
+            <ExternalLink className="size-3.5 opacity-70" />
+          </Link>
+        </Button>
       </div>
-      <a
-        href={href}
-        target={resource.kind === "link" ? "_blank" : undefined}
-        rel={resource.kind === "link" ? "noopener noreferrer" : undefined}
-        className="mt-auto inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={`${resource.kind === "link" ? "Open" : "Download"} ${resource.title}`}
-      >
-        {resource.kind === "link" ? (
-          <>
-            <ExternalLink aria-hidden="true" className="size-4" />
-            Open resource
-          </>
-        ) : (
-          <>
-            <Download aria-hidden="true" className="size-4" />
-            Download file
-          </>
-        )}
-      </a>
     </Card>
   );
 }
