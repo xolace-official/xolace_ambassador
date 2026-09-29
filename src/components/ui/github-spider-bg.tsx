@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 
@@ -58,7 +58,6 @@ export default function GithubSpiderBg({
         viewBox="0 0 1200 480"
         preserveAspectRatio="none"
         fill="none"
-        // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, parent is aria-hidden
         role="presentation"
       >
         {edges.map((edge, index) => {
