@@ -66,7 +66,7 @@ export default function AmbassadorImpact() {
     );
   }
 
-  if (totals == null || contributions === undefined) {
+  if (totals === undefined || contributions === undefined) {
     return <ImpactSkeleton />;
   }
 
