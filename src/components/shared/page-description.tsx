@@ -18,6 +18,8 @@ const descriptions = {
     "Manage brand kit, templates, campaign assets, videos and guides for ambassadors.",
   adminReports:
     "Program health, ambassador performance, mission outcomes, and exportable data.",
+  adminAnalytics:
+    "Program performance, ambassador engagement, and contribution trends across tracks and levels.",
   ambassadorRewards:
     "Track your points, levels, recognition, and the rewards you've earned through your contributions.",
   ambassadorLeaderboard:
