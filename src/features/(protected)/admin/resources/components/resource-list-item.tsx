@@ -1,9 +1,9 @@
 import { useAction } from "convex/react";
-import { ArrowUpRight, Eye, EyeOff, Globe, Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Globe, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { api } from "../../../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { api } from "../../../../../../convex/_generated/api";
 
 interface ResourceListItemProps {
   uuid: string;
@@ -16,14 +16,12 @@ interface ResourceListItemProps {
     track?: string;
     published: boolean;
   };
-  onEdit: () => void;
   onDelete: () => void;
 }
 
 export function ResourceListItem({
   uuid,
   resource,
-  onEdit,
   onDelete,
 }: ResourceListItemProps) {
   const togglePublished = useAction(api.resources.adminTogglePublished);
@@ -55,17 +53,20 @@ export function ResourceListItem({
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="sm"
           aria-label={resource.published ? "Unpublish" : "Publish"}
           onClick={() => void handleToggle()}
         >
           {resource.published ? (
             <Globe aria-hidden="true" className="size-4 text-success" />
           ) : (
-            <EyeOff aria-hidden="true" className="size-4 text-muted-foreground" />
+            <EyeOff
+              aria-hidden="true"
+              className="size-4 text-muted-foreground"
+            />
           )}
         </Button>
-        <Button asChild variant="ghost" size="icon">
+        <Button asChild variant="ghost" size="sm">
           <Link
             href={`/admin/${uuid}/resources/${resource._id}`}
             aria-label="View resource"
@@ -73,19 +74,18 @@ export function ResourceListItem({
             <Eye aria-hidden="true" className="size-4" />
           </Link>
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Edit"
-          onClick={onEdit}
-        >
-          <Pencil aria-hidden="true" className="size-4" />
+        <Button asChild variant="ghost" size="sm">
+          <Link
+            href={`/admin/${uuid}/resources/${resource._id}/edit`}
+            aria-label="Edit resource"
+          >
+            <Pencil aria-hidden="true" className="size-4" />
+          </Link>
         </Button>
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size="sm"
           aria-label="Delete"
           onClick={onDelete}
         >
