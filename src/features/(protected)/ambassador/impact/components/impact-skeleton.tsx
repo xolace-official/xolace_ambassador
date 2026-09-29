@@ -1,6 +1,6 @@
 export function ImpactSkeleton() {
   return (
-    <div className="space-y-5" aria-label="Loading impact data">
+    <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <div
