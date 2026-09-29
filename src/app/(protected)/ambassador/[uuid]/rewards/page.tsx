@@ -6,7 +6,7 @@ import { portalMetadata } from "@/lib/metadata";
 export const metadata: Metadata = portalMetadata({
   title: "Rewards",
   description:
-    "Points, achievements, recognition and reward history from your contributions.",
+    "Track your points, levels, recognition, and reward history earned through contributions.",
 });
 
 export default function Page() {
