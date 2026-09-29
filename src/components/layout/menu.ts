@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CircleHelp,
   FileText,
   FolderOpen,
@@ -126,6 +127,14 @@ export const ambassadorMenu: MenuItem[] = [
     href: (u) => `/ambassador/${u}/impact`,
     icon: LineChart,
     featureKey: "impact",
+  },
+
+  {
+    name: "Leaderboard",
+    // See how I rank among fellow ambassadors by points, contributions, and impact
+    href: (u) => `/ambassador/${u}/leaderboard`,
+    icon: BarChart3,
+    featureKey: "leaderboard",
   },
 
   {
