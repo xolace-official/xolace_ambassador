@@ -1,13 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "convex/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
-import { useAction } from "convex/react";
-import { api } from "../../../../../../convex/_generated/api";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { api } from "../../../../../../convex/_generated/api";
 
 export const CATEGORIES = [
   "brand_kit",
@@ -251,7 +251,7 @@ export function ResourceFormDialog({
               </div>
             ) : (
               <div className="space-y-2">
-                <label className="text-sm font-medium">File upload</label>
+                <span className="text-sm font-medium">File upload</span>
                 <p className="text-xs text-muted-foreground">
                   File storage integration coming soon. Use a link for now.
                 </p>
@@ -298,11 +298,12 @@ export function ResourceFormDialog({
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting ? "Saving…" : editingId ? "Update" : "Create"}
             </Button>
           </DialogFooter>
