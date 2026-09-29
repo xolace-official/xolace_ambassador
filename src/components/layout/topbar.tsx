@@ -14,7 +14,7 @@ interface TopBarProps {
   onMenuClick: () => void;
 }
 
-const subscribeNever = () => () => { };
+const subscribeNever = () => () => {};
 
 function toggleThemeWithTransition(
   origin: Element,
