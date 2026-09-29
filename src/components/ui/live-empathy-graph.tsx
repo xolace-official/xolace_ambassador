@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Activity, MapPin, Radio, Users } from "lucide-react";
 import { motion } from "motion/react";
@@ -95,7 +95,6 @@ export default function LiveEmpathyGraph() {
 
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          // biome-ignore lint/a11y/noSvgWithoutTitle: decorative, parent is aria-hidden
           role="presentation"
         >
           {campusNodes.map((from, idx) => {
