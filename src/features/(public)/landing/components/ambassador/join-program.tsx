@@ -586,7 +586,9 @@ export default function JoinProgramForm() {
                               id={`social-${key}`}
                               placeholder={platform.placeholder}
                               value={socials.get(key) ?? ""}
-                              onChange={(e) => updateSocial(key, e.target.value)}
+                              onChange={(e) =>
+                                updateSocial(key, e.target.value)
+                              }
                             />
                           </div>
                         );
