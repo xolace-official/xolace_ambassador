@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Card } from "@/components/ui/card";
 
 interface ImpactChartCardProps {
   title: string;
