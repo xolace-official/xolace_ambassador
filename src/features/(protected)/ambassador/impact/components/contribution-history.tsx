@@ -1,6 +1,6 @@
+import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/shared/empty-state";
 
 const kindColor: Record<string, string> = {
   mission_submission: "bg-chart-1",
@@ -68,8 +68,8 @@ export function ContributionHistory({
           Contribution history
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          {contributions.length} total · {approved.length} approved · {pending.length}{" "}
-          pending
+          {contributions.length} total · {approved.length} approved ·{" "}
+          {pending.length} pending
         </p>
       </div>
       {contributions.length === 0 ? (
@@ -82,7 +82,10 @@ export function ContributionHistory({
       ) : (
         <ul className="divide-y divide-border">
           {contributions.slice(0, 20).map((contribution) => (
-            <li key={contribution._id} className="flex items-center gap-3 px-5 py-3">
+            <li
+              key={contribution._id}
+              className="flex items-center gap-3 px-5 py-3"
+            >
               <span
                 aria-hidden="true"
                 className={`size-2 shrink-0 rounded-full ${kindColor[contribution.kind] ?? "bg-muted"}`}
