@@ -14,7 +14,6 @@ import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import AdminImpact from "./admin-impact";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
   MISSION_CATEGORY_LABELS,
 } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
+import AdminImpact from "./admin-impact";
 import AdminSubmissions from "./admin-submissions";
 
 const SECTIONS = ["missions", "submissions", "impact"] as const;
