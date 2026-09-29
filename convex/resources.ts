@@ -1,51 +1,31 @@
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
-import { paginationOptsValidator, paginationResultValidator } from "convex/server";
-import { action, internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { requireAdmin, requireRole } from "./model/auth";
 
-const resourceValidator = v.object({
-  _id: v.id("resources"),
-  _creationTime: v.number(),
-  title: v.string(),
-  description: v.string(),
-  category: v.union(
-    v.literal("brand_kit"),
-    v.literal("templates"),
-    v.literal("videos"),
-    v.literal("campaign_assets"),
-    v.literal("captions"),
-    v.literal("screenshots"),
-    v.literal("guide"),
-  ),
-  kind: v.union(v.literal("link"), v.literal("file")),
-  url: v.optional(v.string()),
-  storageId: v.optional(v.id("_storage")),
-  track: v.optional(
-    v.union(
-      v.literal("creator"),
-      v.literal("community"),
-      v.literal("growth"),
-      v.literal("creative"),
-      v.literal("production"),
-      v.literal("advocacy"),
-    ),
-  ),
-  published: v.boolean(),
-  sortOrder: v.number(),
-});
-
-const categoryValidator = v.union(
+export const categoryValidator = v.union(
+  v.literal("playbook"),
+  v.literal("videos"),
   v.literal("brand_kit"),
   v.literal("templates"),
-  v.literal("videos"),
   v.literal("campaign_assets"),
-  v.literal("captions"),
   v.literal("screenshots"),
   v.literal("guide"),
+  v.literal("captions"),
 );
 
-const trackValidator = v.union(
+export const kindValidator = v.union(
+  v.literal("link"),
+  v.literal("file"),
+  v.literal("content"),
+  v.literal("video"),
+);
+
+export const trackValidator = v.union(
   v.literal("creator"),
   v.literal("community"),
   v.literal("growth"),
@@ -53,6 +33,30 @@ const trackValidator = v.union(
   v.literal("production"),
   v.literal("advocacy"),
 );
+
+export const assetMetadataValidator = v.object({
+  estimatedReadTime: v.optional(v.string()),
+  fileType: v.optional(v.string()),
+  fileSize: v.optional(v.string()),
+  tags: v.optional(v.array(v.string())),
+});
+
+const resourceValidator = v.object({
+  _id: v.id("resources"),
+  _creationTime: v.number(),
+  title: v.string(),
+  description: v.string(),
+  category: categoryValidator,
+  kind: kindValidator,
+  url: v.optional(v.string()),
+  embedUrl: v.optional(v.string()),
+  content: v.optional(v.string()),
+  storageId: v.optional(v.id("_storage")),
+  assetMetadata: v.optional(assetMetadataValidator),
+  track: v.optional(trackValidator),
+  published: v.boolean(),
+  sortOrder: v.number(),
+});
 
 export const listPublished = query({
   args: {},
@@ -82,7 +86,7 @@ export const getById = query({
   args: { resourceId: v.string() },
   returns: v.union(resourceValidator, v.null()),
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    await requireRole(ctx);
     const id = ctx.db.normalizeId("resources", args.resourceId);
     if (id === null) return null;
     return await ctx.db.get(id);
@@ -98,14 +102,26 @@ export const getDownloadUrl = query({
   },
 });
 
+export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const create = internalMutation({
   args: {
     title: v.string(),
     description: v.string(),
     category: categoryValidator,
-    kind: v.union(v.literal("link"), v.literal("file")),
+    kind: kindValidator,
     url: v.optional(v.string()),
+    embedUrl: v.optional(v.string()),
+    content: v.optional(v.string()),
     storageId: v.optional(v.id("_storage")),
+    assetMetadata: v.optional(assetMetadataValidator),
     track: v.optional(trackValidator),
     published: v.boolean(),
     sortOrder: v.number(),
@@ -119,7 +135,10 @@ export const create = internalMutation({
       category: args.category,
       kind: args.kind,
       url: args.url?.trim() || undefined,
+      embedUrl: args.embedUrl?.trim() || undefined,
+      content: args.content?.trim() || undefined,
       storageId: args.storageId,
+      assetMetadata: args.assetMetadata,
       track: args.track,
       published: args.published,
       sortOrder: args.sortOrder,
@@ -133,8 +152,12 @@ export const update = internalMutation({
     title: v.string(),
     description: v.string(),
     category: categoryValidator,
-    kind: v.union(v.literal("link"), v.literal("file")),
+    kind: kindValidator,
     url: v.optional(v.string()),
+    embedUrl: v.optional(v.string()),
+    content: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    assetMetadata: v.optional(assetMetadataValidator),
     track: v.optional(trackValidator),
     published: v.boolean(),
     sortOrder: v.number(),
@@ -152,6 +175,10 @@ export const update = internalMutation({
       category: args.category,
       kind: args.kind,
       url: args.url?.trim() || undefined,
+      embedUrl: args.embedUrl?.trim() || undefined,
+      content: args.content?.trim() || undefined,
+      storageId: args.storageId ?? existing.storageId,
+      assetMetadata: args.assetMetadata,
       track: args.track,
       published: args.published,
       sortOrder: args.sortOrder,
@@ -196,9 +223,12 @@ export const adminCreate = action({
     title: v.string(),
     description: v.string(),
     category: categoryValidator,
-    kind: v.union(v.literal("link"), v.literal("file")),
+    kind: kindValidator,
     url: v.optional(v.string()),
+    embedUrl: v.optional(v.string()),
+    content: v.optional(v.string()),
     storageId: v.optional(v.id("_storage")),
+    assetMetadata: v.optional(assetMetadataValidator),
     track: v.optional(trackValidator),
     published: v.boolean(),
     sortOrder: v.number(),
@@ -214,8 +244,12 @@ export const adminUpdate = action({
     title: v.string(),
     description: v.string(),
     category: categoryValidator,
-    kind: v.union(v.literal("link"), v.literal("file")),
+    kind: kindValidator,
     url: v.optional(v.string()),
+    embedUrl: v.optional(v.string()),
+    content: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    assetMetadata: v.optional(assetMetadataValidator),
     track: v.optional(trackValidator),
     published: v.boolean(),
     sortOrder: v.number(),
