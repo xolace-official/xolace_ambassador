@@ -2,8 +2,8 @@
 
 import { useQuery } from "convex/react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PageDescription } from "@/components/shared/page-description";
+import { Button } from "@/components/ui/button";
 import { api } from "../../../../../../convex/_generated/api";
 import { AnalyticsDemographics } from "../components/analytics-demographics";
 import { AnalyticsDonutChart } from "../components/analytics-donut-chart";
@@ -20,16 +20,6 @@ const trackColors: Record<string, string> = {
   advocacy: "var(--primary)",
 };
 
-const kindLabels: Record<string, string> = {
-  mission_submission: "Mission Submissions",
-  people_reached: "People Reached",
-  app_install: "App Installs",
-  referral: "Referrals",
-  content: "Content",
-  event: "Events",
-  other: "Other",
-};
-
 export default function AdminAnalytics() {
   const analytics = useQuery(api.analytics.getAnalytics);
 
@@ -37,7 +27,7 @@ export default function AdminAnalytics() {
     return <AnalyticsSkeleton />;
   }
 
-  const { timeline, byTrack, byKind, byLevel, byLocation } = analytics;
+  const { summary, timeline, byTrack, byKind, byLevel, byLocation } = analytics;
 
   const totalTrackCount = byTrack.reduce((sum, t) => sum + t.count, 0);
   const trackData = byTrack.map((t) => ({
@@ -45,14 +35,6 @@ export default function AdminAnalytics() {
     value: t.count,
     percentage: totalTrackCount > 0 ? (t.count / totalTrackCount) * 100 : 0,
     color: trackColors[t.track] ?? "var(--muted-foreground)",
-  }));
-
-  const totalKindCount = byKind.reduce((sum, k) => sum + k.count, 0);
-  const kindData = byKind.map((k) => ({
-    name: kindLabels[k.kind] ?? k.kind,
-    value: k.count,
-    percentage: totalKindCount > 0 ? (k.count / totalKindCount) * 100 : 0,
-    color: "var(--chart-2)",
   }));
 
   const totalLevelCount = byLevel.reduce((sum, l) => sum + l.count, 0);
@@ -73,7 +55,10 @@ export default function AdminAnalytics() {
         </Button>
       </div>
 
-      <AnalyticsTimelineChart data={timeline} />
+      <AnalyticsTimelineChart
+        data={timeline}
+        totalPoints={summary.totalPoints}
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <AnalyticsDonutChart data={byKind} title="Contribution Types" />
