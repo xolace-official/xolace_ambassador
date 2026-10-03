@@ -21,16 +21,25 @@ export function InviteDialog({
   triggerLabel,
   onOpen,
   triggerVariant = "default",
+  open,
+  onOpenChange,
 }: {
-  triggerLabel: string;
+  triggerLabel?: string;
   onOpen?: () => void;
   triggerVariant?: "default" | "sidebar";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const isControlled = open !== undefined;
+  const isOpen = open ?? internalOpen;
 
   function handleOpenChange(next: boolean) {
-    setOpen(next);
+    if (!isControlled) {
+      setInternalOpen(next);
+    }
+    onOpenChange?.(next);
 
     if (next) {
       onOpen?.();
@@ -38,24 +47,26 @@ export function InviteDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          className={
-            triggerVariant === "sidebar"
-              ? "h-8 w-full justify-start px-4 text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
-              : undefined
-          }
-          variant={triggerVariant === "sidebar" ? "ghost" : "default"}
-        >
-          {triggerVariant === "sidebar" ? (
-            <UserPlus aria-hidden="true" className="size-4 shrink-0" />
-          ) : null}
-          {triggerLabel}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {triggerLabel ? (
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            size="sm"
+            className={
+              triggerVariant === "sidebar"
+                ? "mt-1 h-8 w-full justify-start gap-3 rounded-md px-3 text-left text-[14px] font-semibold text-foreground/80 hover:bg-foreground/5 hover:text-foreground"
+                : undefined
+            }
+            variant={triggerVariant === "sidebar" ? "ghost" : "default"}
+          >
+            {triggerVariant === "sidebar" ? (
+              <UserPlus aria-hidden="true" className="size-4 shrink-0" />
+            ) : null}
+            {triggerLabel}
+          </Button>
+        </DialogTrigger>
+      ) : null}
 
       <DialogContent>
         <DialogHeader>
@@ -83,7 +94,7 @@ export function InviteDialog({
           <Button
             type="button"
             variant="outline"
-            onClick={() => setOpen(false)}
+            onClick={() => handleOpenChange(false)}
           >
             Cancel
           </Button>
@@ -94,7 +105,7 @@ export function InviteDialog({
               const body =
                 "Hi,\n\nWe would love to invite you to join the Xolace Ambassadors program. Reply to this email and we will help you get started.\n\nLearn more at xolaceinc.com.";
               window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent("Xolace Ambassador Program")}&body=${encodeURIComponent(body)}`;
-              setOpen(false);
+              handleOpenChange(false);
             }}
           >
             Open email app
