@@ -20,12 +20,16 @@ export const current = query({
       return null;
     }
 
+    const image = user.avatarStorageId
+      ? await ctx.storage.getUrl(user.avatarStorageId)
+      : (user.image ?? null);
+
     return {
       _id: user._id,
       uuid: user.uuid ?? null,
       role: user.role ?? null,
       name: user.name ?? null,
-      image: user.image ?? null,
+      image,
       email: user.email ?? null,
     };
   },
