@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { PortalSettings } from "@/features/(protected)/shared/portal-settings";
+import { PortalSettings } from "@/features/(protected)/shared/settings/pages/portal-settings";
 import { portalMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = portalMetadata({
@@ -9,5 +10,9 @@ export const metadata: Metadata = portalMetadata({
 });
 
 export default function Page() {
-  return <PortalSettings />;
+  return (
+    <Suspense fallback={null}>
+      <PortalSettings />
+    </Suspense>
+  );
 }
