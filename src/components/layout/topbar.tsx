@@ -1,14 +1,21 @@
 ﻿"use client";
 
 import { useConvexAuth } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
 import { ArrowLeft, Bell, Menu, Moon, Sun, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { allDestinations } from "@/components/layout/menu";
+import {
+  getDemoNotifications,
+  NotificationPanel,
+} from "@/components/layout/notification-panel";
 import { Button } from "@/components/ui/button";
 import type { PortalRole } from "@/types/portal.type";
+import { api } from "../../../convex/_generated/api";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -43,8 +50,10 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const router = useRouter();
 
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const user = useQuery(api.users.current);
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const [, roleSegment, uuid] = pathname.split("/");
 
@@ -62,6 +71,11 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     roleSegment === "admin" || roleSegment === "ambassador"
       ? roleSegment
       : null;
+  const unreadNotificationCount = role
+    ? getDemoNotifications(role, uuid).filter(
+        (notification) => notification.unread,
+      ).length
+    : 0;
 
   const destinations = role ? allDestinations(role, uuid) : [];
 
@@ -75,7 +89,10 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     pathname.startsWith(`${item.href}/`),
   );
 
-  const pageTitle = current?.name ?? parent?.name ?? "Dashboard";
+  const pageTitle =
+    current?.name ??
+    parent?.name ??
+    (pathname.endsWith("/profile") ? "Profile" : "Dashboard");
 
   function getParentHref() {
     if (!parent) return pathname;
@@ -117,14 +134,6 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
       router.replace("/login");
     }
   }, [isLoading, isAuthenticated, router]);
-
-  async function handleProfile() {
-    try {
-      router.push("/profile");
-    } catch (error) {
-      console.error("Navigation failed:", error);
-    }
-  }
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between px-4 md:p-4">
@@ -219,24 +228,52 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
           type="button"
           variant="ghost"
           size="icon"
+          aria-label="Open notifications"
+          aria-expanded={notificationsOpen}
+          aria-controls="notification-panel"
+          onClick={() => setNotificationsOpen(true)}
           className="relative h-9 w-9 rounded-full text-muted-foreground hover:bg-muted"
         >
           <Bell className="h-[18px] w-[18px] stroke-[1.7]" />
-
-          <span className="absolute right-[7px] top-[7px] h-1.5 w-1.5 rounded-full bg-destructive" />
+          {unreadNotificationCount > 0 ? (
+            <span className="absolute right-0.5 top-0.5 flex min-h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-semibold leading-none text-destructive-foreground">
+              {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+            </span>
+          ) : null}
         </Button>
 
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onClick={handleProfile}
+          onClick={() => {
+            if (role && uuid) router.push(`/${role}/${uuid}/profile`);
+          }}
           className="h-9 w-9 rounded-full border border-border bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
-          title="Profile"
+          aria-label="Open profile"
         >
-          <User className="h-[17px] w-[17px] stroke-[1.7]" />
+          {user?.image ? (
+            <Image
+              src={user.image}
+              alt=""
+              width={36}
+              height={36}
+              className="size-full rounded-full object-cover"
+            />
+          ) : (
+            <User
+              aria-hidden="true"
+              className="h-[17px] w-[17px] stroke-[1.7]"
+            />
+          )}
         </Button>
       </div>
+      <NotificationPanel
+        open={notificationsOpen}
+        onOpenChange={setNotificationsOpen}
+        role={role}
+        uuid={uuid}
+      />
     </header>
   );
 }
