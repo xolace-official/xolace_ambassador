@@ -24,6 +24,10 @@ const descriptions = {
     "Track your points, levels, recognition, and the rewards you've earned through your contributions.",
   ambassadorLeaderboard:
     "See how you rank among fellow ambassadors by points, contributions, and impact.",
+  profile:
+    "Your identity, program progress, and the impact you are making with Xolace.",
+  settings:
+    "Manage the profile and account details connected to your ambassador portal.",
 } as const;
 
 type PageDescriptionProps = {
