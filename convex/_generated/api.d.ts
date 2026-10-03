@@ -25,6 +25,7 @@ import type * as reports from "../reports.js";
 import type * as resources from "../resources.js";
 import type * as rewards from "../rewards.js";
 import type * as seed from "../seed.js";
+import type * as settings from "../settings.js";
 import type * as users from "../users.js";
 import type * as utils_uuid from "../utils/uuid.js";
 
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   resources: typeof resources;
   rewards: typeof rewards;
   seed: typeof seed;
+  settings: typeof settings;
   users: typeof users;
   "utils/uuid": typeof utils_uuid;
 }>;
