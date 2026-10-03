@@ -17,6 +17,16 @@ const COLORS = [
   "var(--chart-5)",
 ];
 
+const kindLabels: Record<string, string> = {
+  mission_submission: "Mission submissions",
+  people_reached: "People reached",
+  app_install: "App installs",
+  referral: "Referrals",
+  content: "Content",
+  event: "Events",
+  other: "Other",
+};
+
 interface DonutItem {
   kind: string;
   count: number;
@@ -33,9 +43,9 @@ export function AnalyticsDonutChart({ data, title }: AnalyticsDonutChartProps) {
 
   let cumulative = 0;
   const segments = sorted.map((item, i) => {
-    const start = (cumulative / total) * 360;
+    const start = total > 0 ? (cumulative / total) * 360 : 0;
     cumulative += item.count;
-    const end = (cumulative / total) * 360;
+    const end = total > 0 ? (cumulative / total) * 360 : 0;
     return { ...item, start, end, color: COLORS[i % COLORS.length] };
   });
 
@@ -55,7 +65,12 @@ export function AnalyticsDonutChart({ data, title }: AnalyticsDonutChartProps) {
       </div>
       <div className="flex items-center gap-4">
         <div className="relative h-36 w-36 shrink-0">
-          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+          <svg
+            viewBox="0 0 100 100"
+            className="h-full w-full -rotate-90"
+            role="img"
+            aria-label={`${title} breakdown`}
+          >
             <circle
               cx="50"
               cy="50"
@@ -99,7 +114,9 @@ export function AnalyticsDonutChart({ data, title }: AnalyticsDonutChartProps) {
                 className="size-2.5 shrink-0 rounded-sm"
                 style={{ background: COLORS[i % COLORS.length] }}
               />
-              <span className="truncate text-muted-foreground">{item.kind}</span>
+              <span className="truncate text-muted-foreground">
+                {kindLabels[item.kind] ?? item.kind}
+              </span>
               <span className="ml-auto font-medium tabular-nums text-foreground">
                 {numberFormat.format(item.count)}
               </span>
