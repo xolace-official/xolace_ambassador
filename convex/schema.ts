@@ -53,6 +53,7 @@ export default defineSchema({
     authTables.users.validator.extend({
       uuid: v.optional(v.string()),
       role: v.optional(v.union(v.literal("admin"), v.literal("ambassador"))),
+      avatarStorageId: v.optional(v.id("_storage")),
     }),
   )
     .index("uuid", ["uuid"])
