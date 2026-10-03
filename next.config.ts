@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "qdjrwasidlmgqxakdxkl.supabase.co",
       },
+      // Convex returns signed avatar URLs from the deployment's cloud host.
+      {
+        protocol: "https",
+        hostname: "*.convex.cloud",
+        pathname: "/api/storage/**",
+      },
     ],
   },
   experimental: {
