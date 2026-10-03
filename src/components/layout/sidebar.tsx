@@ -1,9 +1,10 @@
 ﻿"use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { LogOut, ShieldCheck, Sparkles, X } from "lucide-react";
+import { LogOut, ShieldCheck, Sparkles, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { InviteDialog } from "@/components/layout/invite-dialog";
 import {
   adminMenu,
@@ -12,6 +13,15 @@ import {
   UTILITY_MENU,
 } from "@/components/layout/menu";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SidebarProps {
   role: "admin" | "ambassador";
@@ -38,17 +48,22 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { signOut } = useAuthActions();
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const menuItems: MenuItem[] = role === "admin" ? adminMenu : ambassadorMenu;
 
   const RoleIcon = roleMeta[role].icon;
 
   async function handleSignOut() {
+    setIsSigningOut(true);
     try {
       await signOut();
       window.location.href = "/login";
     } catch (error) {
       console.error("Sign out failed:", error);
+      setIsSigningOut(false);
     }
   }
 
@@ -130,13 +145,20 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
         </nav>
 
         <div className="mt-auto pt-4 font-semibold text-[14px]">
-          <div className="mt-1">
-            <InviteDialog
-              triggerLabel={inviteLabel(role)}
-              onOpen={() => onClose()}
-              triggerVariant="sidebar"
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              setInviteOpen(true);
+            }}
+            className="mt-1 flex h-8 w-full items-center gap-3 rounded-md px-3.5 text-left text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
+          >
+            <UserPlus
+              className="h-4 w-4 shrink-0 stroke-[1.8]"
+              aria-hidden="true"
             />
-          </div>
+            <span>{inviteLabel(role)}</span>
+          </button>
 
           {UTILITY_MENU.map((item) => {
             const Icon = item.icon;
@@ -160,7 +182,8 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
 
           <button
             type="button"
-            onClick={handleSignOut}
+            onClick={() => setSignOutOpen(true)}
+            disabled={isSigningOut}
             className="mt-1 flex h-8 w-full items-center gap-3 rounded-md px-3 text-left text-destructive/80 transition-colors hover:bg-foreground/5 hover:text-destructive"
           >
             <LogOut
@@ -171,6 +194,37 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
           </button>
         </div>
       </aside>
+
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+
+      <Dialog open={signOutOpen} onOpenChange={setSignOutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign out?</DialogTitle>
+            <DialogDescription>
+              You’ll need to sign in again to access your portal.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSignOutOpen(false)}
+              disabled={isSigningOut}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void handleSignOut()}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? "Signing out…" : "Sign out"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
