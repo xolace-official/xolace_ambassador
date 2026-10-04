@@ -97,89 +97,94 @@ export function AnalyticsDemographics({ data }: AnalyticsDemographicsProps) {
   const total = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <Card className="w-full border-border p-3 sm:p-4">
-      <div className="w-full mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Globe2 aria-hidden="true" className="size-4 text-muted-foreground" />
-          Ambassador locations
-        </h3>
-        <Select defaultValue="monthly">
-          <SelectTrigger className="h-11 w-28 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="weekly">Last Week</SelectItem>
-            <SelectItem value="monthly">Last Month</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(13rem,0.8fr)_minmax(0,2fr)]">
-        <div className="min-w-0 space-y-1.5">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-b border-border pb-1.5 text-[11px] text-muted-foreground">
-            <span>Country</span>
-            <span>Ambassadors</span>
-            <span>%</span>
-          </div>
-          {data.map((item) => (
-            <div
-              key={item.location}
-              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 py-0.5"
-            >
-              <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-                {item.location}
-              </span>
-              <span className="text-sm font-medium tabular-nums text-foreground">
-                {numberFormat.format(item.count)}
-              </span>
-              <span className="w-12 text-right text-xs text-muted-foreground">
-                {total > 0 ? ((item.count / total) * 100).toFixed(1) : 0}%
-              </span>
-            </div>
-          ))}
+    <Card className="w-full rounded-2xl border-border py-0 shadow-none">
+      <div className="p-3 sm:p-4">
+        <div className="w-full mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Globe2
+              aria-hidden="true"
+              className="size-4 text-muted-foreground"
+            />
+            Ambassador locations
+          </h3>
+          <Select defaultValue="monthly">
+            <SelectTrigger className="h-11 w-28 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Last Week</SelectItem>
+              <SelectItem value="monthly">Last Month</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="relative h-44 min-w-0 w-full overflow-hidden rounded-lg border border-border bg-muted/20 p-0 sm:h-48">
-          <svg
-            viewBox="0 0 100 100"
-            className="h-full w-full"
-            role="img"
-            aria-label="Ambassador locations across the world"
-          >
-            {mapDots.map(([cx, cy], i) => (
-              <circle
-                key={`${cx}-${cy}`}
-                cx={cx}
-                cy={cy}
-                r="1.1"
-                fill="var(--muted-foreground)"
-                opacity={0.28 + (i % 4) * 0.08}
-              />
+        <div className="grid gap-4 lg:grid-cols-[minmax(13rem,0.8fr)_minmax(0,2fr)]">
+          <div className="min-w-0 space-y-1.5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-b border-border pb-1.5 text-[11px] text-muted-foreground">
+              <span>Country</span>
+              <span>Ambassadors</span>
+              <span>%</span>
+            </div>
+            {data.map((item) => (
+              <div
+                key={item.location}
+                className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 py-0.5"
+              >
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                  {item.location}
+                </span>
+                <span className="text-sm font-medium tabular-nums text-foreground">
+                  {numberFormat.format(item.count)}
+                </span>
+                <span className="w-12 text-right text-xs text-muted-foreground">
+                  {total > 0 ? ((item.count / total) * 100).toFixed(1) : 0}%
+                </span>
+              </div>
             ))}
-            {data.map((item, i) => {
-              const [anchorX, anchorY] =
-                locationAnchors[i % locationAnchors.length];
-              return (
-                <g key={item.location}>
-                  <title>{`${item.location}: ${item.count} ambassadors`}</title>
-                  {Array.from({ length: item.count }, (_, dotIndex) => {
-                    const column = dotIndex % 7;
-                    const row = Math.floor(dotIndex / 7);
-                    const cx = anchorX + (column - 3) * 2.2;
-                    const cy = anchorY + (row - 1) * 2.2;
-                    return (
-                      <circle
-                        key={`${item.location}-${dotIndex}`}
-                        cx={cx}
-                        cy={cy}
-                        r="1.1"
-                        fill="var(--primary)"
-                        opacity="0.9"
-                      />
-                    );
-                  })}
-                </g>
-              );
-            })}
-          </svg>
+          </div>
+          <div className="relative h-44 min-w-0 w-full overflow-hidden rounded-lg border border-border bg-muted/20 p-0 sm:h-48">
+            <svg
+              viewBox="0 0 100 100"
+              className="h-full w-full"
+              role="img"
+              aria-label="Ambassador locations across the world"
+            >
+              {mapDots.map(([cx, cy], i) => (
+                <circle
+                  key={`${cx}-${cy}`}
+                  cx={cx}
+                  cy={cy}
+                  r="1.1"
+                  fill="var(--muted-foreground)"
+                  opacity={0.28 + (i % 4) * 0.08}
+                />
+              ))}
+              {data.map((item, i) => {
+                const [anchorX, anchorY] =
+                  locationAnchors[i % locationAnchors.length];
+                return (
+                  <g key={item.location}>
+                    <title>{`${item.location}: ${item.count} ambassadors`}</title>
+                    {Array.from({ length: item.count }, (_, dotIndex) => {
+                      const column = dotIndex % 7;
+                      const row = Math.floor(dotIndex / 7);
+                      const cx = anchorX + (column - 3) * 2.2;
+                      const cy = anchorY + (row - 1) * 2.2;
+                      return (
+                        <circle
+                          key={`${item.location}-${dotIndex}`}
+                          cx={cx}
+                          cy={cy}
+                          r="1.1"
+                          fill="var(--primary)"
+                          opacity="0.9"
+                        />
+                      );
+                    })}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
         </div>
       </div>
     </Card>
