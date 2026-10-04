@@ -4,6 +4,7 @@ export const settingsSchema = z.object({
   name: z.string().trim().min(2, "Enter a name with at least 2 characters."),
   location: z.string(),
   school: z.string(),
+  dateOfBirth: z.string(),
   bio: z.string().max(500, "Keep your bio under 500 characters."),
   tiktok: z.string(),
   instagram: z.string(),
@@ -20,6 +21,7 @@ export type Settings = {
   profile: {
     location: string | null;
     school: string | null;
+    dateOfBirth: string | null;
     bio: string | null;
     tiktok: string | null;
     instagram: string | null;
@@ -40,6 +42,7 @@ export const emptyValues: SettingsFormValues = {
   name: "",
   location: "",
   school: "",
+  dateOfBirth: "",
   bio: "",
   tiktok: "",
   instagram: "",
