@@ -78,6 +78,7 @@ export function PortalSettings() {
       name: settings.name ?? "",
       location: settings.profile?.location ?? "",
       school: settings.profile?.school ?? "",
+      dateOfBirth: settings.profile?.dateOfBirth ?? "",
       bio: settings.profile?.bio ?? "",
       tiktok: settings.profile?.tiktok ?? "",
       instagram: settings.profile?.instagram ?? "",
