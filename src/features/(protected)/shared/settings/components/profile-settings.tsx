@@ -74,6 +74,18 @@ export function ProfileSettings({
                   label="School or organization"
                   placeholder="Your school or organization…"
                 />
+                <div className="grid gap-2">
+                  <Label htmlFor="settings-date-of-birth">Date of birth</Label>
+                  <Input
+                    id="settings-date-of-birth"
+                    type="date"
+                    autoComplete="bday"
+                    {...form.register("dateOfBirth")}
+                  />
+                  <FormError
+                    message={form.formState.errors.dateOfBirth?.message}
+                  />
+                </div>
                 <div className="grid gap-2 sm:col-span-2">
                   <Label htmlFor="settings-bio">Bio</Label>
                   <Textarea
@@ -130,6 +142,21 @@ export function ProfileSettings({
               <SettingRow
                 label="School or organization"
                 value={settings.profile?.school || "Not provided"}
+                editable
+                onEdit={() => setEditing(true)}
+              />
+              <SettingRow
+                label="Date of birth"
+                value={
+                  settings.profile?.dateOfBirth
+                    ? new Intl.DateTimeFormat("en-GB", {
+                        dateStyle: "long",
+                        timeZone: "UTC",
+                      }).format(
+                        new Date(`${settings.profile.dateOfBirth}T00:00:00Z`),
+                      )
+                    : "Not provided"
+                }
                 editable
                 onEdit={() => setEditing(true)}
               />
