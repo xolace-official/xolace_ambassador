@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { BriefcaseBusiness, GraduationCap, MapPin, Pencil } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  GraduationCap,
+  MapPin,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +60,7 @@ export function PortalProfile({
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-6">
         <Card className="rounded-2xl shadow-sm">
-          <CardContent className="relative flex flex-col items-center p-4 text-center sm:items-start sm:p-8 sm:text-left">
+          <CardContent className="relative flex flex-col items-center p-4 text-center sm:items-start sm:p-6 sm:text-left">
             <Link
               href={`/${portalRole}/${uuid}/settings`}
               className="absolute right-5 top-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-muted px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-8 sm:top-8"
@@ -64,7 +70,7 @@ export function PortalProfile({
               <span className="sm:hidden">Edit</span>
             </Link>
             <ProfileAvatar image={profile.image} name={displayName} />
-            <h2 className="mt-4 text-2xl font-semibold text-foreground sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">
               {displayName}
             </h2>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -87,11 +93,11 @@ export function PortalProfile({
               ) : null}
             </div>
             {details?.bio ? (
-              <p className="mt-6 max-w-xl text-sm leading-6 text-muted-foreground">
+              <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
                 {details.bio}
               </p>
             ) : null}
-            <div className="mt-6 grid w-full max-w-md gap-4 border-t border-border pt-5 text-left sm:grid-cols-2">
+            <div className="mt-4 grid w-full gap-4 border-t border-border pt-4 text-left sm:grid-cols-3">
               <ProfileDetail
                 icon={GraduationCap}
                 label="School or organization"
@@ -102,6 +108,16 @@ export function PortalProfile({
                 label="Joined Xolace"
                 value={dateFormatter.format(profile.joinedAt)}
               />
+              {details?.dateOfBirth ? (
+                <ProfileDetail
+                  icon={CalendarDays}
+                  label="Date of birth"
+                  value={new Intl.DateTimeFormat("en-GB", {
+                    dateStyle: "long",
+                    timeZone: "UTC",
+                  }).format(new Date(`${details.dateOfBirth}T00:00:00Z`))}
+                />
+              ) : null}
             </div>
             <ProfileSocialLinks socials={details?.socials} />
           </CardContent>
