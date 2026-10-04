@@ -2,7 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { ArrowLeft, ArrowRight, Camera, Check, Plus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  Info,
+  Plus,
+  X,
+} from "lucide-react";
 import { motion } from "motion/react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -51,6 +59,12 @@ const SOCIAL_PLATFORMS = [
 const applicationSchema = z.object({
   name: z.string().trim().min(2, "Enter at least 2 characters.").max(120),
   email: z.email({ error: "Enter a valid email address." }),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose your date of birth.")
+    .refine((value) => new Date(`${value}T00:00:00Z`) <= new Date(), {
+      error: "Date of birth cannot be in the future.",
+    }),
   location: z.string().trim().min(2, "Enter your city and country.").max(120),
   schoolOrCommunity: z.string().max(160),
   track: z.enum(
@@ -69,6 +83,7 @@ type ApplicationForm = z.infer<typeof applicationSchema>;
 const initialFormData = {
   name: "",
   email: "",
+  dateOfBirth: "",
   location: "",
   schoolOrCommunity: "",
   track: "creator" as const,
@@ -83,6 +98,15 @@ const TRACKS = [
   "production",
   "advocacy",
 ] as const;
+
+const TRACK_HINTS: Record<(typeof TRACKS)[number], string> = {
+  creator: "Make helpful content that introduces people to Xolace.",
+  community: "Build welcoming spaces and connect people around Xolace.",
+  growth: "Help more people discover and start using Xolace.",
+  creative: "Shape ideas, visuals, and campaigns that tell the Xolace story.",
+  production: "Turn plans into reliable events, projects, and experiences.",
+  advocacy: "Speak up for emotional wellbeing and reduce mental health stigma.",
+};
 
 const steps = ["About You", "Social Profiles", "Your Interest"] as const;
 
@@ -117,6 +141,7 @@ export default function JoinProgramForm() {
   });
 
   const email = watch("email");
+  const selectedTrack = watch("track");
   const emailExists = useQuery(
     api.applications.checkEmailExists,
     email?.includes("@") ? { email } : "skip",
@@ -164,7 +189,7 @@ export default function JoinProgramForm() {
 
   async function handleStepNext() {
     const fieldsToValidate: (keyof ApplicationForm)[][] = [
-      ["name", "email", "location"],
+      ["name", "email", "dateOfBirth", "location"],
       [],
       ["track", "whyXolace"],
     ];
@@ -239,6 +264,7 @@ export default function JoinProgramForm() {
       await submitApplication({
         name: values.name,
         email: values.email,
+        dateOfBirth: values.dateOfBirth,
         location: values.location,
         school: values.schoolOrCommunity || undefined,
         socials: socialsArray,
@@ -488,6 +514,21 @@ export default function JoinProgramForm() {
                         </div>
                       )}
                     </Field>
+                    <Field
+                      label="Date of birth"
+                      id="date-of-birth"
+                      error={errors.dateOfBirth?.message}
+                    >
+                      {(fieldProps) => (
+                        <Input
+                          id="date-of-birth"
+                          type="date"
+                          autoComplete="bday"
+                          {...fieldProps}
+                          {...register("dateOfBirth")}
+                        />
+                      )}
+                    </Field>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -601,7 +642,15 @@ export default function JoinProgramForm() {
                 <div className="space-y-5">
                   <div className="space-y-2">
                     <label htmlFor="track" className="text-sm font-medium">
-                      Track
+                      <span className="inline-flex items-center gap-1">
+                        Track
+                        <span title="Choose the kind of contribution you want to make.">
+                          <Info
+                            aria-hidden="true"
+                            className="size-3.5 text-muted-foreground"
+                          />
+                        </span>
+                      </span>
                     </label>
                     <Controller
                       control={control}
@@ -619,6 +668,7 @@ export default function JoinProgramForm() {
                               <SelectItem
                                 key={track}
                                 value={track}
+                                title={TRACK_HINTS[track]}
                                 className="capitalize"
                               >
                                 {track}
@@ -632,6 +682,13 @@ export default function JoinProgramForm() {
                       id="track-error"
                       message={errors.track?.message}
                     />
+                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <Info
+                        aria-hidden="true"
+                        className="mt-0.5 size-3.5 shrink-0"
+                      />
+                      {TRACK_HINTS[selectedTrack]}
+                    </p>
                   </div>
                   <Field
                     label="Why Xolace?"
