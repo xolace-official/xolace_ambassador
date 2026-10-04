@@ -126,6 +126,7 @@ export default defineSchema({
     podId: v.optional(v.id("pods")),
     location: v.optional(v.string()),
     school: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),
     bio: v.optional(v.string()),
     socials: v.optional(
       v.object({
@@ -360,6 +361,7 @@ export default defineSchema({
   applications: defineTable({
     name: v.string(),
     email: v.string(),
+    dateOfBirth: v.optional(v.string()),
     location: v.string(),
     school: v.optional(v.string()),
     socials: v.optional(
