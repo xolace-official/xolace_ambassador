@@ -26,6 +26,7 @@ const applicationValidator = v.object({
   _creationTime: v.number(),
   name: v.string(),
   email: v.string(),
+  dateOfBirth: v.optional(v.string()),
   location: v.string(),
   school: v.optional(v.string()),
   socials: v.optional(v.array(socialValidator)),
@@ -43,6 +44,7 @@ function toApplication(application: Doc<"applications">) {
     _creationTime: application._creationTime,
     name: application.name,
     email: application.email,
+    dateOfBirth: application.dateOfBirth,
     location: application.location,
     school: application.school,
     socials: application.socials,
@@ -74,6 +76,7 @@ export const submit = mutation({
   args: {
     name: v.string(),
     email: v.string(),
+    dateOfBirth: v.string(),
     location: v.string(),
     school: v.optional(v.string()),
     socials: v.array(socialValidator),
@@ -85,6 +88,7 @@ export const submit = mutation({
   handler: async (ctx, args) => {
     const name = args.name.trim();
     const email = args.email.trim().toLowerCase();
+    const dateOfBirth = args.dateOfBirth.trim();
     const location = args.location.trim();
     const school = args.school?.trim();
     const socials = args.socials.map((s) => ({
@@ -98,6 +102,12 @@ export const submit = mutation({
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error("Enter a valid email address.");
+    }
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth) ||
+      new Date(`${dateOfBirth}T00:00:00Z`) > new Date()
+    ) {
+      throw new Error("Choose a valid date of birth.");
     }
     if (location.length < 2 || location.length > 120) {
       throw new Error("Enter a location between 2 and 120 characters.");
@@ -132,6 +142,7 @@ export const submit = mutation({
     return await ctx.db.insert("applications", {
       name,
       email,
+      dateOfBirth,
       location,
       school: school || undefined,
       socials,
