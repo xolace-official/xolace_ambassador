@@ -164,6 +164,14 @@ export default function AdminApplicationDetail({
           <Detail label="Interested track">
             {MISSION_CATEGORY_LABELS[application.trackInterest]}
           </Detail>
+          <Detail label="Date of birth">
+            {application.dateOfBirth
+              ? new Intl.DateTimeFormat("en-GB", {
+                  dateStyle: "long",
+                  timeZone: "UTC",
+                }).format(new Date(`${application.dateOfBirth}T00:00:00Z`))
+              : "Not provided"}
+          </Detail>
           <Detail label="Location">{application.location}</Detail>
           <Detail label="School or community">
             {application.school || "Not provided"}
