@@ -6,6 +6,7 @@ const settingsProfileValidator = v.union(
   v.object({
     location: v.union(v.string(), v.null()),
     school: v.union(v.string(), v.null()),
+    dateOfBirth: v.union(v.string(), v.null()),
     bio: v.union(v.string(), v.null()),
     tiktok: v.union(v.string(), v.null()),
     instagram: v.union(v.string(), v.null()),
@@ -74,6 +75,7 @@ export const getSettings = query({
         ? {
             location: profile.location ?? null,
             school: profile.school ?? null,
+            dateOfBirth: profile.dateOfBirth ?? null,
             bio: profile.bio ?? null,
             tiktok: profile.socials?.tiktok ?? null,
             instagram: profile.socials?.instagram ?? null,
@@ -156,6 +158,7 @@ export const updateSettings = mutation({
     name: v.string(),
     location: v.optional(v.string()),
     school: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),
     bio: v.optional(v.string()),
     tiktok: v.optional(v.string()),
     instagram: v.optional(v.string()),
@@ -194,6 +197,7 @@ export const updateSettings = mutation({
     const profileFields = {
       location: args.location?.trim() ?? "",
       school: args.school?.trim() ?? "",
+      dateOfBirth: args.dateOfBirth?.trim() ?? "",
       bio: args.bio?.trim() ?? "",
       socials,
     };
