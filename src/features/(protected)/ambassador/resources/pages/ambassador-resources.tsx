@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import {
   BookOpen,
   Clock,
@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsString } from "nuqs/server";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
@@ -73,9 +74,25 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
     "search",
     parseAsString.withDefault(""),
   );
-  const resources = useQuery(api.resources.listPublished);
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => setSearchInput(search), [search]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      void setSearch(searchInput || null);
+    }, 300);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, setSearch]);
+  const {
+    results: resources,
+    status: resourceStatus,
+    loadMore,
+  } = usePaginatedQuery(
+    api.resources.listPublished,
+    { search: search.trim() || undefined },
+    { initialNumItems: 12 },
+  );
 
-  if (resources === undefined) {
+  if (resourceStatus === "LoadingFirstPage") {
     return (
       <div className="space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,8 +153,8 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
           <Input
             aria-label="Search resources"
             placeholder="Search playbooks, guides, assets…"
-            value={search}
-            onChange={(e) => void setSearch(e.target.value || null)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -146,7 +163,9 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
       {filtered.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={search ? "No matching resources" : "No resources in this category"}
+          title={
+            search ? "No matching resources" : "No resources in this category"
+          }
           description={
             search
               ? "Try adjusting your search terms or category selection."
@@ -160,6 +179,21 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
           ))}
         </div>
       )}
+
+      {resourceStatus === "CanLoadMore" || resourceStatus === "LoadingMore" ? (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => loadMore(12)}
+            disabled={resourceStatus === "LoadingMore"}
+          >
+            {resourceStatus === "LoadingMore"
+              ? "Loading…"
+              : "Load more resources"}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -197,7 +231,10 @@ function ResourceCard({
 
           <div className="flex items-center gap-1.5">
             {resource.assetMetadata?.estimatedReadTime ? (
-              <Badge variant="outline" className="gap-1 text-[11px] text-muted-foreground">
+              <Badge
+                variant="outline"
+                className="gap-1 text-[11px] text-muted-foreground"
+              >
                 <Clock className="size-3" />
                 {resource.assetMetadata.estimatedReadTime}
               </Badge>
@@ -220,7 +257,12 @@ function ResourceCard({
       </div>
 
       <div className="mt-5 border-t border-border/60 pt-3">
-        <Button asChild className="w-full justify-between" variant="secondary" size="sm">
+        <Button
+          asChild
+          className="w-full justify-between"
+          variant="secondary"
+          size="sm"
+        >
           <Link href={detailHref}>
             <span>View Resource</span>
             <ExternalLink className="size-3.5 opacity-70" />

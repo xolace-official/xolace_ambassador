@@ -23,7 +23,6 @@ import {
   MISSION_CATEGORIES,
   MISSION_CATEGORY_LABELS,
   MISSION_STATUS_LABELS,
-  MISSION_STATUSES,
 } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
 import { MissionCard } from "../components/mission-card";
@@ -36,7 +35,14 @@ const PAGE_SIZE = 6;
 type MissionFilter = MissionCategory | typeof ALL;
 
 const FILTERS = [ALL, ...MISSION_CATEGORIES] as const;
-const STATUS_FILTERS = [ALL, ...MISSION_STATUSES] as const;
+const MISSION_STATUS_FILTERS = [
+  "available",
+  "submitted",
+  "approved",
+  "rejected",
+  "declined",
+] as const;
+const STATUS_FILTERS = [ALL, ...MISSION_STATUS_FILTERS] as const;
 
 // Typed parsers, so a hand-edited url cannot produce a value outside the list.
 const parseMissionFilter = parseAsStringLiteral(FILTERS)
@@ -155,7 +161,7 @@ export default function AmbassadorMissions() {
             <SelectContent>
               <SelectItem value={ALL}>Any status</SelectItem>
 
-              {MISSION_STATUSES.map((value) => (
+              {MISSION_STATUS_FILTERS.map((value) => (
                 <SelectItem key={value} value={value}>
                   {MISSION_STATUS_LABELS[value]}
                 </SelectItem>

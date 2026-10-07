@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import AmbassadorResources from "@/features/(protected)/ambassador/resources/pages/ambassador-resources";
 import { portalMetadata } from "@/lib/metadata";
@@ -13,5 +14,13 @@ export const metadata: Metadata = portalMetadata({
 
 export default async function Page({ params }: { params: Params }) {
   const { uuid } = await params;
-  return <AmbassadorResources uuid={uuid} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="h-64 animate-pulse rounded-xl border border-border bg-card" />
+      }
+    >
+      <AmbassadorResources uuid={uuid} />
+    </Suspense>
+  );
 }

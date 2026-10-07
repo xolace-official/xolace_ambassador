@@ -12,7 +12,7 @@ export const metadata: Metadata = portalMetadata({
 });
 
 export default async function Page({ params }: { params: Params }) {
-  const { uuid, resourceId } = await params;
+  const { resourceId } = await params;
 
-  return <AmbassadorResourceDetail uuid={uuid} resourceId={resourceId} />;
+  return <AmbassadorResourceDetail resourceId={resourceId} />;
 }

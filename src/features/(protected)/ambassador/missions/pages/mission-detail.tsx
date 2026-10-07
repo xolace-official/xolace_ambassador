@@ -102,11 +102,12 @@ export function MissionDetail({
   const submission = row.submission;
 
   // Rejected missions accept revised submissions, so keep them in the submit path.
-  const canSubmit =
-    mission.status === "available" ||
-    mission.status === "in_progress" ||
-    mission.status === "rejected";
   const isExpired = row.openState === "expired";
+  const canSubmit =
+    !isExpired &&
+    (mission.status === "available" ||
+      mission.status === "in_progress" ||
+      mission.status === "rejected");
   const remaining = isExpired ? "Closed" : remainingLabel(mission.endsAt, now);
 
   return (

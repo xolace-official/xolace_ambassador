@@ -68,7 +68,14 @@ export function MissionCard({
           <Clock3 aria-hidden="true" className="size-3.5 shrink-0" />
           {mission.difficulty} mission
         </span>
-        <span className="shrink-0 font-medium text-foreground transition-colors group-hover:text-primary">
+        <span
+          aria-disabled={mission.status === "expired"}
+          className={`shrink-0 font-medium transition-colors ${
+            mission.status === "expired"
+              ? "text-muted-foreground"
+              : "text-foreground group-hover:text-primary"
+          }`}
+        >
           View brief{" "}
           <ArrowUpRight aria-hidden="true" className="ml-1 inline size-3.5" />
         </span>

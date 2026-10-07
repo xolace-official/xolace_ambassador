@@ -43,10 +43,8 @@ const trackLabels: Record<string, string> = {
 
 export default function AmbassadorResourceDetail({
   resourceId,
-  uuid,
 }: {
   resourceId: string;
-  uuid: string;
 }) {
   const resource = useQuery(api.resources.getById, { resourceId });
   const [copiedContent, setCopiedContent] = useState(false);
@@ -119,13 +117,22 @@ export default function AmbassadorResourceDetail({
                 onClick={handleShareLink}
                 className="gap-2"
               >
-                {copiedLink ? <Check className="size-4 text-success" /> : <Share2 className="size-4" />}
+                {copiedLink ? (
+                  <Check className="size-4 text-success" />
+                ) : (
+                  <Share2 className="size-4" />
+                )}
                 <span>{copiedLink ? "Link Copied" : "Share"}</span>
               </Button>
 
               {downloadUrl ? (
                 <Button asChild size="sm" className="gap-2">
-                  <a href={downloadUrl} download target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={downloadUrl}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Download className="size-4" />
                     <span>Download Asset</span>
                   </a>
@@ -142,9 +149,13 @@ export default function AmbassadorResourceDetail({
             {resource.description}
           </p>
 
-          {resource.assetMetadata?.tags && resource.assetMetadata.tags.length > 0 ? (
+          {resource.assetMetadata?.tags &&
+          resource.assetMetadata.tags.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Tag aria-hidden="true" className="size-4 text-muted-foreground" />
+              <Tag
+                aria-hidden="true"
+                className="size-4 text-muted-foreground"
+              />
               {resource.assetMetadata.tags.map((tag: string) => (
                 <span
                   key={tag}
@@ -163,7 +174,8 @@ export default function AmbassadorResourceDetail({
         {/* Main Column (2 Cols) */}
         <div className="space-y-6 lg:col-span-2">
           {/* 1. Embedded Video Streaming Container */}
-          {(resource.category === "videos" || resource.kind === "video") && embedVideoUrl ? (
+          {(resource.category === "videos" || resource.kind === "video") &&
+          embedVideoUrl ? (
             <Card className="overflow-hidden border-border p-0 shadow-sm">
               <div className="aspect-video w-full bg-black">
                 <iframe
@@ -180,7 +192,8 @@ export default function AmbassadorResourceDetail({
                   Video Overview & Highlights
                 </h2>
                 <p className="text-xs leading-6 text-muted-foreground">
-                  Watch this video walkthrough for actionable guidance on completing your missions.
+                  Watch this video walkthrough for actionable guidance on
+                  completing your missions.
                 </p>
               </div>
             </Card>
@@ -201,7 +214,11 @@ export default function AmbassadorResourceDetail({
                   onClick={() => handleCopyContent(resource.content ?? "")}
                   className="gap-2"
                 >
-                  {copiedContent ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+                  {copiedContent ? (
+                    <Check className="size-4 text-success" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
                   <span>{copiedContent ? "Copied" : "Copy Content"}</span>
                 </Button>
               </div>
@@ -306,7 +323,9 @@ export default function AmbassadorResourceDetail({
               <div className="flex items-center justify-between border-b border-border/50 pb-2">
                 <span className="text-muted-foreground">Target Track</span>
                 <span className="font-medium text-foreground">
-                  {resource.track ? (trackLabels[resource.track] ?? resource.track) : "All Tracks"}
+                  {resource.track
+                    ? (trackLabels[resource.track] ?? resource.track)
+                    : "All Tracks"}
                 </span>
               </div>
 
@@ -335,7 +354,11 @@ export default function AmbassadorResourceDetail({
               onClick={handleShareLink}
               className="w-full justify-center gap-2"
             >
-              {copiedLink ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+              {copiedLink ? (
+                <Check className="size-4 text-success" />
+              ) : (
+                <Copy className="size-4" />
+              )}
               <span>{copiedLink ? "Link Copied" : "Copy Resource Link"}</span>
             </Button>
           </Card>
@@ -349,7 +372,8 @@ export default function AmbassadorResourceDetail({
               </h3>
             </div>
             <p className="text-xs leading-5 text-muted-foreground">
-              Have questions about applying this playbook or using brand assets? Reach out in your ambassador community channel.
+              Have questions about applying this playbook or using brand assets?
+              Reach out in your ambassador community channel.
             </p>
           </Card>
         </div>
