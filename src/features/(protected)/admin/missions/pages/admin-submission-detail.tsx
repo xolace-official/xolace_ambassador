@@ -203,9 +203,9 @@ export default function AdminSubmissionDetail({
               <CalendarDays aria-hidden="true" className="size-4" />
               {dateTimeFormat.format(new Date(submission._creationTime))}
             </span>
-            {submission.missionId ? (
+            {submission.missionId && submission.missionSetId ? (
               <Link
-                href={`/admin/${uuid}/missions/${submission.missionId}`}
+                href={`/admin/${uuid}/missions/${submission.missionSetId}/${submission.missionId}`}
                 className="inline-flex min-h-11 items-center gap-1 font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 View mission

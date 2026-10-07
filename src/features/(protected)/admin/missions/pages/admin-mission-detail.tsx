@@ -2,9 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { CalendarDays, Clock3, Sparkles, UserRound } from "lucide-react";
-
+import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
@@ -40,8 +41,12 @@ const responseTypeLabel = {
 } as const;
 
 export default function AdminMissionDetail({
+  uuid,
+  missionSetId,
   missionId,
 }: {
+  uuid: string;
+  missionSetId: string;
   missionId: string;
 }) {
   const mission = useQuery(api.missions.adminGet, { missionId });
@@ -76,13 +81,22 @@ export default function AdminMissionDetail({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <section aria-label="Mission information" className="min-w-0 space-y-6">
           <header className="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-8">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">
-                {MISSION_CATEGORY_LABELS[mission.track]}
-              </Badge>
-              <Badge className={statusStyle[mission.status]}>
-                {mission.status[0].toUpperCase() + mission.status.slice(1)}
-              </Badge>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">
+                  {MISSION_CATEGORY_LABELS[mission.track]}
+                </Badge>
+                <Badge className={statusStyle[mission.status]}>
+                  {mission.status[0].toUpperCase() + mission.status.slice(1)}
+                </Badge>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link
+                  href={`/admin/${uuid}/missions/${missionSetId}/${mission._id}/edit`}
+                >
+                  Edit mission
+                </Link>
+              </Button>
             </div>
             <div className="max-w-3xl space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">

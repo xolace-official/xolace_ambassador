@@ -1,6 +1,6 @@
 "use client";
 
-import { usePaginatedQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -12,7 +12,8 @@ import {
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
-
+import { useState } from "react";
+import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import {
   MISSION_CATEGORY_LABELS,
 } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import AdminImpact from "./admin-impact";
 import AdminSubmissions from "./admin-submissions";
 
@@ -83,19 +85,79 @@ const statusStyle = {
   closed: "border-border bg-muted text-muted-foreground",
 } as const;
 
-export default function AdminMissions({ uuid }: { uuid: string }) {
+export default function AdminMissions({
+  uuid,
+  missionSetId,
+}: {
+  uuid: string;
+  missionSetId?: string;
+}) {
   const [section, setSection] = useQueryState("section", parseSection);
+  const [publishing, setPublishing] = useState(false);
+  const publicationStatus = useQuery(
+    api.leaderboard.adminSetPublicationStatus,
+    missionSetId ? { missionSetId: missionSetId as Id<"missionSets"> } : "skip",
+  );
+  const togglePublication = useMutation(api.leaderboard.adminTogglePublication);
 
   return (
     <div className="flex flex-col gap-2">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <PageDescription page="adminMissions" className="max-w-2xl" />
-        <Button asChild className="ml-auto w-fit self-end" size="sm">
-          <Link href={`/admin/${uuid}/missions/new`}>
-            <Plus aria-hidden="true" />
-            New mission
-          </Link>
-        </Button>
+        <div className="ml-auto flex w-fit flex-wrap justify-end gap-2 self-end">
+          {missionSetId ? null : (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/${uuid}/missions`}>Mission sets</Link>
+            </Button>
+          )}
+          {missionSetId && publicationStatus ? (
+            <Button
+              type="button"
+              variant={publicationStatus.published ? "outline" : "secondary"}
+              size="sm"
+              aria-pressed={publicationStatus.published}
+              disabled={
+                publishing ||
+                (!publicationStatus.published && !publicationStatus.canPublish)
+              }
+              onClick={() => {
+                setPublishing(true);
+                void togglePublication({
+                  missionSetId: missionSetId as Id<"missionSets">,
+                })
+                  .then((published) =>
+                    toast.success(
+                      published
+                        ? "Leaderboard published."
+                        : "Leaderboard unpublished.",
+                    ),
+                  )
+                  .catch((error: unknown) =>
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Could not update the leaderboard.",
+                    ),
+                  )
+                  .finally(() => setPublishing(false));
+              }}
+            >
+              {publishing
+                ? "Updating…"
+                : publicationStatus.published
+                  ? "Unpublish Leaderboard"
+                  : "Publish Leaderboard"}
+            </Button>
+          ) : null}
+          <Button asChild size="sm">
+            <Link
+              href={`/admin/${uuid}/missions/new${missionSetId ? `?setId=${missionSetId}` : ""}`}
+            >
+              <Plus aria-hidden="true" />
+              New mission
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <nav
@@ -120,7 +182,7 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
       </nav>
 
       {section === "missions" ? (
-        <MissionListing uuid={uuid} />
+        <MissionListing uuid={uuid} missionSetId={missionSetId} />
       ) : section === "submissions" ? (
         <AdminSubmissions uuid={uuid} />
       ) : (
@@ -130,7 +192,13 @@ export default function AdminMissions({ uuid }: { uuid: string }) {
   );
 }
 
-function MissionListing({ uuid }: { uuid: string }) {
+function MissionListing({
+  uuid,
+  missionSetId,
+}: {
+  uuid: string;
+  missionSetId?: string;
+}) {
   const [track, setTrack] = useQueryState("track", parseTrack);
   const [status, setStatus] = useQueryState("status", parseStatus);
 
@@ -141,6 +209,9 @@ function MissionListing({ uuid }: { uuid: string }) {
   } = usePaginatedQuery(
     api.missions.adminList,
     {
+      missionSetId: missionSetId
+        ? (missionSetId as Id<"missionSets">)
+        : undefined,
       track: track === "all" ? undefined : track,
       status: status === "all" ? undefined : status,
     },
@@ -294,7 +365,11 @@ function MissionListing({ uuid }: { uuid: string }) {
                   </time>
                 </div>
                 <Link
-                  href={`/admin/${uuid}/missions/${mission._id}`}
+                  href={
+                    mission.missionSetId
+                      ? `/admin/${uuid}/missions/${mission.missionSetId}/${mission._id}`
+                      : `/admin/${uuid}/missions`
+                  }
                   className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-foreground transition-colors group-hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   View details

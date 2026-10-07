@@ -5,14 +5,22 @@ import { AdminMissionForm } from "@/features/(protected)/admin/missions/componen
 import { portalMetadata } from "@/lib/metadata";
 
 type Params = Promise<{ uuid: string }>;
+type SearchParams = Promise<{ setId?: string }>;
 
 export const metadata: Metadata = portalMetadata({
   title: "Create mission",
   description: "Create a mission for Xolace ambassadors.",
 });
 
-export default async function Page({ params }: { params: Params }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: SearchParams;
+}) {
   const { uuid } = await params;
+  const { setId } = await searchParams;
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,7 +28,7 @@ export default async function Page({ params }: { params: Params }) {
         <PageDescription page="createMission" />
       </header>
 
-      <AdminMissionForm uuid={uuid} />
+      <AdminMissionForm uuid={uuid} initialMissionSetId={setId} />
     </div>
   );
 }

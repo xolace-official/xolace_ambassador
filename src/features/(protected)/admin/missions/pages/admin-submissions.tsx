@@ -1,14 +1,21 @@
 "use client";
 
-import { usePaginatedQuery } from "convex/react";
-import { ArrowRight, ArrowUpRight, FileCheck2, UserRound } from "lucide-react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Award,
+  FileCheck2,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
-
+import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -78,6 +85,8 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
     { status: status === "all" ? undefined : status },
     { initialNumItems: 8 },
   );
+  const publicationStatus = useQuery(api.leaderboard.adminPublicationStatus);
+  const publishLeaderboard = useMutation(api.leaderboard.adminPublish);
 
   return (
     <section aria-label="Ambassador submissions" className="space-y-5">
@@ -118,23 +127,63 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
           ))}
         </div>
       ) : results.length === 0 ? (
-        <EmptyState
-          icon={FileCheck2}
-          title={"No submissions found"}
-          description={
-            status === "all"
-              ? "Ambassador submissions will appear here."
-              : `There are no ${statusLabel[status]} contributions right now.`
-          }
-          action={
-            status !== "all"
-              ? {
-                  label: "Show all submissions",
-                  onClick: () => void setStatus("all"),
-                }
-              : undefined
-          }
-        />
+        <div className="space-y-4">
+          {status === "pending" && publicationStatus?.canPublish ? (
+            <Card className="flex flex-col gap-4 border-border bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Award aria-hidden="true" className="size-5" />
+                </span>
+                <div>
+                  <h2 className="font-semibold text-foreground">
+                    Publish the ambassador leaderboard
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    All submissions for {publicationStatus.missionSetName} have
+                    been reviewed.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  if (!publicationStatus.missionSetId) return;
+                  void publishLeaderboard({
+                    missionSetId: publicationStatus.missionSetId,
+                  })
+                    .then(() => toast.success("Leaderboard published."))
+                    .catch((error: unknown) => {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not publish the leaderboard.",
+                      );
+                    });
+                }}
+              >
+                Publish leaderboard
+              </Button>
+            </Card>
+          ) : null}
+          <EmptyState
+            icon={FileCheck2}
+            title="No submissions found"
+            description={
+              status === "all"
+                ? "Ambassador submissions will appear here."
+                : `There are no ${statusLabel[status]} contributions right now.`
+            }
+            action={
+              status !== "all"
+                ? {
+                    label: "Show all submissions",
+                    onClick: () => void setStatus("all"),
+                  }
+                : undefined
+            }
+          />
+        </div>
       ) : (
         <ul className="divide-y divide-border rounded-lg bg-card px-3 sm:px-4">
           {results.map((submission) => (

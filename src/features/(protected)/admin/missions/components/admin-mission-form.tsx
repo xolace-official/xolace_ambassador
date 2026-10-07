@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import {
   MISSION_SUBMISSION_FIELD_TYPES,
 } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../../../convex/_generated/dataModel";
 
 const missionSchema = z.object({
   title: z.string().trim().min(3, "Enter a title with at least 3 characters."),
@@ -51,7 +53,8 @@ const missionSchema = z.object({
     .int("Enter a whole number of points.")
     .min(1, "Award at least 1 point."),
   difficulty: z.enum(MISSION_DIFFICULTIES),
-  status: z.enum(["draft", "published"]),
+  status: z.enum(["draft", "published", "closed"]),
+  missionSetId: z.string().min(1, "Choose a mission set."),
   submissionFields: z
     .array(
       z.object({
@@ -74,22 +77,43 @@ const missionSchema = z.object({
         });
       }
     }),
-  endsAt: z
-    .string()
-    .min(1, "Choose a deadline.")
-    .refine((value) => Number.isFinite(Date.parse(value)), {
-      message: "Enter a valid deadline.",
-    })
-    .refine((value) => Date.parse(value) > Date.now(), {
-      message: "Choose a deadline in the future.",
-    }),
 });
 
 type MissionFormValues = z.infer<typeof missionSchema>;
 
-export function AdminMissionForm({ uuid }: { uuid: string }) {
+type AdminMissionInitialValues = Pick<
+  Doc<"missions">,
+  | "_id"
+  | "title"
+  | "summary"
+  | "description"
+  | "track"
+  | "points"
+  | "difficulty"
+  | "status"
+  | "submissionFields"
+  | "missionSetId"
+>;
+
+export function AdminMissionForm({
+  uuid,
+  initialMissionSetId,
+  initial,
+}: {
+  uuid: string;
+  initialMissionSetId?: string;
+  initial?: AdminMissionInitialValues;
+}) {
   const router = useRouter();
   const createMission = useMutation(api.missions.adminCreate);
+  const updateMission = useMutation(api.missions.adminUpdate);
+  const hasSelectedMissionSet =
+    initial?.missionSetId !== undefined || initialMissionSetId !== undefined;
+  const { results: missionSets } = usePaginatedQuery(
+    api.missionSets.adminList,
+    {},
+    { initialNumItems: 50 },
+  );
   const {
     register,
     control,
@@ -98,12 +122,17 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
   } = useForm<MissionFormValues>({
     resolver: zodResolver(missionSchema),
     defaultValues: {
-      title: "",
-      summary: "",
-      description: "",
-      submissionFields: [],
-      status: "draft",
-      endsAt: "",
+      title: initial?.title ?? "",
+      summary: initial?.summary ?? "",
+      description: initial?.description ?? "",
+      track: initial?.track,
+      points: initial?.points,
+      difficulty: initial?.difficulty,
+      submissionFields:
+        initial?.submissionFields?.map(({ key: _key, ...field }) => field) ??
+        [],
+      status: initial?.status ?? "draft",
+      missionSetId: initial?.missionSetId ?? initialMissionSetId ?? "",
     },
   });
   const {
@@ -114,17 +143,30 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
 
   async function onSubmit(values: MissionFormValues) {
     try {
-      await createMission({
-        ...values,
-        endsAt: new Date(values.endsAt).getTime(),
-        submissionFields: values.submissionFields,
-      });
+      const missionSetId = values.missionSetId as Id<"missionSets">;
+      if (initial) {
+        await updateMission({
+          ...values,
+          missionId: initial._id,
+          missionSetId,
+          submissionFields: values.submissionFields,
+        });
+      } else {
+        await createMission({
+          ...values,
+          missionSetId,
+          submissionFields: values.submissionFields,
+          status: values.status === "closed" ? "draft" : values.status,
+        });
+      }
       toast.success(
-        values.status === "published"
-          ? "Mission published."
-          : "Mission saved as a draft.",
+        initial
+          ? "Mission updated."
+          : values.status === "published"
+            ? "Mission published."
+            : "Mission saved as a draft.",
       );
-      router.replace(`/admin/${uuid}/missions`);
+      router.replace(`/admin/${uuid}/missions/${values.missionSetId}`);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -334,34 +376,67 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
             </section>
 
             <section
-              aria-labelledby="mission-schedule-heading"
+              aria-labelledby="mission-set-heading"
               className="border-b border-border pb-6 last:border-0 last:pb-0 lg:border-0 lg:pb-0"
             >
-              <div className="mb-5">
-                <h2
-                  id="mission-schedule-heading"
-                  className="text-lg font-semibold text-foreground"
-                >
-                  Schedule
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Set the last date ambassadors can submit their work.
-                </p>
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2
+                    id="mission-set-heading"
+                    className="text-lg font-semibold text-foreground"
+                  >
+                    Mission set
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    The mission inherits its visibility schedule from this set.
+                  </p>
+                </div>
+                <Button asChild type="button" variant="outline" size="sm">
+                  <Link href={`/admin/${uuid}/missions`}>Manage sets</Link>
+                </Button>
               </div>
-              <Field data-invalid={!!errors.endsAt}>
-                <FieldLabel htmlFor="endsAt">Submission deadline</FieldLabel>
-                <Input
-                  id="endsAt"
-                  type="datetime-local"
-                  autoComplete="off"
-                  aria-invalid={!!errors.endsAt}
-                  {...register("endsAt")}
+              <Field data-invalid={!!errors.missionSetId}>
+                <FieldLabel htmlFor="missionSetId">
+                  Mission set{hasSelectedMissionSet ? " (selected)" : ""}
+                </FieldLabel>
+                <Controller
+                  control={control}
+                  name="missionSetId"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger
+                        id="missionSetId"
+                        aria-invalid={!!errors.missionSetId}
+                        disabled={hasSelectedMissionSet}
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Choose a mission set" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {missionSets?.map((missionSet) => (
+                          <SelectItem
+                            key={missionSet._id}
+                            value={missionSet._id}
+                          >
+                            {missionSet.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-                <FieldDescription>
-                  The mission becomes unavailable after this local date and
-                  time.
-                </FieldDescription>
-                <FieldError errors={[errors.endsAt]} />
+                {missionSets?.length === 0 ? (
+                  <FieldDescription>
+                    Create a mission set before adding missions.
+                  </FieldDescription>
+                ) : null}
+                {hasSelectedMissionSet ? (
+                  <FieldDescription>
+                    This mission belongs to the selected set. Rename the set
+                    from Mission Sets to update its displayed name.
+                  </FieldDescription>
+                ) : null}
+                <FieldError errors={[errors.missionSetId]} />
               </Field>
             </section>
           </div>
@@ -486,6 +561,7 @@ export function AdminMissionForm({ uuid }: { uuid: string }) {
                         <SelectContent>
                           <SelectItem value="draft">Save as draft</SelectItem>
                           <SelectItem value="published">Publish now</SelectItem>
+                          <SelectItem value="closed">Close mission</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
