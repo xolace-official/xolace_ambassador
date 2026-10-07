@@ -5,7 +5,6 @@ import {
   FolderOpen,
   LayoutDashboard,
   LineChart,
-  MessageCircle,
   Settings,
   Target,
   Trophy,
@@ -88,19 +87,17 @@ export const adminMenu: MenuItem[] = [
   },
 
   {
-    name: "Communities",
-    // Manage ambassador community spaces - announcements, events, pods, discussions, recognition
-    href: (u) => `/admin/${u}/communities`,
-    icon: MessageCircle,
-    featureKey: "communities",
-  },
-
-  {
     name: "Reports",
     // Generate structured program reports - program, ambassador, mission, impact, exports
     href: (u) => `/admin/${u}/reports`,
     icon: FileText,
     featureKey: "reports",
+  },
+  {
+    name: "Rewards",
+    href: (u) => `/admin/${u}/rewards`,
+    icon: Trophy,
+    featureKey: "rewards",
   },
 ];
 
@@ -143,14 +140,6 @@ export const ambassadorMenu: MenuItem[] = [
     href: (u) => `/ambassador/${u}/resources`,
     icon: FolderOpen,
     featureKey: "resources",
-  },
-
-  {
-    name: "Community",
-    // Connect and participate with other ambassadors - announcements, events, pods, discussions, recognition
-    href: (u) => `/ambassador/${u}/community`,
-    icon: MessageCircle,
-    featureKey: "community",
   },
 
   {

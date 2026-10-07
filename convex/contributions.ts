@@ -3,13 +3,16 @@ import {
   paginationResultValidator,
 } from "convex/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { AuthError, requireAdmin, requireRole } from "./model/auth";
 
 const adminContributionValidator = v.object({
   _id: v.id("contributions"),
   _creationTime: v.number(),
   missionId: v.union(v.id("missions"), v.null()),
+  missionSetId: v.union(v.id("missionSets"), v.null()),
   ambassadorName: v.string(),
   missionTitle: v.union(v.string(), v.null()),
   title: v.string(),
@@ -89,6 +92,7 @@ export const adminList = query({
             _id: contribution._id,
             _creationTime: contribution._creationTime,
             missionId: contribution.missionId ?? null,
+            missionSetId: mission?.missionSetId ?? null,
             ambassadorName: ambassador?.name?.trim() || "Ambassador",
             missionTitle: mission?.title ?? null,
             title: contribution.title,
@@ -132,6 +136,7 @@ export const adminGet = query({
       _id: contribution._id,
       _creationTime: contribution._creationTime,
       missionId: contribution.missionId ?? null,
+      missionSetId: mission?.missionSetId ?? null,
       ambassadorName: ambassador?.name?.trim() || "Ambassador",
       missionTitle: mission?.title ?? null,
       title: contribution.title,
@@ -178,12 +183,106 @@ export const adminReview = mutation({
       throw new Error("Add clear feedback before sending this decision.");
     }
 
+    const mission =
+      contribution.missionId === undefined
+        ? null
+        : await ctx.db.get(contribution.missionId);
+    const awardedPoints =
+      args.status === "approved" && contribution.kind === "mission_submission"
+        ? (mission?.points ?? 0)
+        : 0;
+
     await ctx.db.patch(args.contributionId, {
       status: args.status,
+      awardedPoints: args.status === "approved" ? awardedPoints : undefined,
       reviewNote: reviewNote || undefined,
       reviewedBy: admin._id,
       reviewedAt: Date.now(),
     });
+
+    if (args.status === "approved") {
+      const existingTotals = await ctx.db
+        .query("ambassadorTotals")
+        .withIndex("by_userId", (q) =>
+          q.eq("userId", contribution.ambassadorId),
+        )
+        .first();
+      const nextPoints = (existingTotals?.points ?? 0) + awardedPoints;
+      const levels = await ctx.db.query("levels").order("asc").take(100);
+      const levelRank = levels.reduce(
+        (rank, level) => (nextPoints >= level.minPoints ? level.rank : rank),
+        0,
+      );
+      const quantity = contribution.quantity ?? 0;
+      const totals = {
+        userId: contribution.ambassadorId,
+        points: nextPoints,
+        levelRank,
+        contributionsApproved: (existingTotals?.contributionsApproved ?? 0) + 1,
+        missionsCompleted:
+          (existingTotals?.missionsCompleted ?? 0) +
+          (contribution.kind === "mission_submission" ? 1 : 0),
+        peopleReached:
+          (existingTotals?.peopleReached ?? 0) +
+          (contribution.kind === "people_reached" ||
+          contribution.kind === "mission_submission"
+            ? quantity
+            : 0),
+        installs:
+          (existingTotals?.installs ?? 0) +
+          (contribution.kind === "app_install" ? quantity : 0),
+        referrals:
+          (existingTotals?.referrals ?? 0) +
+          (contribution.kind === "referral" ? quantity : 0),
+        contentCount:
+          (existingTotals?.contentCount ?? 0) +
+          (contribution.kind === "content" ? 1 : 0),
+        eventCount:
+          (existingTotals?.eventCount ?? 0) +
+          (contribution.kind === "event" ? 1 : 0),
+      };
+
+      if (existingTotals === null) {
+        await ctx.db.insert("ambassadorTotals", totals);
+      } else {
+        await ctx.db.patch(existingTotals._id, totals);
+      }
+
+      if (awardedPoints !== 0) {
+        await ctx.db.insert("pointLedger", {
+          ambassadorId: contribution.ambassadorId,
+          delta: awardedPoints,
+          reason: mission?.title ?? contribution.title,
+          missionId: contribution.missionId,
+          contributionId: contribution._id,
+          awardedBy: admin._id,
+        });
+      }
+    }
+    await ctx.runMutation(internal.notifications.createForUser, {
+      recipientId: contribution.ambassadorId,
+      kind: "review",
+      title:
+        args.status === "approved"
+          ? "Your contribution was approved"
+          : "Your contribution needs attention",
+      description:
+        args.status === "approved"
+          ? "Your mission submission was approved by the program team."
+          : "Open your mission to review the feedback from the program team.",
+      href: contribution.missionId
+        ? `/ambassador/${contribution.ambassadorId}/missions/${contribution.missionId}`
+        : `/ambassador/${contribution.ambassadorId}/impact`,
+    });
+    if (awardedPoints > 0) {
+      await ctx.runMutation(internal.notifications.createForUser, {
+        recipientId: contribution.ambassadorId,
+        kind: "reward",
+        title: "You earned reward points",
+        description: `${awardedPoints} points were added to your ambassador rewards.`,
+        href: `/ambassador/${contribution.ambassadorId}/rewards`,
+      });
+    }
 
     return null;
   },
@@ -230,7 +329,7 @@ export const listForUser = query({
       .query("contributions")
       .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", args.userId))
       .order("desc")
-      .collect();
+      .take(200);
     const limit = Math.min(args.limit ?? 50, 200);
     return all.slice(0, limit);
   },
@@ -272,8 +371,25 @@ export const submit = mutation({
     if (mission === null || mission.status !== "published") {
       throw new AuthError(404, "Not found.");
     }
+    if (
+      args.quantity !== undefined &&
+      (!Number.isSafeInteger(args.quantity) || args.quantity < 0)
+    ) {
+      throw new Error("Enter a valid people-reached number.");
+    }
 
-    if (Date.now() > mission.endsAt) {
+    const now = Date.now();
+    if (mission.missionSetId !== undefined) {
+      const visibleSetId = await visibleMissionSetId(ctx, now);
+      if (visibleSetId !== mission.missionSetId) {
+        throw new AuthError(404, "Not found.");
+      }
+    }
+
+    if (
+      mission.missionSetId === undefined &&
+      (mission.startsAt > now || mission.endsAt < now)
+    ) {
       throw new Error(
         "This mission has closed and is no longer accepting submissions.",
       );
@@ -384,3 +500,29 @@ export const submit = mutation({
     });
   },
 });
+
+async function visibleMissionSetId(
+  ctx: MutationCtx,
+  now: number,
+): Promise<Id<"missionSets"> | null> {
+  const published = await ctx.db
+    .query("missionSets")
+    .withIndex("by_status", (q) => q.eq("status", "published"))
+    .take(100);
+  const active = published.find(
+    (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
+  );
+  if (active !== undefined) return active._id;
+
+  const next = await ctx.db
+    .query("missionSets")
+    .withIndex("by_status", (q) => q.eq("status", "published_next"))
+    .take(100);
+  return (
+    next
+      .filter(
+        (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
+      )
+      .sort((a, b) => a.startsAt - b.startsAt)[0]?._id ?? null
+  );
+}

@@ -12,8 +12,8 @@ export const ROLE_PERMISSIONS: Record<PortalRole, readonly string[]> = {
     "missions",
     "analytics",
     "resources",
-    "communities",
     "reports",
+    "rewards",
   ],
   ambassador: [
     "dashboard",
@@ -21,7 +21,6 @@ export const ROLE_PERMISSIONS: Record<PortalRole, readonly string[]> = {
     "impact",
     "leaderboard",
     "resources",
-    "community",
     "rewards",
   ],
 };

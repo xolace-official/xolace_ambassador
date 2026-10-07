@@ -1,6 +1,8 @@
 import { Activity, Gift, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -19,8 +21,10 @@ interface LedgerEntry {
 
 export function RewardsHistoryList({
   ledger,
+  moreHref,
 }: {
   ledger: LedgerEntry[];
+  moreHref?: string;
 }) {
   if (ledger.length === 0) {
     return (
@@ -40,7 +44,7 @@ export function RewardsHistoryList({
         {ledger.map((entry) => (
           <li
             key={entry._id}
-            className="flex items-center gap-3 px-5 py-3"
+            className="flex min-h-14 items-center gap-3 px-4 py-2"
           >
             <div
               className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
@@ -74,6 +78,13 @@ export function RewardsHistoryList({
           </li>
         ))}
       </ul>
+      {moreHref ? (
+        <div className="flex justify-end border-t border-border p-3">
+          <Button asChild variant="ghost" size="sm">
+            <Link href={moreHref}>See more</Link>
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }

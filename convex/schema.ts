@@ -54,6 +54,15 @@ export default defineSchema({
       uuid: v.optional(v.string()),
       role: v.optional(v.union(v.literal("admin"), v.literal("ambassador"))),
       avatarStorageId: v.optional(v.id("_storage")),
+      notificationPreferences: v.optional(
+        v.object({
+          mission: v.boolean(),
+          review: v.boolean(),
+          reward: v.boolean(),
+          resource: v.boolean(),
+          community: v.boolean(),
+        }),
+      ),
     }),
   )
     .index("uuid", ["uuid"])
@@ -181,11 +190,68 @@ export default defineSchema({
     .index("by_ambassadorId", ["ambassadorId"])
     .index("by_contributionId", ["contributionId"]),
 
+  rewards: defineTable({
+    name: v.string(),
+    description: v.string(),
+    costPoints: v.number(),
+    stock: v.optional(v.number()),
+    status: v.union(v.literal("active"), v.literal("paused")),
+    createdBy: v.id("users"),
+  })
+    .index("by_status", ["status"])
+    .index("by_createdBy", ["createdBy"]),
+
+  rewardRedemptions: defineTable({
+    rewardId: v.id("rewards"),
+    ambassadorId: v.id("users"),
+    points: v.number(),
+    status: v.union(
+      v.literal("requested"),
+      v.literal("approved"),
+      v.literal("declined"),
+      v.literal("fulfilled"),
+    ),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    reviewNote: v.optional(v.string()),
+  })
+    .index("by_ambassadorId", ["ambassadorId"])
+    .index("by_rewardId", ["rewardId"])
+    .index("by_status", ["status"]),
+
   // ---------------------------------------------------------------------------
   // Missions and contributions
   // ---------------------------------------------------------------------------
 
+  missionSets: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("published_next"),
+      v.literal("closed"),
+    ),
+    startsAt: v.number(),
+    endsAt: v.number(),
+    createdBy: v.id("users"),
+  })
+    .index("by_status", ["status"])
+    .index("by_startsAt", ["startsAt"])
+    .index("by_createdBy", ["createdBy"]),
+
+  leaderboardPublications: defineTable({
+    missionSetId: v.id("missionSets"),
+    publishedAt: v.number(),
+    publishedBy: v.id("users"),
+  })
+    .index("by_missionSetId", ["missionSetId"])
+    .index("by_publishedAt", ["publishedAt"]),
+
   missions: defineTable({
+    // Optional during the transition so existing missions can be assigned to
+    // the default set without making the schema migration block deployment.
+    missionSetId: v.optional(v.id("missionSets")),
     title: v.string(),
     // Stable handle for seeding and future share links. The url uses `_id`.
     slug: v.string(),
@@ -217,7 +283,8 @@ export default defineSchema({
     .index("by_title", ["title"])
     .index("by_track", ["track"])
     .index("by_status_and_track", ["status", "track"])
-    .index("by_createdBy", ["createdBy"]),
+    .index("by_createdBy", ["createdBy"])
+    .index("by_missionSetId", ["missionSetId"]),
 
   // One table for both a mission submission and a self-reported impact number.
   // They are the same workflow — report, admin review, points awarded — so
@@ -300,7 +367,26 @@ export default defineSchema({
     sortOrder: v.number(),
   })
     .index("by_published", ["published"])
-    .index("by_category", ["category"]),
+    .index("by_category", ["category"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["published", "category"],
+    }),
+
+  notifications: defineTable({
+    recipientId: v.id("users"),
+    kind: v.union(
+      v.literal("mission"),
+      v.literal("review"),
+      v.literal("reward"),
+      v.literal("resource"),
+      v.literal("community"),
+    ),
+    title: v.string(),
+    description: v.string(),
+    href: v.string(),
+    readAt: v.optional(v.number()),
+  }).index("by_recipientId", ["recipientId"]),
 
   announcements: defineTable({
     authorId: v.id("users"),

@@ -1,20 +1,20 @@
-import { Activity, Award, Crown, Target } from "lucide-react";
+import { Award, Crown, Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
 
 interface RewardsStatsGridProps {
   points: number;
-  levelName: string;
+  levelRank: number;
+  availablePoints: number;
   contributionsApproved: number;
-  missionsCompleted: number;
 }
 
 export function RewardsStatsGrid({
   points,
-  levelName,
+  levelRank,
+  availablePoints,
   contributionsApproved,
-  missionsCompleted,
 }: RewardsStatsGridProps) {
   const stats = [
     {
@@ -25,7 +25,7 @@ export function RewardsStatsGrid({
     },
     {
       label: "Current level",
-      value: levelName,
+      value: `Level ${levelRank}`,
       icon: Crown,
       color: "text-warning",
     },
@@ -36,9 +36,9 @@ export function RewardsStatsGrid({
       color: "text-success",
     },
     {
-      label: "Missions completed",
-      value: missionsCompleted,
-      icon: Activity,
+      label: "Points available",
+      value: availablePoints,
+      icon: Award,
       color: "text-accent",
     },
   ];

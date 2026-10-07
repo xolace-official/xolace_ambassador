@@ -16,15 +16,15 @@ interface Level {
 interface RewardsLevelProgressProps {
   currentLevel: Level;
   nextLevel: Level | null;
-  progress: number;
   points: number;
+  availablePoints: number;
 }
 
 export function RewardsLevelProgress({
   currentLevel,
   nextLevel,
-  progress,
   points,
+  availablePoints,
 }: RewardsLevelProgressProps) {
   return (
     <Card className="border-border p-6">
@@ -38,10 +38,7 @@ export function RewardsLevelProgress({
               Current level
             </p>
             <p className="text-xl font-bold text-foreground">
-              {currentLevel.name}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {currentLevel.description}
+              Level {currentLevel.rank}
             </p>
           </div>
         </div>
@@ -51,7 +48,7 @@ export function RewardsLevelProgress({
               Next level
             </p>
             <p className="text-lg font-semibold text-foreground">
-              {nextLevel.name}
+              Level {nextLevel.rank}
             </p>
             <p className="text-xs text-muted-foreground">
               {numberFormat.format(nextLevel.minPoints - points)} points to go
@@ -66,14 +63,17 @@ export function RewardsLevelProgress({
       </div>
       <div className="mt-4">
         <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-          <span>{numberFormat.format(points)} points</span>
-          {nextLevel ? (
-            <span>{numberFormat.format(nextLevel.minPoints)} points</span>
-          ) : (
-            <span>Max</span>
-          )}
+          <span>{numberFormat.format(points)} earned</span>
+          <span>{numberFormat.format(availablePoints)} available</span>
         </div>
-        <Progress value={progress * 100} className="h-2" />
+        <Progress
+          value={
+            availablePoints > 0
+              ? Math.min((points / availablePoints) * 100, 100)
+              : 0
+          }
+          className="h-2"
+        />
       </div>
     </Card>
   );

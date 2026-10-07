@@ -14,12 +14,20 @@ const descriptions = {
     "Brand kit, templates, campaign assets and guides for representing Xolace.",
   createMission:
     "Give ambassadors a focused task, a clear brief, and a safe way to make a meaningful contribution.",
+  createMissionSet:
+    "Group missions under one schedule so they become visible together for ambassadors.",
   adminResources:
     "Manage brand kit, templates, campaign assets, videos and guides for ambassadors.",
   adminReports:
     "Program health, ambassador performance, mission outcomes, and exportable data.",
+  adminRewards:
+    "Create rewards, manage availability, and review ambassador redemption requests.",
   adminAnalytics:
     "Program performance, ambassador engagement, and contribution trends across tracks and levels.",
+  adminDashboard:
+    "Program-wide overview of ambassadors, missions, impact, and actions waiting on your team.",
+  ambassadorDashboard:
+    "Your current mission, progress, impact, and the next action waiting for you.",
   ambassadorRewards:
     "Track your points, levels, recognition, and the rewards you've earned through your contributions.",
   ambassadorLeaderboard:
