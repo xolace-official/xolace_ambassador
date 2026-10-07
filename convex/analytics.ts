@@ -105,7 +105,9 @@ export const getAnalytics = query({
 
     const trackMap = new Map<string, { count: number; points: number }>();
     for (const c of approved) {
-      const mission = c.missionId ? missions.find((m) => m._id === c.missionId) : null;
+      const mission = c.missionId
+        ? missions.find((m) => m._id === c.missionId)
+        : null;
       const track = mission?.track ?? "other";
       const entry = trackMap.get(track) ?? { count: 0, points: 0 };
       entry.count += 1;

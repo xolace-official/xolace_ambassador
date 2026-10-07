@@ -121,7 +121,11 @@ export default function AdminResourceDetail({
                 onClick={handleShareLink}
                 className="gap-2"
               >
-                {copiedLink ? <Check className="size-4 text-success" /> : <Share2 className="size-4" />}
+                {copiedLink ? (
+                  <Check className="size-4 text-success" />
+                ) : (
+                  <Share2 className="size-4" />
+                )}
                 <span>{copiedLink ? "Copied" : "Share"}</span>
               </Button>
 
@@ -144,9 +148,13 @@ export default function AdminResourceDetail({
             {resource.description}
           </p>
 
-          {resource.assetMetadata?.tags && resource.assetMetadata.tags.length > 0 ? (
+          {resource.assetMetadata?.tags &&
+          resource.assetMetadata.tags.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Tag aria-hidden="true" className="size-4 text-muted-foreground" />
+              <Tag
+                aria-hidden="true"
+                className="size-4 text-muted-foreground"
+              />
               {resource.assetMetadata.tags.map((tag: string) => (
                 <span
                   key={tag}
@@ -165,7 +173,8 @@ export default function AdminResourceDetail({
         {/* Main Column */}
         <div className="space-y-6 lg:col-span-2">
           {/* Video Player */}
-          {(resource.category === "videos" || resource.kind === "video") && embedVideoUrl ? (
+          {(resource.category === "videos" || resource.kind === "video") &&
+          embedVideoUrl ? (
             <Card className="overflow-hidden border-border p-0 shadow-sm">
               <div className="aspect-video w-full bg-black">
                 <iframe
@@ -203,7 +212,11 @@ export default function AdminResourceDetail({
                   onClick={() => handleCopyContent(resource.content ?? "")}
                   className="gap-2"
                 >
-                  {copiedContent ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+                  {copiedContent ? (
+                    <Check className="size-4 text-success" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
                   <span>{copiedContent ? "Copied" : "Copy Body"}</span>
                 </Button>
               </div>
@@ -293,7 +306,13 @@ export default function AdminResourceDetail({
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between border-b border-border/50 pb-2">
                 <span className="text-muted-foreground">Status</span>
-                <Badge className={resource.published ? "bg-success text-success-foreground" : "bg-muted"}>
+                <Badge
+                  className={
+                    resource.published
+                      ? "bg-success text-success-foreground"
+                      : "bg-muted"
+                  }
+                >
                   {resource.published ? "Published" : "Draft"}
                 </Badge>
               </div>
@@ -315,7 +334,9 @@ export default function AdminResourceDetail({
               <div className="flex items-center justify-between border-b border-border/50 pb-2">
                 <span className="text-muted-foreground">Target Track</span>
                 <span className="font-medium text-foreground">
-                  {resource.track ? (trackLabels[resource.track] ?? resource.track) : "All Tracks"}
+                  {resource.track
+                    ? (trackLabels[resource.track] ?? resource.track)
+                    : "All Tracks"}
                 </span>
               </div>
 
@@ -335,7 +356,8 @@ export default function AdminResourceDetail({
                 Manage Resource
               </h3>
               <p className="text-xs leading-5 text-muted-foreground">
-                Update content, replace attached files, or change publish status.
+                Update content, replace attached files, or change publish
+                status.
               </p>
               <Button asChild className="w-full justify-center gap-2">
                 <Link href={`/admin/${uuid}/resources/${resource._id}/edit`}>

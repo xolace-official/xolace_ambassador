@@ -9,14 +9,9 @@ export function ReportsHeader() {
       <div>
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold text-foreground">Reports</h1>
-          <Star
-            aria-hidden="true"
-            className="size-4 text-muted-foreground"
-          />
+          <Star aria-hidden="true" className="size-4 text-muted-foreground" />
         </div>
-        <p className="text-xs text-muted-foreground">
-          Auto-updates in 2 min
-        </p>
+        <p className="text-xs text-muted-foreground">Auto-updates in 2 min</p>
       </div>
     </div>
   );

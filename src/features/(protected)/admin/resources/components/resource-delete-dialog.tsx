@@ -46,10 +46,18 @@ export function ResourceDeleteDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => void handleDelete()}
+          >
             Delete
           </Button>
         </DialogFooter>

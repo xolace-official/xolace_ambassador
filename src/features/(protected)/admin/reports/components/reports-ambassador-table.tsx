@@ -50,7 +50,10 @@ export function ReportsAmbassadorTable({
           </thead>
           <tbody className="divide-y divide-border">
             {ambassadors.map((a) => (
-              <tr key={a.userId} className="hover:bg-muted/20 transition-colors">
+              <tr
+                key={a.userId}
+                className="hover:bg-muted/20 transition-colors"
+              >
                 <td className="px-4 py-3 text-sm font-medium text-foreground">
                   {a.name}
                 </td>

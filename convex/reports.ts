@@ -175,19 +175,26 @@ export const getReports = query({
     const status = args.status ?? "all";
     const search = args.search?.trim().toLowerCase();
 
-    const [ambassadors, missions, contributions, resources, events, recognitions, applications] =
-      await Promise.all([
-        ctx.db
-          .query("users")
-          .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-          .collect(),
-        ctx.db.query("missions").collect(),
-        ctx.db.query("contributions").collect(),
-        ctx.db.query("resources").collect(),
-        ctx.db.query("events").collect(),
-        ctx.db.query("recognitions").collect(),
-        ctx.db.query("applications").collect(),
-      ]);
+    const [
+      ambassadors,
+      missions,
+      contributions,
+      resources,
+      events,
+      recognitions,
+      applications,
+    ] = await Promise.all([
+      ctx.db
+        .query("users")
+        .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+        .collect(),
+      ctx.db.query("missions").collect(),
+      ctx.db.query("contributions").collect(),
+      ctx.db.query("resources").collect(),
+      ctx.db.query("events").collect(),
+      ctx.db.query("recognitions").collect(),
+      ctx.db.query("applications").collect(),
+    ]);
 
     const ambassadorRows = await Promise.all(
       ambassadors.map(async (a) => {
@@ -241,9 +248,7 @@ export const getReports = query({
     const contributionRows = await Promise.all(
       contributions.map(async (c) => {
         const ambassador = await ctx.db.get(c.ambassadorId);
-        const mission = c.missionId
-          ? await ctx.db.get(c.missionId)
-          : null;
+        const mission = c.missionId ? await ctx.db.get(c.missionId) : null;
         return {
           contributionId: c._id,
           ambassadorName: ambassador?.name?.trim() || "Ambassador",
@@ -303,8 +308,7 @@ export const getReports = query({
     return {
       summary: {
         totalAmbassadors: ambassadors.length,
-        activeMissions: missions.filter((m) => m.status === "published")
-          .length,
+        activeMissions: missions.filter((m) => m.status === "published").length,
         pendingReviews: contributions.filter((c) => c.status === "pending")
           .length,
         totalPoints: approvedContributions.reduce(

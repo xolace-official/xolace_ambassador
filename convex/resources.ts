@@ -59,14 +59,27 @@ const resourceValidator = v.object({
 });
 
 export const listPublished = query({
-  args: {},
-  returns: v.array(resourceValidator),
-  handler: async (ctx) => {
+  args: {
+    paginationOpts: paginationOptsValidator,
+    search: v.optional(v.string()),
+  },
+  returns: paginationResultValidator(resourceValidator),
+  handler: async (ctx, args) => {
     await requireRole(ctx);
+    const search = args.search?.trim();
+    if (search) {
+      return await ctx.db
+        .query("resources")
+        .withSearchIndex("search_title", (q) =>
+          q.search("title", search).eq("published", true),
+        )
+        .paginate(args.paginationOpts);
+    }
     return await ctx.db
       .query("resources")
       .withIndex("by_published", (q) => q.eq("published", true))
-      .collect();
+      .order("desc")
+      .paginate(args.paginationOpts);
   },
 });
 
@@ -86,10 +99,14 @@ export const getById = query({
   args: { resourceId: v.string() },
   returns: v.union(resourceValidator, v.null()),
   handler: async (ctx, args) => {
-    await requireRole(ctx);
+    const user = await requireRole(ctx);
     const id = ctx.db.normalizeId("resources", args.resourceId);
     if (id === null) return null;
-    return await ctx.db.get(id);
+    const resource = await ctx.db.get(id);
+    if (resource !== null && user.role !== "admin" && !resource.published) {
+      return null;
+    }
+    return resource;
   },
 });
 

@@ -60,7 +60,10 @@ export function ReportsMissionTable({
           </thead>
           <tbody className="divide-y divide-border">
             {missions.map((m) => (
-              <tr key={m.missionId} className="hover:bg-muted/20 transition-colors">
+              <tr
+                key={m.missionId}
+                className="hover:bg-muted/20 transition-colors"
+              >
                 <td className="px-4 py-3 text-sm font-medium text-foreground">
                   {m.title}
                 </td>

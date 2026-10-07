@@ -1,10 +1,4 @@
-import {
-  Award,
-  CheckCircle,
-  Clock,
-  Target,
-  Users,
-} from "lucide-react";
+import { Award, CheckCircle, Clock, Target, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
@@ -65,10 +59,7 @@ export function ReportsStatsGrid({
         <Card key={stat.label} className="border-border p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <stat.icon
-                aria-hidden="true"
-                className="size-5 text-primary"
-              />
+              <stat.icon aria-hidden="true" className="size-5 text-primary" />
             </div>
             <div className="min-w-0">
               <p className="text-2xl font-bold tabular-nums text-foreground">

@@ -166,9 +166,7 @@ export function ReportsDynamicTable({
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <Badge
-      className={statusStyles[status] ?? "bg-muted text-muted-foreground"}
-    >
+    <Badge className={statusStyles[status] ?? "bg-muted text-muted-foreground"}>
       {status}
     </Badge>
   );

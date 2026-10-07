@@ -43,9 +43,7 @@ export function ReportsSummaryCards({
             {card.value}
           </p>
           <div className="mt-1 flex items-end justify-between">
-            <p className="text-[10px] text-muted-foreground">
-              {card.subtitle}
-            </p>
+            <p className="text-[10px] text-muted-foreground">{card.subtitle}</p>
             <svg
               aria-hidden="true"
               className="h-6 w-14"

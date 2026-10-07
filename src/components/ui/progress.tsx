@@ -12,7 +12,10 @@ export function Progress({ value, className }: ProgressProps) {
       aria-valuenow={Math.round(value)}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn("h-2 w-full overflow-hidden rounded-full bg-secondary", className)}
+      className={cn(
+        "h-2 w-full overflow-hidden rounded-full bg-secondary",
+        className,
+      )}
     >
       <div
         className="h-full rounded-full bg-primary transition-all"
