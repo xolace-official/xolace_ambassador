@@ -9,7 +9,6 @@ import {
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
-import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { api } from "../../../../../../convex/_generated/api";
@@ -56,13 +55,11 @@ export function PortalProfile({
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <PageDescription page="profile" className="max-w-2xl" />
-
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="relative flex flex-col items-center p-4 text-center sm:items-start sm:p-6 sm:text-left">
             <Link
-              href={`/${portalRole}/${uuid}/settings`}
+              href={`/${portalRole}/${uuid}/profile/edit`}
               className="absolute right-5 top-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-muted px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-8 sm:top-8"
             >
               <Pencil aria-hidden="true" className="size-4" />

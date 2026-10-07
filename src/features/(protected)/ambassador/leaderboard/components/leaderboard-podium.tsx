@@ -1,11 +1,14 @@
 import { Crown, Medal, Target, TrendingUp, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LeaderboardAvatar } from "./leaderboard-avatar";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
 
 interface LeaderboardEntry {
+  rank: number;
   userId: string;
   name: string;
+  image: string | null;
   points: number;
   levelRank: number;
   contributionsApproved: number;
@@ -14,20 +17,22 @@ interface LeaderboardEntry {
 }
 
 const placeStyles = [
-  { place: 2, ring: "ring-1 ring-muted-foreground/30", badge: "bg-muted-foreground/20 text-muted-foreground" },
-  { place: 1, ring: "ring-2 ring-primary", badge: "bg-primary/20 text-primary" },
-  { place: 3, ring: "ring-1 ring-accent/30", badge: "bg-accent/20 text-accent" },
+  {
+    place: 2,
+    ring: "ring-1 ring-muted-foreground/30",
+    badge: "bg-muted-foreground/20 text-muted-foreground",
+  },
+  {
+    place: 1,
+    ring: "ring-2 ring-primary",
+    badge: "bg-primary/20 text-primary",
+  },
+  {
+    place: 3,
+    ring: "ring-1 ring-accent/30",
+    badge: "bg-accent/20 text-accent",
+  },
 ];
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w.charAt(0))
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 export function LeaderboardPodium({
   entries,
@@ -59,9 +64,11 @@ export function LeaderboardPodium({
             ) : null}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                  {getInitials(entry.name)}
-                </div>
+                <LeaderboardAvatar
+                  name={entry.name}
+                  image={entry.image}
+                  size="lg"
+                />
                 <div>
                   <p className="text-sm font-semibold text-foreground">
                     {entry.name}
@@ -84,7 +91,10 @@ export function LeaderboardPodium({
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
-                <TrendingUp aria-hidden="true" className="size-4 text-primary" />
+                <TrendingUp
+                  aria-hidden="true"
+                  className="size-4 text-primary"
+                />
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                     Points

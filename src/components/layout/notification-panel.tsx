@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery } from "convex/react";
 import {
   Bell,
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { PortalRole } from "@/types/portal.type";
+import { api } from "../../../convex/_generated/api";
 
 type NotificationItem = {
   id: string;
@@ -63,102 +65,33 @@ function formatNotificationTime(timestamp: number) {
   return notificationDateFormatter.format(timestamp);
 }
 
-export function getDemoNotifications(role: PortalRole, uuid: string) {
-  const basePath = `/${role}/${uuid}`;
-
-  return [
-    {
-      id: "mission-published",
-      title: "A new mission is available",
-      description:
-        "Explore the latest way to contribute to the Xolace program.",
-      date: Date.UTC(2026, 9, 2),
-      kind: "mission",
-      href: `${basePath}/missions`,
-      unread: true,
-    },
-    {
-      id: "contribution-reviewed",
-      title: "Your contribution was approved",
-      description:
-        "Your recent submission has been reviewed by the program team.",
-      date: Date.UTC(2026, 9, 1),
-      kind: "review",
-      href: `${basePath}/${role === "ambassador" ? "impact" : "missions"}`,
-      unread: true,
-    },
-    {
-      id: "reward-earned",
-      title: "You earned a new reward",
-      description:
-        "View your points, recognition, and progress toward the next level.",
-      date: Date.UTC(2026, 8, 28),
-      kind: "reward",
-      href: `${basePath}/${role === "ambassador" ? "rewards" : "analytics"}`,
-      unread: false,
-    },
-    {
-      id: "resource-added",
-      title: "New ambassador resources added",
-      description:
-        "Updated guides and campaign materials are ready to explore.",
-      date: Date.UTC(2026, 8, 25),
-      kind: "resource",
-      href: `${basePath}/resources`,
-      unread: false,
-    },
-    {
-      id: "community-update",
-      title: "A new community update is available",
-      description: "Read the latest message from the Xolace program team.",
-      date: Date.UTC(2026, 8, 22),
-      kind: "community",
-      href: `${basePath}/community`,
-      unread: false,
-    },
-    {
-      id: "mission-reminder",
-      title: "Your mission deadline is approaching",
-      description: "Review the brief and submit your work before it closes.",
-      date: Date.UTC(2026, 8, 20),
-      kind: "mission",
-      href: `${basePath}/missions`,
-      unread: false,
-    },
-    {
-      id: "resource-guide",
-      title: "A new guide is ready",
-      description:
-        "Find practical guidance for representing Xolace in your community.",
-      date: Date.UTC(2026, 8, 17),
-      kind: "resource",
-      href: `${basePath}/resources`,
-      unread: false,
-    },
-    {
-      id: "recognition-update",
-      title: "Your ambassador recognition was updated",
-      description: "See the latest recognition and progress on your profile.",
-      date: Date.UTC(2026, 8, 14),
-      kind: "reward",
-      href: `${basePath}/profile`,
-      unread: false,
-    },
-  ] satisfies NotificationItem[];
-}
-
 export function NotificationPanel({
   open,
   onOpenChange,
-  role,
-  uuid,
+  onNotificationOpen,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: PortalRole | null;
-  uuid: string;
+  onNotificationOpen: () => void;
 }) {
-  const notifications = role ? getDemoNotifications(role, uuid) : [];
+  const rows = useQuery(api.notifications.list);
+  const markRead = useMutation(api.notifications.markRead);
+  const router = useRouter();
+  const [locallyRead, setLocallyRead] = useState<Set<string>>(() => new Set());
+  const notifications = useMemo(
+    () =>
+      (rows ?? []).map((notification) => ({
+        id: notification._id,
+        title: notification.title,
+        description: notification.description,
+        date: notification._creationTime,
+        kind: notification.kind,
+        href: notification.href,
+        unread:
+          notification.readAt === null && !locallyRead.has(notification._id),
+      })),
+    [locallyRead, rows],
+  );
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [visibleCount, setVisibleCount] = useState(4);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -235,7 +168,24 @@ export function NotificationPanel({
                   <Link
                     key={notification.id}
                     href={notification.href}
-                    onClick={() => onOpenChange(false)}
+                    onClick={(event) => {
+                      if (notification.unread) {
+                        event.preventDefault();
+                        onOpenChange(false);
+                        onNotificationOpen();
+                        setLocallyRead((current) => {
+                          const next = new Set(current);
+                          next.add(notification.id);
+                          return next;
+                        });
+                        void markRead({ notificationId: notification.id }).then(
+                          () => router.push(notification.href),
+                        );
+                      } else {
+                        onOpenChange(false);
+                        onNotificationOpen();
+                      }
+                    }}
                     className={`group flex gap-2 rounded-xl border border-border p-2 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${notification.unread ? "bg-muted/40" : ""}`}
                   >
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">

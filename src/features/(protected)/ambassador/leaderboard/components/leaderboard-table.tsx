@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card";
+import { LeaderboardAvatar } from "./leaderboard-avatar";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
 
 interface LeaderboardEntry {
+  rank: number;
   userId: string;
   name: string;
+  image: string | null;
   points: number;
   levelRank: number;
   contributionsApproved: number;
@@ -17,17 +20,6 @@ interface LeaderboardTableProps {
   currentUserId: string;
   page: number;
   pageSize: number;
-  offset: number;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w.charAt(0))
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 export function LeaderboardTable({
@@ -35,7 +27,6 @@ export function LeaderboardTable({
   currentUserId,
   page,
   pageSize,
-  offset,
 }: LeaderboardTableProps) {
   const start = (page - 1) * pageSize;
   const pageEntries = entries.slice(start, start + pageSize);
@@ -70,8 +61,8 @@ export function LeaderboardTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {pageEntries.map((entry, index) => {
-              const rank = offset + start + index + 1;
+            {pageEntries.map((entry) => {
+              const rank = entry.rank;
               const isCurrentUser = entry.userId === currentUserId;
               return (
                 <tr
@@ -89,9 +80,11 @@ export function LeaderboardTable({
                   </td>
                   <td className="px-4 py-3 pb-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                        {getInitials(entry.name)}
-                      </div>
+                      <LeaderboardAvatar
+                        name={entry.name}
+                        image={entry.image}
+                        size="sm"
+                      />
                       <span className="truncate text-sm font-medium text-foreground">
                         {entry.name}
                         {isCurrentUser ? (

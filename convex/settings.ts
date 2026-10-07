@@ -18,6 +18,14 @@ const settingsProfileValidator = v.union(
   v.null(),
 );
 
+const notificationPreferencesValidator = v.object({
+  mission: v.boolean(),
+  review: v.boolean(),
+  reward: v.boolean(),
+  resource: v.boolean(),
+  community: v.boolean(),
+});
+
 const programProfileValidator = v.union(
   v.object({
     status: v.union(
@@ -47,6 +55,7 @@ export const getSettings = query({
     name: v.union(v.string(), v.null()),
     email: v.union(v.string(), v.null()),
     image: v.union(v.string(), v.null()),
+    notificationPreferences: notificationPreferencesValidator,
     profile: settingsProfileValidator,
     program: programProfileValidator,
   }),
@@ -71,6 +80,13 @@ export const getSettings = query({
       name: user.name?.trim() || null,
       email: user.email?.trim() || null,
       image: storedImage ?? user.image ?? null,
+      notificationPreferences: user.notificationPreferences ?? {
+        mission: true,
+        review: true,
+        reward: true,
+        resource: true,
+        community: true,
+      },
       profile: profile
         ? {
             location: profile.location ?? null,
@@ -175,6 +191,9 @@ export const updateSettings = mutation({
     if (name.length < 2) {
       throw new Error("Enter a name with at least 2 characters.");
     }
+    if (name.length > 120) {
+      throw new Error("Keep your name under 120 characters.");
+    }
 
     await ctx.db.patch(user._id, { name });
 
@@ -187,18 +206,18 @@ export const updateSettings = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .first();
     const socials = {
-      tiktok: args.tiktok?.trim() ?? "",
-      instagram: args.instagram?.trim() ?? "",
-      x: args.x?.trim() ?? "",
-      youtube: args.youtube?.trim() ?? "",
-      linkedin: args.linkedin?.trim() ?? "",
-      snapchat: args.snapchat?.trim() ?? "",
+      tiktok: cleanField(args.tiktok, "TikTok", 120),
+      instagram: cleanField(args.instagram, "Instagram", 120),
+      x: cleanField(args.x, "X", 120),
+      youtube: cleanField(args.youtube, "YouTube", 120),
+      linkedin: cleanField(args.linkedin, "LinkedIn", 120),
+      snapchat: cleanField(args.snapchat, "Snapchat", 120),
     };
     const profileFields = {
-      location: args.location?.trim() ?? "",
-      school: args.school?.trim() ?? "",
-      dateOfBirth: args.dateOfBirth?.trim() ?? "",
-      bio: args.bio?.trim() ?? "",
+      location: cleanField(args.location, "Location", 160),
+      school: cleanField(args.school, "School or organization", 160),
+      dateOfBirth: cleanDateOfBirth(args.dateOfBirth),
+      bio: cleanField(args.bio, "Bio", 500),
       socials,
     };
 
@@ -215,3 +234,46 @@ export const updateSettings = mutation({
     return null;
   },
 });
+
+export const updateNotificationPreferences = mutation({
+  args: {
+    mission: v.boolean(),
+    review: v.boolean(),
+    reward: v.boolean(),
+    resource: v.boolean(),
+    community: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireRole(ctx);
+    await ctx.db.patch(user._id, { notificationPreferences: args });
+    return null;
+  },
+});
+
+function cleanField(
+  value: string | undefined,
+  label: string,
+  maxLength: number,
+) {
+  const cleaned = value?.trim() ?? "";
+  if (cleaned.length > maxLength) {
+    throw new Error(
+      `Keep ${label.toLowerCase()} under ${maxLength} characters.`,
+    );
+  }
+  return cleaned;
+}
+
+function cleanDateOfBirth(value: string | undefined) {
+  const cleaned = value?.trim() ?? "";
+  if (!cleaned) return cleaned;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
+    throw new Error("Enter your date of birth using the date picker.");
+  }
+  const selected = new Date(`${cleaned}T00:00:00Z`);
+  if (Number.isNaN(selected.getTime()) || selected > new Date()) {
+    throw new Error("Date of birth cannot be in the future.");
+  }
+  return cleaned;
+}

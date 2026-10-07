@@ -30,6 +30,13 @@ export type Settings = {
     linkedin: string | null;
     snapchat: string | null;
   } | null;
+  notificationPreferences: {
+    mission: boolean;
+    review: boolean;
+    reward: boolean;
+    resource: boolean;
+    community: boolean;
+  };
   program: {
     status: "active" | "paused" | "suspended";
     track: string | null;

@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
-import { BriefcaseBusiness, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, BriefcaseBusiness, ShieldCheck, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
@@ -16,10 +16,10 @@ import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 const settingsTabs = [
   {
-    value: "profile",
-    label: "Profile",
-    icon: UserRound,
-    description: "Your identity and public details",
+    value: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    description: "Choose the updates you want to receive",
   },
   {
     value: "program",
@@ -36,9 +36,10 @@ const settingsTabs = [
 ] as const;
 const settingsTabParser = parseAsStringLiteral(
   settingsTabs.map((tab) => tab.value),
-).withDefault("profile");
+).withDefault("program");
 
 import { AccountSettings } from "../components/account-settings";
+import { NotificationPreferences } from "../components/notification-preferences";
 import { ProfileSettings } from "../components/profile-settings";
 import { ProgramSettings } from "../components/program-settings";
 import { SettingsCard } from "../components/settings-card";
@@ -50,11 +51,20 @@ import {
   settingsSchema,
 } from "../types/settings.types";
 
-export function PortalSettings() {
+export function PortalSettings({
+  profileEdit = false,
+  profileHref,
+}: {
+  profileEdit?: boolean;
+  profileHref?: string;
+}) {
   const router = useRouter();
   const { signOut } = useAuthActions();
   const settings = useQuery(api.settings.getSettings);
   const updateSettings = useMutation(api.settings.updateSettings);
+  const updateNotificationPreferences = useMutation(
+    api.settings.updateNotificationPreferences,
+  );
   const generateAvatarUploadUrl = useMutation(
     api.settings.generateAvatarUploadUrl,
   );
@@ -64,8 +74,9 @@ export function PortalSettings() {
     "section",
     settingsTabParser,
   );
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(profileEdit);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [acknowledgingSafety, setAcknowledgingSafety] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -138,7 +149,9 @@ export function PortalSettings() {
   }
 
   async function handleSafetyAcknowledgement() {
+    if (acknowledgingSafety) return;
     try {
+      setAcknowledgingSafety(true);
       await acknowledgeSafety();
       toast.success("Safety acknowledgement completed");
     } catch (error) {
@@ -147,6 +160,8 @@ export function PortalSettings() {
           ? error.message
           : "Could not save your acknowledgement.",
       );
+    } finally {
+      setAcknowledgingSafety(false);
     }
   }
 
@@ -166,40 +181,50 @@ export function PortalSettings() {
 
   return (
     <div className="w-full space-y-6">
-      <PageDescription page="settings" className="max-w-2xl" />
-      <nav
-        aria-label="Settings sections"
-        className="flex w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-muted/30 p-2 sm:grid sm:grid-cols-3 sm:overflow-visible"
-      >
-        {settingsTabs.map((tab) => {
-          const Icon = tab.icon;
-          const isSelected = selectedTab === tab.value;
-          return (
-            <button
-              key={tab.value}
-              type="button"
-              aria-current={isSelected ? "page" : undefined}
-              onClick={() => {
-                void setSelectedTab(tab.value);
-                setEditing(false);
-              }}
-              className={`flex min-h-11 min-w-[9.5rem] shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-14 sm:min-w-0 sm:gap-3 sm:px-4 ${isSelected ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}
-            >
-              <Icon aria-hidden="true" className="size-5 shrink-0" />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">
-                  {tab.label}
+      <PageDescription
+        page={profileEdit ? "profile" : "settings"}
+        className="max-w-2xl"
+      />
+      {!profileEdit ? (
+        <nav
+          aria-label="Settings sections"
+          className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-border bg-muted/30 p-1.5 sm:gap-2 sm:p-2"
+        >
+          {settingsTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isSelected = selectedTab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                aria-current={isSelected ? "page" : undefined}
+                onClick={() => {
+                  void setSelectedTab(tab.value);
+                  setEditing(false);
+                }}
+                className={`flex min-h-11 w-full min-w-0 items-start justify-start gap-1 rounded-xl px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-14 sm:gap-3 sm:px-4 ${isSelected ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/70 hover:text-foreground"}`}
+              >
+                <Icon aria-hidden="true" className="size-5 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">
+                    <span className="sm:hidden">
+                      {tab.label.replace(" & ", " / ")}
+                    </span>
+                    <span className="hidden sm:inline text-start">
+                      {tab.label}
+                    </span>
+                  </span>
+                  <span className="hidden truncate text-xs sm:block">
+                    {tab.description}
+                  </span>
                 </span>
-                <span className="hidden truncate text-xs sm:block">
-                  {tab.description}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+              </button>
+            );
+          })}
+        </nav>
+      ) : null}
       <main className="min-w-0">
-        {selectedTab === "profile" ? (
+        {profileEdit ? (
           <SettingsCard
             icon={UserRound}
             title="Profile"
@@ -208,7 +233,13 @@ export function PortalSettings() {
             <ProfileSettings
               settings={typedSettings}
               editing={editing}
-              setEditing={setEditing}
+              setEditing={(value) => {
+                if (profileEdit && !value && profileHref) {
+                  router.push(profileHref);
+                  return;
+                }
+                setEditing(value);
+              }}
               form={form}
               onSubmit={onSubmit}
               image={settings.image}
@@ -225,6 +256,20 @@ export function PortalSettings() {
             <ProgramSettings
               settings={typedSettings}
               onAcknowledge={handleSafetyAcknowledgement}
+              acknowledging={acknowledgingSafety}
+            />
+          </SettingsCard>
+        ) : selectedTab === "notifications" ? (
+          <SettingsCard
+            icon={Bell}
+            title="Notifications"
+            description="Choose which updates appear in your notification panel."
+          >
+            <NotificationPreferences
+              preferences={settings.notificationPreferences}
+              onSave={async (preferences) => {
+                await updateNotificationPreferences(preferences);
+              }}
             />
           </SettingsCard>
         ) : (

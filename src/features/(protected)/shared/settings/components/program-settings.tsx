@@ -7,9 +7,11 @@ import { SettingRow } from "./setting-row";
 export function ProgramSettings({
   settings,
   onAcknowledge,
+  acknowledging,
 }: {
   settings: Settings;
   onAcknowledge: () => Promise<void>;
+  acknowledging: boolean;
 }) {
   return (
     <section>
@@ -63,9 +65,10 @@ export function ProgramSettings({
                     <Button
                       type="button"
                       className="mt-4"
+                      disabled={acknowledging}
                       onClick={() => void onAcknowledge()}
                     >
-                      I acknowledge the guidance
+                      {acknowledging ? "Saving…" : "I acknowledge the guidance"}
                     </Button>
                   )}
                 </div>

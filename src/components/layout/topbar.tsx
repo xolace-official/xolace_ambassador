@@ -9,16 +9,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { allDestinations } from "@/components/layout/menu";
-import {
-  getDemoNotifications,
-  NotificationPanel,
-} from "@/components/layout/notification-panel";
+import { NotificationPanel } from "@/components/layout/notification-panel";
 import { Button } from "@/components/ui/button";
 import type { PortalRole } from "@/types/portal.type";
 import { api } from "../../../convex/_generated/api";
 
 interface TopBarProps {
   onMenuClick: () => void;
+  onCloseSidebar: () => void;
 }
 
 const subscribeNever = () => () => {};
@@ -45,7 +43,7 @@ function toggleThemeWithTransition(
   document.startViewTransition(() => setTheme(next));
 }
 
-export default function TopBar({ onMenuClick }: TopBarProps) {
+export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -71,11 +69,10 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
     roleSegment === "admin" || roleSegment === "ambassador"
       ? roleSegment
       : null;
-  const unreadNotificationCount = role
-    ? getDemoNotifications(role, uuid).filter(
-        (notification) => notification.unread,
-      ).length
-    : 0;
+  const notifications = useQuery(api.notifications.list);
+  const unreadNotificationCount =
+    notifications?.filter((notification) => notification.readAt === null)
+      .length ?? 0;
 
   const destinations = role ? allDestinations(role, uuid) : [];
 
@@ -92,10 +89,27 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const pageTitle =
     current?.name ??
     parent?.name ??
-    (pathname.endsWith("/profile") ? "Profile" : "Dashboard");
+    (pathname.includes("/profile/edit")
+      ? "Edit Profile"
+      : pathname.includes("/profile")
+        ? "Profile"
+        : "Dashboard");
 
   function getParentHref() {
     if (!parent) return pathname;
+
+    const pathParts = pathname.split("/");
+    const isAdminMissionDetail =
+      role === "admin" &&
+      pathParts[3] === "missions" &&
+      pathParts[4] !== "submissions" &&
+      pathParts.length === 6;
+
+    // A mission detail belongs to its set, not to the top-level mission list.
+    if (isAdminMissionDetail) {
+      return `/${role}/${uuid}/missions/${pathParts[4]}`;
+    }
+
     if (role !== "admin" || !pathname.includes("/missions/submissions/")) {
       return parent.href;
     }
@@ -271,8 +285,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
       <NotificationPanel
         open={notificationsOpen}
         onOpenChange={setNotificationsOpen}
-        role={role}
-        uuid={uuid}
+        onNotificationOpen={onCloseSidebar}
       />
     </header>
   );

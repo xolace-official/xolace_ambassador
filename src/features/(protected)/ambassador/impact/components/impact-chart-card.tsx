@@ -18,12 +18,16 @@ export function ImpactChartCard({
   children,
 }: ImpactChartCardProps) {
   return (
-    <Card className="border-border p-5">
-      <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2>
+    <Card className="border-border p-5 sm:p-6">
+      <h2 className="mb-4 text-base font-semibold text-foreground">{title}</h2>
       {isEmpty ? (
         <EmptyState title={emptyTitle} description={emptyDescription} />
       ) : (
-        <div className="h-64" role="img" aria-label={`${title} chart`}>
+        <div
+          className="h-72 min-w-0 sm:h-80"
+          role="img"
+          aria-label={`${title} chart`}
+        >
           {children}
         </div>
       )}

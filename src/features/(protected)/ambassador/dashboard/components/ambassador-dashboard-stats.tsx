@@ -1,4 +1,4 @@
-import { TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
@@ -6,40 +6,43 @@ const numberFormat = new Intl.NumberFormat("en-GB");
 function StatCell({
   label,
   value,
-  secondary,
-  secondaryLabel,
-  delta,
+  note,
 }: {
   label: string;
   value: number;
-  secondary?: number;
-  secondaryLabel?: string;
-  delta?: string;
+  note?: { value: number; direction: "up" | "down" | "flat" };
 }) {
+  const TrendIcon =
+    note?.direction === "up"
+      ? ArrowUp
+      : note?.direction === "down"
+        ? ArrowDown
+        : Minus;
+
   return (
-    <div className="flex min-w-0 flex-col gap-1 px-4 py-5 sm:px-5 sm:py-6">
+    <div className="flex min-w-0 flex-col gap-1 px-3 py-4 sm:px-5 sm:py-6">
       <p className="text-xs text-muted-foreground">{label}</p>
       <div className="flex items-baseline gap-2">
-        <span className="text-xl font-semibold tabular-nums text-foreground sm:text-2xl">
+        <span className="text-lg font-semibold tabular-nums text-foreground sm:text-2xl">
           {numberFormat.format(value)}
         </span>
-        {secondary !== undefined && (
-          <span className="text-sm font-medium tabular-nums text-primary">
-            {numberFormat.format(secondary)}
-          </span>
-        )}
-        {secondaryLabel && (
-          <span className="text-xs text-muted-foreground">
-            {secondaryLabel}
-          </span>
-        )}
       </div>
-      {delta && (
-        <p className="flex items-center gap-1 text-xs text-success">
-          <TrendingUp aria-hidden="true" className="size-3" />
-          {delta}
+      {note ? (
+        <p
+          className={`flex items-center gap-1 text-xs ${
+            note.direction === "down"
+              ? "text-destructive"
+              : note.direction === "up"
+                ? "text-success"
+                : "text-muted-foreground"
+          }`}
+        >
+          <TrendIcon aria-hidden="true" className="size-3" />
+          {note.direction === "flat"
+            ? "No change this week"
+            : `${numberFormat.format(note.value)} this week`}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -49,13 +52,17 @@ export function AmbassadorDashboardStats({
   missions,
   peopleReached,
   recognitions,
+  weeklyPoints,
 }: {
   points: number;
   missions: number;
   peopleReached: number;
   recognitions: number;
+  weeklyPoints: { current: number; previous: number };
 }) {
-  const dailyAvg = Math.round(points / Math.max(1, 30));
+  const pointChange = weeklyPoints.current - weeklyPoints.previous;
+  const pointDirection =
+    pointChange > 0 ? "up" : pointChange < 0 ? "down" : "flat";
 
   return (
     <section aria-label="Your progress">
@@ -63,19 +70,16 @@ export function AmbassadorDashboardStats({
         <CardContent className="p-0">
           <div className="grid grid-cols-2 divide-x divide-y divide-border/60 sm:grid-cols-4 sm:divide-y-0">
             <StatCell
-              label="Points / day"
-              value={dailyAvg}
-              secondary={points}
-              secondaryLabel="total"
-              delta="+4.2%"
+              label="Points earned"
+              value={points}
+              note={{
+                value: Math.abs(pointChange),
+                direction: pointDirection,
+              }}
             />
-            <StatCell label="Missions" value={missions} delta="+4.2%" />
-            <StatCell
-              label="People reached"
-              value={peopleReached}
-              delta="+4.2%"
-            />
-            <StatCell label="Recognitions" value={recognitions} delta="+4.2%" />
+            <StatCell label="Missions completed" value={missions} />
+            <StatCell label="People reached" value={peopleReached} />
+            <StatCell label="Recognitions" value={recognitions} />
           </div>
         </CardContent>
       </Card>

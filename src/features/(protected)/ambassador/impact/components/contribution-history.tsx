@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const kindColor: Record<string, string> = {
@@ -55,8 +57,10 @@ interface Contribution {
 
 export function ContributionHistory({
   contributions,
+  moreHref,
 }: {
   contributions: Contribution[];
+  moreHref?: string;
 }) {
   const approved = contributions.filter((c) => c.status === "approved");
   const pending = contributions.filter((c) => c.status === "pending");
@@ -81,7 +85,7 @@ export function ContributionHistory({
         </div>
       ) : (
         <ul className="divide-y divide-border">
-          {contributions.slice(0, 20).map((contribution) => (
+          {contributions.map((contribution) => (
             <li
               key={contribution._id}
               className="flex items-center gap-3 px-5 py-3"
@@ -111,6 +115,13 @@ export function ContributionHistory({
           ))}
         </ul>
       )}
+      {moreHref && contributions.length > 0 ? (
+        <div className="flex justify-end border-t border-border p-3">
+          <Button asChild variant="ghost" size="sm">
+            <Link href={moreHref}>See more</Link>
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }

@@ -99,7 +99,7 @@ export function AmbassadorReportsChart({
             value={period}
             onValueChange={(v) => setPeriod(v as "weekly" | "monthly")}
           >
-            <SelectTrigger className="h-8 w-24 rounded-full border-0 bg-muted px-3 text-xs shadow-none">
+            <SelectTrigger className="h-8 px-3 text-xs ">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -154,11 +154,11 @@ export function AmbassadorReportsChart({
                 tickFormatter={(v: string) =>
                   period === "weekly"
                     ? new Intl.DateTimeFormat("en-GB", {
-                        weekday: "short",
-                      }).format(new Date(`${v}T12:00:00Z`))
+                      weekday: "short",
+                    }).format(new Date(`${v}T12:00:00Z`))
                     : new Intl.DateTimeFormat("en-GB", {
-                        month: "short",
-                      }).format(new Date(`${v}-01T12:00:00Z`))
+                      month: "short",
+                    }).format(new Date(`${v}-01T12:00:00Z`))
                 }
               />
               <YAxis tick={{ fontSize: 9 }} stroke="var(--muted-foreground)" />

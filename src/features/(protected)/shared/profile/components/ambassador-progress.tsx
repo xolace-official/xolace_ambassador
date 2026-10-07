@@ -1,11 +1,9 @@
 import type { useQuery } from "convex/react";
-import { Award, Sparkles, Target, Users } from "lucide-react";
+import { Sparkles, Target, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { api } from "../../../../../../convex/_generated/api";
-import { ProfileActivityCard } from "./profile-activity-card";
-import { ProfileRecognitionCard } from "./profile-recognition-card";
 
 const numberFormatter = new Intl.NumberFormat("en-GB");
 
@@ -35,12 +33,11 @@ export function AmbassadorProgress({
       icon: Target,
     },
     { label: "People reached", value: totals.peopleReached, icon: Users },
-    { label: "Recognitions", value: profile.recognitions.length, icon: Award },
   ];
 
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="border-border p-3 sm:p-5">
             <div className="flex items-center gap-3">
@@ -94,11 +91,6 @@ export function AmbassadorProgress({
           </div>
         </Card>
       ) : null}
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ProfileActivityCard contributions={profile.contributions} />
-        <ProfileRecognitionCard recognitions={profile.recognitions} />
-      </div>
     </section>
   );
 }

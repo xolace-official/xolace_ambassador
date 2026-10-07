@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { useQueryState } from "nuqs";
 import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
 import { api } from "../../../../../../convex/_generated/api";
 import { LeaderboardPagination } from "../components/leaderboard-pagination";
@@ -18,17 +19,16 @@ type Period = (typeof periodOptions)[number];
 
 const periodLabels: Record<Period, string> = {
   allTime: "All Time",
-  lastMission: "Last Mission",
+  lastMission: "Latest Set",
 };
 
 export default function AmbassadorLeaderboard() {
-  const [page, setPage] = useQueryState(
-    "page",
-    parseAsInteger.withDefault(1),
-  );
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [period, setPeriod] = useQueryState(
     "period",
-    parseAsStringLiteral(periodOptions).withDefault("allTime"),
+    parseAsStringLiteral(periodOptions)
+      .withDefault("allTime")
+      .withOptions({ clearOnDefault: true }),
   );
 
   const leaderboard = useQuery(
@@ -38,6 +38,18 @@ export default function AmbassadorLeaderboard() {
 
   if (leaderboard === undefined) {
     return <LeaderboardSkeleton />;
+  }
+
+  if (!leaderboard.published) {
+    return (
+      <div className="space-y-6">
+        <PageDescription page="ambassadorLeaderboard" className="max-w-2xl" />
+        <EmptyState
+          title="The leaderboard is not published yet"
+          description="The program team will publish rankings after the latest Mission Set closes and every submission has been reviewed."
+        />
+      </div>
+    );
   }
 
   const { entries, currentUserId, currentUserRank } = leaderboard;
@@ -64,7 +76,7 @@ export default function AmbassadorLeaderboard() {
                 period === option
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
             >
               {periodLabels[option]}
             </button>
@@ -79,7 +91,6 @@ export default function AmbassadorLeaderboard() {
         currentUserId={currentUserId}
         page={currentPage}
         pageSize={PAGE_SIZE}
-        offset={PODIUM_COUNT}
       />
 
       <LeaderboardPagination
