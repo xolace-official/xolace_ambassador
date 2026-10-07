@@ -34,7 +34,7 @@ npx convex dev     # push convex functions to the dev deployment
 - Feature components live in `src/features/<group>/<area>/<feature>/`, with
   `pages/` and `components/` subfolders. Route files in `src/app` stay thin and
   delegate to them.
-- Biome, not ESLint. There is no test framework configured yet.
+- Biome, not ESLint. There is no test framework configured yet.                                                                                                                                                                                                                                                                                                                   
 - Package manager is Bun.
 
 ## Gotchas
