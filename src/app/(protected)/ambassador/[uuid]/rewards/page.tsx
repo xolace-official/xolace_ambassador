@@ -9,6 +9,9 @@ export const metadata: Metadata = portalMetadata({
     "Track your points, levels, recognition, and reward history earned through contributions.",
 });
 
-export default function Page() {
-  return <AmbassadorRewards />;
+type Params = Promise<{ uuid: string }>;
+
+export default async function Page({ params }: { params: Params }) {
+  const { uuid } = await params;
+  return <AmbassadorRewards uuid={uuid} />;
 }
