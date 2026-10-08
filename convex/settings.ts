@@ -33,6 +33,7 @@ const programProfileValidator = v.union(
       v.literal("paused"),
       v.literal("suspended"),
     ),
+    referralCode: v.union(v.string(), v.null()),
     track: v.union(
       v.literal("creator"),
       v.literal("community"),
@@ -104,6 +105,7 @@ export const getSettings = query({
       program: profile
         ? {
             status: profile.status,
+            referralCode: profile.referralCode ?? null,
             track: profile.track ?? null,
             podName: pod?.name ?? null,
             safetyAcknowledgedAt: profile.safetyAcknowledgedAt ?? null,
