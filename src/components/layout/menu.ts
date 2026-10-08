@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  CalendarDays,
   CircleHelp,
   FileText,
   FolderOpen,
@@ -63,6 +64,13 @@ export const adminMenu: MenuItem[] = [
   },
 
   {
+    name: "Meetings",
+    href: (u) => `/admin/${u}/meetings`,
+    icon: CalendarDays,
+    featureKey: "meetings",
+  },
+
+  {
     name: "Missions",
     // Manage ambassador activities and contributions - create missions, active missions, submissions, reviews, performance
     href: (u) => `/admin/${u}/missions`,
@@ -92,12 +100,6 @@ export const adminMenu: MenuItem[] = [
     href: (u) => `/admin/${u}/reports`,
     icon: FileText,
     featureKey: "reports",
-  },
-  {
-    name: "Rewards",
-    href: (u) => `/admin/${u}/rewards`,
-    icon: Trophy,
-    featureKey: "rewards",
   },
 ];
 
