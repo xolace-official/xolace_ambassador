@@ -28,12 +28,20 @@ const statusValidator = v.union(
   v.literal("reviewing"),
   v.literal("accepted"),
 );
+const periodValidator = v.union(
+  v.literal("all"),
+  v.literal("daily"),
+  v.literal("weekly"),
+  v.literal("monthly"),
+  v.literal("yearly"),
+);
 
 export const getReports = query({
   args: {
     reportType: v.optional(reportTypeValidator),
     status: v.optional(statusValidator),
     search: v.optional(v.string()),
+    period: v.optional(periodValidator),
   },
   returns: v.object({
     summary: v.object({
@@ -174,6 +182,9 @@ export const getReports = query({
     const reportType = args.reportType ?? "ambassadors";
     const status = args.status ?? "all";
     const search = args.search?.trim().toLowerCase();
+    const periodStart = getPeriodStart(args.period ?? "all");
+    const inPeriod = (timestamp: number) =>
+      periodStart === null || timestamp >= periodStart;
 
     const [
       ambassadors,
@@ -187,13 +198,13 @@ export const getReports = query({
       ctx.db
         .query("users")
         .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-        .collect(),
-      ctx.db.query("missions").collect(),
-      ctx.db.query("contributions").collect(),
-      ctx.db.query("resources").collect(),
-      ctx.db.query("events").collect(),
-      ctx.db.query("recognitions").collect(),
-      ctx.db.query("applications").collect(),
+        .take(500),
+      ctx.db.query("missions").take(1000),
+      ctx.db.query("contributions").take(5000),
+      ctx.db.query("resources").take(500),
+      ctx.db.query("events").take(500),
+      ctx.db.query("recognitions").take(500),
+      ctx.db.query("applications").take(500),
     ]);
 
     const ambassadorRows = await Promise.all(
@@ -301,6 +312,43 @@ export const getReports = query({
       appliedAt: a._creationTime,
     }));
 
+    const matches = (...values: Array<string | null | undefined>) =>
+      !search || values.some((value) => value?.toLowerCase().includes(search));
+    const ambassadorReport = ambassadorRows.filter(
+      (row) =>
+        (status === "all" || row.status === status) &&
+        matches(row.name, row.track),
+    );
+    const missionReport = missionRows.filter(
+      (row) =>
+        (status === "all" || row.status === status) &&
+        matches(row.title, row.track),
+    );
+    const contributionReport = contributionRows.filter(
+      (row) =>
+        (status === "all" || row.status === status) &&
+        inPeriod(row.createdAt) &&
+        matches(row.ambassadorName, row.missionTitle, row.kind),
+    );
+    const resourceReport = resourceRows.filter(
+      (row) =>
+        (status === "all" || (status === "published" && row.published)) &&
+        matches(row.title, row.category, row.kind, row.track),
+    );
+    const eventReport = eventRows.filter((row) =>
+      matches(row.title, row.format, row.location),
+    );
+    const recognitionReport = recognitionRows.filter(
+      (row) =>
+        inPeriod(row.awardedAt) && matches(row.userName, row.kind, row.note),
+    );
+    const applicationReport = applicationRows.filter(
+      (row) =>
+        (status === "all" || row.status === status) &&
+        inPeriod(row.appliedAt) &&
+        matches(row.name, row.email, row.trackInterest),
+    );
+
     const approvedContributions = contributions.filter(
       (c) => c.status === "approved",
     );
@@ -320,13 +368,50 @@ export const getReports = query({
           .filter((c) => c.kind === "people_reached")
           .reduce((sum, c) => sum + (c.quantity ?? 0), 0),
       },
-      ambassadors: ambassadorRows.sort((a, b) => b.points - a.points),
-      missions: missionRows.sort((a, b) => b.submissions - a.submissions),
-      contributions: contributionRows.sort((a, b) => b.createdAt - a.createdAt),
-      resources: resourceRows.sort((a, b) => a.title.localeCompare(b.title)),
-      events: eventRows.sort((a, b) => b.startsAt - a.startsAt),
-      recognitions: recognitionRows.sort((a, b) => b.awardedAt - a.awardedAt),
-      applications: applicationRows.sort((a, b) => b.appliedAt - a.appliedAt),
+      ambassadors:
+        reportType === "ambassadors"
+          ? ambassadorReport.sort((a, b) => b.points - a.points)
+          : [],
+      missions:
+        reportType === "missions"
+          ? missionReport.sort((a, b) => b.submissions - a.submissions)
+          : [],
+      contributions:
+        reportType === "contributions"
+          ? contributionReport.sort((a, b) => b.createdAt - a.createdAt)
+          : [],
+      resources:
+        reportType === "resources"
+          ? resourceReport.sort((a, b) => a.title.localeCompare(b.title))
+          : [],
+      events:
+        reportType === "events"
+          ? eventReport.sort((a, b) => b.startsAt - a.startsAt)
+          : [],
+      recognitions:
+        reportType === "recognitions"
+          ? recognitionReport.sort((a, b) => b.awardedAt - a.awardedAt)
+          : [],
+      applications:
+        reportType === "applications"
+          ? applicationReport.sort((a, b) => b.appliedAt - a.appliedAt)
+          : [],
     };
   },
 });
+
+function getPeriodStart(
+  period: "all" | "daily" | "weekly" | "monthly" | "yearly",
+) {
+  if (period === "all") return null;
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  if (period === "daily") return start.getTime();
+  if (period === "weekly") return start.getTime() - 6 * 86_400_000;
+  if (period === "monthly") {
+    start.setUTCDate(1);
+    return start.getTime();
+  }
+  start.setUTCMonth(0, 1);
+  return start.getTime();
+}
