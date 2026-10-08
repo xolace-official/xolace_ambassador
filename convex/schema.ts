@@ -53,6 +53,7 @@ export default defineSchema({
     authTables.users.validator.extend({
       uuid: v.optional(v.string()),
       role: v.optional(v.union(v.literal("admin"), v.literal("ambassador"))),
+      passwordSetupRequired: v.optional(v.boolean()),
       avatarStorageId: v.optional(v.id("_storage")),
       notificationPreferences: v.optional(
         v.object({
@@ -126,11 +127,13 @@ export default defineSchema({
 
   ambassadorProfiles: defineTable({
     userId: v.id("users"),
+    referralCode: v.optional(v.string()),
     status: v.union(
       v.literal("active"),
       v.literal("paused"),
       v.literal("suspended"),
     ),
+    statusReason: v.optional(v.string()),
     track: v.optional(track),
     podId: v.optional(v.id("pods")),
     location: v.optional(v.string()),
@@ -154,6 +157,7 @@ export default defineSchema({
     onboardedAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
+    .index("by_referralCode", ["referralCode"])
     .index("by_status", ["status"])
     .index("by_track", ["track"])
     .index("by_podId", ["podId"]),
@@ -367,6 +371,8 @@ export default defineSchema({
     sortOrder: v.number(),
   })
     .index("by_published", ["published"])
+    .index("by_published_and_sortOrder", ["published", "sortOrder"])
+    .index("by_sortOrder", ["sortOrder"])
     .index("by_category", ["category"])
     .searchIndex("search_title", {
       searchField: "title",
@@ -463,6 +469,10 @@ export default defineSchema({
     socialHandle: v.optional(v.string()),
     whyXolace: v.string(),
     trackInterest: track,
+    referralCode: v.optional(v.string()),
+    meetingSlotId: v.optional(v.string()),
+    meetingSlotLabel: v.optional(v.string()),
+    meetingSlotStartsAt: v.optional(v.number()),
     image: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("new"),
@@ -472,12 +482,27 @@ export default defineSchema({
     ),
     reviewedBy: v.optional(v.id("users")),
     reviewedAt: v.optional(v.number()),
+    ambassadorId: v.optional(v.id("users")),
+    invitationSentAt: v.optional(v.number()),
+    meetingScheduledAt: v.optional(v.number()),
     reviewNote: v.optional(v.string()),
   })
     .index("by_status", ["status"])
     .index("by_email", ["email"])
+    .index("by_meetingSlotId", ["meetingSlotId"])
+    .index("by_meetingScheduledAt", ["meetingScheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["status"],
     }),
+
+  meetingSlots: defineTable({
+    slotKey: v.string(),
+    startsAt: v.number(),
+    active: v.boolean(),
+    createdBy: v.id("users"),
+  })
+    .index("by_slotKey", ["slotKey"])
+    .index("by_startsAt", ["startsAt"])
+    .index("by_active_and_startsAt", ["active", "startsAt"]),
 });
