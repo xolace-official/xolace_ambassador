@@ -43,7 +43,7 @@ export function ProfileCompletionCard({
         <Progress value={completion} />
         {completion < 100 ? (
           <Link
-            href={`/${role}/${uuid}/settings`}
+            href={`/${role}/${uuid}/profile/edit`}
             className="inline-flex min-h-10 items-center rounded-lg text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Complete your profile
