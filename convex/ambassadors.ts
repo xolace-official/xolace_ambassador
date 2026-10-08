@@ -28,7 +28,7 @@ const ambassadorRowValidator = v.object({
     v.null(),
   ),
   location: v.union(v.string(), v.null()),
-  podName: v.union(v.string(), v.null()),
+  referralCode: v.union(v.string(), v.null()),
   points: v.number(),
   missionsCompleted: v.number(),
   lastActivityAt: v.union(v.number(), v.null()),
@@ -37,6 +37,8 @@ const ambassadorRowValidator = v.object({
 const profileValidator = v.union(
   v.object({
     status: ambassadorStatusValidator,
+    statusReason: v.union(v.string(), v.null()),
+    referralCode: v.union(v.string(), v.null()),
     track: v.union(
       v.literal("creator"),
       v.literal("community"),
@@ -50,7 +52,6 @@ const profileValidator = v.union(
     school: v.union(v.string(), v.null()),
     dateOfBirth: v.union(v.string(), v.null()),
     bio: v.union(v.string(), v.null()),
-    podName: v.union(v.string(), v.null()),
     onboardedAt: v.union(v.number(), v.null()),
     safetyAcknowledgedAt: v.union(v.number(), v.null()),
   }),
@@ -106,16 +107,11 @@ const recognitionValidator = v.object({
   awardedByName: v.union(v.string(), v.null()),
 });
 
-const eventValidator = v.object({
-  _id: v.id("events"),
-  title: v.string(),
-  startsAt: v.number(),
-  status: v.union(v.literal("going"), v.literal("interested")),
-});
-
 const selfProfileValidator = v.union(
   v.object({
     status: ambassadorStatusValidator,
+    statusReason: v.union(v.string(), v.null()),
+    referralCode: v.union(v.string(), v.null()),
     track: v.union(
       v.literal("creator"),
       v.literal("community"),
@@ -125,7 +121,6 @@ const selfProfileValidator = v.union(
       v.literal("advocacy"),
       v.null(),
     ),
-    podName: v.union(v.string(), v.null()),
     location: v.union(v.string(), v.null()),
     school: v.union(v.string(), v.null()),
     dateOfBirth: v.union(v.string(), v.null()),
@@ -189,27 +184,35 @@ export const adminList = query({
     await requireAdmin(ctx);
     const search = args.search?.trim();
     const status = args.status;
-    const page = search
-      ? await ctx.db
-          .query("users")
-          .withSearchIndex("search_name", (q) => {
-            const searchFilter = q
-              .search("name", search)
-              .eq("role", "ambassador");
-            return searchFilter;
-          })
-          .paginate(args.paginationOpts)
-      : status && status !== "active"
+    const page =
+      search && /^AMB-[A-Z0-9]{8}$/.test(search.toUpperCase())
         ? await ctx.db
             .query("ambassadorProfiles")
-            .withIndex("by_status", (q) => q.eq("status", status))
-            .order("desc")
+            .withIndex("by_referralCode", (q) =>
+              q.eq("referralCode", search.toUpperCase()),
+            )
             .paginate(args.paginationOpts)
-        : await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-            .order("desc")
-            .paginate(args.paginationOpts);
+        : search
+          ? await ctx.db
+              .query("users")
+              .withSearchIndex("search_name", (q) => {
+                const searchFilter = q
+                  .search("name", search)
+                  .eq("role", "ambassador");
+                return searchFilter;
+              })
+              .paginate(args.paginationOpts)
+          : status !== undefined
+            ? await ctx.db
+                .query("ambassadorProfiles")
+                .withIndex("by_status", (q) => q.eq("status", status))
+                .order("desc")
+                .paginate(args.paginationOpts)
+            : await ctx.db
+                .query("users")
+                .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+                .order("desc")
+                .paginate(args.paginationOpts);
 
     return {
       ...page,
@@ -239,7 +242,6 @@ export const adminList = query({
               .order("desc")
               .first(),
           ]);
-          const pod = profile?.podId ? await ctx.db.get(profile.podId) : null;
 
           const row = {
             _id: user._id,
@@ -249,7 +251,7 @@ export const adminList = query({
             status: profile?.status ?? "active",
             track: profile?.track ?? null,
             location: profile?.location ?? null,
-            podName: pod?.name ?? null,
+            referralCode: profile?.referralCode ?? null,
             points: totals?.points ?? 0,
             missionsCompleted: totals?.missionsCompleted ?? 0,
             lastActivityAt: latestContribution?._creationTime ?? null,
@@ -273,7 +275,6 @@ export const adminGet = query({
       totals: v.union(totalsValidator, v.null()),
       contributions: v.array(contributionValidator),
       recognitions: v.array(recognitionValidator),
-      events: v.array(eventValidator),
     }),
     v.null(),
   ),
@@ -285,92 +286,73 @@ export const adminGet = query({
     const user = await ctx.db.get(id);
     if (user === null || user.role !== "ambassador") return null;
 
-    const [profile, totals, contributions, recognitions, rsvps] =
-      await Promise.all([
-        ctx.db
-          .query("ambassadorProfiles")
-          .withIndex("by_userId", (q) => q.eq("userId", id))
-          .first(),
-        ctx.db
-          .query("ambassadorTotals")
-          .withIndex("by_userId", (q) => q.eq("userId", id))
-          .first(),
-        ctx.db
-          .query("contributions")
-          .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", id))
-          .order("desc")
-          .take(20),
-        ctx.db
-          .query("recognitions")
-          .withIndex("by_userId", (q) => q.eq("userId", id))
-          .order("desc")
-          .take(20),
-        ctx.db
-          .query("eventRsvps")
-          .withIndex("by_userId", (q) => q.eq("userId", id))
-          .take(20),
-      ]);
+    const [profile, totals, contributions, recognitions] = await Promise.all([
+      ctx.db
+        .query("ambassadorProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", id))
+        .first(),
+      ctx.db
+        .query("ambassadorTotals")
+        .withIndex("by_userId", (q) => q.eq("userId", id))
+        .first(),
+      ctx.db
+        .query("contributions")
+        .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", id))
+        .order("desc")
+        .take(20),
+      ctx.db
+        .query("recognitions")
+        .withIndex("by_userId", (q) => q.eq("userId", id))
+        .order("desc")
+        .take(20),
+    ]);
 
-    const pod = profile?.podId ? await ctx.db.get(profile.podId) : null;
     const mappedProfile = profile
       ? {
           status: profile.status,
+          statusReason: profile.statusReason ?? null,
+          referralCode: profile.referralCode ?? null,
           track: profile.track ?? null,
           location: profile.location ?? null,
           school: profile.school ?? null,
           dateOfBirth: profile.dateOfBirth ?? null,
           bio: profile.bio ?? null,
-          podName: pod?.name ?? null,
           onboardedAt: profile.onboardedAt ?? null,
           safetyAcknowledgedAt: profile.safetyAcknowledgedAt ?? null,
         }
       : null;
 
-    const [mappedContributions, mappedRecognitions, mappedEvents] =
-      await Promise.all([
-        Promise.all(
-          contributions.map(async (contribution) => {
-            const mission = contribution.missionId
-              ? await ctx.db.get(contribution.missionId)
-              : null;
-            return {
-              _id: contribution._id,
-              _creationTime: contribution._creationTime,
-              title: contribution.title,
-              missionTitle: mission?.title ?? null,
-              kind: contribution.kind,
-              status: contribution.status,
-              quantity: contribution.quantity ?? null,
-              awardedPoints: contribution.awardedPoints ?? null,
-            };
-          }),
-        ),
-        Promise.all(
-          recognitions.map(async (recognition) => {
-            const admin = await ctx.db.get(recognition.awardedBy);
-            return {
-              _id: recognition._id,
-              _creationTime: recognition._creationTime,
-              kind: recognition.kind,
-              note: recognition.note,
-              awardedByName: admin?.name?.trim() || null,
-            };
-          }),
-        ),
-        Promise.all(
-          rsvps.map(async (rsvp) => {
-            const event = await ctx.db.get(rsvp.eventId);
-            return event
-              ? {
-                  _id: event._id,
-                  title: event.title,
-                  startsAt: event.startsAt,
-                  status: rsvp.status,
-                }
-              : null;
-          }),
-        ),
-      ]);
+    const [mappedContributions, mappedRecognitions] = await Promise.all([
+      Promise.all(
+        contributions.map(async (contribution) => {
+          const mission = contribution.missionId
+            ? await ctx.db.get(contribution.missionId)
+            : null;
+          return {
+            _id: contribution._id,
+            _creationTime: contribution._creationTime,
+            title: contribution.title,
+            missionTitle: mission?.title ?? null,
+            kind: contribution.kind,
+            status: contribution.status,
+            quantity: contribution.quantity ?? null,
+            awardedPoints: contribution.awardedPoints ?? null,
+          };
+        }),
+      ),
+      Promise.all(
+        recognitions.map(async (recognition) => {
+          const admin = await ctx.db.get(recognition.awardedBy);
+          return {
+            _id: recognition._id,
+            _creationTime: recognition._creationTime,
+            kind: recognition.kind,
+            note: recognition.note,
+            awardedByName: admin?.name?.trim() || null,
+          };
+        }),
+      ),
+    ]);
 
     return {
       _id: user._id,
@@ -393,7 +375,6 @@ export const adminGet = query({
         : null,
       contributions: mappedContributions,
       recognitions: mappedRecognitions,
-      events: mappedEvents.filter((event) => event !== null),
     };
   },
 });
@@ -462,7 +443,6 @@ export const getProfile = query({
           .order("asc")
           .first()
       : null;
-    const pod = profile?.podId ? await ctx.db.get(profile.podId) : null;
     const storedImage = caller.avatarStorageId
       ? await ctx.storage.getUrl(caller.avatarStorageId)
       : null;
@@ -476,8 +456,9 @@ export const getProfile = query({
       profile: profile
         ? {
             status: profile.status,
+            statusReason: profile.statusReason ?? null,
+            referralCode: profile.referralCode ?? null,
             track: profile.track ?? null,
-            podName: pod?.name ?? null,
             location: profile.location ?? null,
             school: profile.school ?? null,
             dateOfBirth: profile.dateOfBirth ?? null,
@@ -567,6 +548,7 @@ export const adminSetStatus = mutation({
   args: {
     ambassadorId: v.id("users"),
     status: ambassadorStatusValidator,
+    reason: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -576,17 +558,29 @@ export const adminSetStatus = mutation({
       throw new AuthError(404, "Ambassador not found.");
     }
 
+    const reason = args.reason?.trim();
+    if (args.status !== "active" && (!reason || reason.length < 10)) {
+      throw new Error("Add at least 10 characters explaining this status.");
+    }
+    if (reason && reason.length > 1000) {
+      throw new Error("Keep the status reason under 1,000 characters.");
+    }
+
     const profile = await ctx.db
       .query("ambassadorProfiles")
       .withIndex("by_userId", (q) => q.eq("userId", args.ambassadorId))
       .first();
 
     if (profile) {
-      await ctx.db.patch(profile._id, { status: args.status });
+      await ctx.db.patch(profile._id, {
+        status: args.status,
+        statusReason: args.status === "active" ? undefined : reason,
+      });
     } else {
       await ctx.db.insert("ambassadorProfiles", {
         userId: args.ambassadorId,
         status: args.status,
+        ...(args.status !== "active" ? { statusReason: reason } : {}),
         ...(args.status === "active" ? { onboardedAt: Date.now() } : {}),
       });
     }
