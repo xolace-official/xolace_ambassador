@@ -48,8 +48,13 @@ export function SetupPasswordPage() {
     setSubmitting(true);
     try {
       await setPassword({ newPassword: values.password });
+      // The action invalidates existing sessions, so this sign-out is what stops
+      // the stale token from bouncing the new password straight back here.
       await signOut();
-      window.location.href = "/login";
+      toast.success("Password saved", {
+        description: "Sign in with your new password to reach your dashboard.",
+      });
+      window.location.href = "/login?passwordSet=1";
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not set your password.",
@@ -74,6 +79,10 @@ export function SetupPasswordPage() {
             entering the ambassador portal.
           </p>
         </div>
+        <p className="rounded-xl border border-border/60 bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
+          Once you save, your temporary password stops working. Sign in with the
+          password you just chose and you will go straight to your dashboard.
+        </p>
         <div className="space-y-2">
           <label htmlFor="new-password" className="text-sm font-medium">
             New password
