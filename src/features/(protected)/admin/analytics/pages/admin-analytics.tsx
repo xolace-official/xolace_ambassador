@@ -1,9 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Plus } from "lucide-react";
 import { PageDescription } from "@/components/shared/page-description";
-import { Button } from "@/components/ui/button";
 import { api } from "../../../../../../convex/_generated/api";
 import { AnalyticsDemographics } from "../components/analytics-demographics";
 import { AnalyticsDonutChart } from "../components/analytics-donut-chart";
@@ -49,10 +47,6 @@ export default function AdminAnalytics() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageDescription page="adminAnalytics" className="max-w-2xl" />
-        <Button size="sm" className="gap-2">
-          <Plus aria-hidden="true" className="size-4" />
-          Create Report
-        </Button>
       </div>
 
       <AnalyticsTimelineChart
