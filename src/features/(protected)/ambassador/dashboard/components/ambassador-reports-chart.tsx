@@ -154,11 +154,11 @@ export function AmbassadorReportsChart({
                 tickFormatter={(v: string) =>
                   period === "weekly"
                     ? new Intl.DateTimeFormat("en-GB", {
-                      weekday: "short",
-                    }).format(new Date(`${v}T12:00:00Z`))
+                        weekday: "short",
+                      }).format(new Date(`${v}T12:00:00Z`))
                     : new Intl.DateTimeFormat("en-GB", {
-                      month: "short",
-                    }).format(new Date(`${v}-01T12:00:00Z`))
+                        month: "short",
+                      }).format(new Date(`${v}-01T12:00:00Z`))
                 }
               />
               <YAxis tick={{ fontSize: 9 }} stroke="var(--muted-foreground)" />
