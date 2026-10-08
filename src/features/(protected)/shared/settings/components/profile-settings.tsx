@@ -40,14 +40,19 @@ export function ProfileSettings({
               uploading={uploadingAvatar}
               onChange={onAvatarChange}
             />
-            <TextField
-              form={form}
-              name="name"
-              label="Display name"
-              placeholder="Your name…"
-              defaultValue={settings.name ?? ""}
-              autoComplete="name"
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="settings-name">Full name</Label>
+              <Input
+                id="settings-name"
+                value={settings.name ?? ""}
+                disabled
+                readOnly
+              />
+              <p className="text-xs text-muted-foreground">
+                This is the name on your application. Contact an admin if it
+                needs to change.
+              </p>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="settings-email">Email address</Label>
               <Input
@@ -122,10 +127,8 @@ export function ProfileSettings({
       ) : (
         <div className="space-y-5">
           <SettingRow
-            label="Display name"
+            label="Full name"
             value={settings.name || "Not provided"}
-            editable
-            onEdit={() => setEditing(true)}
           />
           <SettingRow
             label="Email address"
