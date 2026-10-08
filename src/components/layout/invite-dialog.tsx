@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "../../../convex/_generated/api";
 
 // An action, not a destination, so it gets no route. Promote to
 // `/<role>/<uuid>/invites` once invites have history and resend state.
@@ -32,6 +34,7 @@ export function InviteDialog({
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const user = useQuery(api.users.current);
   const isControlled = open !== undefined;
   const isOpen = open ?? internalOpen;
 
@@ -102,8 +105,11 @@ export function InviteDialog({
             type="button"
             disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
             onClick={() => {
-              const body =
-                "Hi,\n\nWe would love to invite you to join the Xolace Ambassadors program. Reply to this email and we will help you get started.\n\nLearn more at xolaceinc.com.";
+              const referralCode = user?.referralCode;
+              const applicationUrl = referralCode
+                ? `${window.location.origin}/?ref=${encodeURIComponent(referralCode)}#apply`
+                : `${window.location.origin}/#apply`;
+              const body = `Hi,\n\nWe would love to invite you to join the Xolace Ambassadors program. Complete your application here:\n${applicationUrl}\n\nWe look forward to hearing from you.`;
               window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent("Xolace Ambassador Program")}&body=${encodeURIComponent(body)}`;
               handleOpenChange(false);
             }}
