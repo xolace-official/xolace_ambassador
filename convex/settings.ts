@@ -173,7 +173,6 @@ export const acknowledgeSafety = mutation({
 
 export const updateSettings = mutation({
   args: {
-    name: v.string(),
     location: v.optional(v.string()),
     school: v.optional(v.string()),
     dateOfBirth: v.optional(v.string()),
@@ -188,16 +187,9 @@ export const updateSettings = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireRole(ctx);
-    const name = args.name.trim();
 
-    if (name.length < 2) {
-      throw new Error("Enter a name with at least 2 characters.");
-    }
-    if (name.length > 120) {
-      throw new Error("Keep your name under 120 characters.");
-    }
-
-    await ctx.db.patch(user._id, { name });
+    // `name` is deliberately not writable here: an ambassador's display name is
+    // the name on their application and must not drift from it.
 
     if (user.role !== "ambassador") {
       return null;
