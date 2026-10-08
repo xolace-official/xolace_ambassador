@@ -34,6 +34,10 @@ export function ProgramSettings({
               value={settings.program?.track || "Not assigned"}
             />
             <SettingRow
+              label="Referral code"
+              value={settings.program?.referralCode || "Not generated"}
+            />
+            <SettingRow
               label="Pod"
               value={settings.program?.podName || "Not assigned"}
             />
