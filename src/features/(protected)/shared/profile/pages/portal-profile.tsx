@@ -39,7 +39,8 @@ export function PortalProfile({
   if (profile === undefined) return <ProfileSkeleton />;
 
   const details = profile.profile;
-  const displayName = profile.name || "Your profile";
+  const displayName =
+    profile.name || (profile.role === "admin" ? "Admin" : "Ambassador");
   const completionFields =
     profile.role === "ambassador"
       ? [
