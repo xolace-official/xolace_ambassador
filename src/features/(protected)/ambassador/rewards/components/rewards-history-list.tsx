@@ -1,8 +1,8 @@
 import { Activity, Gift, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
