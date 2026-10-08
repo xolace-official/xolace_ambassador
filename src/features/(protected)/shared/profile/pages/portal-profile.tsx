@@ -7,6 +7,7 @@ import {
   GraduationCap,
   MapPin,
   Pencil,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,13 @@ export function PortalProfile({
                 label="Joined Xolace"
                 value={dateFormatter.format(profile.joinedAt)}
               />
+              {profile.role === "ambassador" ? (
+                <ProfileDetail
+                  icon={Share2}
+                  label="Referral code"
+                  value={profile.profile?.referralCode || "Not generated"}
+                />
+              ) : null}
               {details?.dateOfBirth ? (
                 <ProfileDetail
                   icon={CalendarDays}
