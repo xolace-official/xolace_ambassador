@@ -58,6 +58,11 @@ export function LoginForm() {
       return;
     }
 
+    if (user.passwordSetupRequired) {
+      router.replace("/setup-password");
+      return;
+    }
+
     router.replace(`/${user.role}/${user._id}/dashboard`);
   }, [user, router]);
 
