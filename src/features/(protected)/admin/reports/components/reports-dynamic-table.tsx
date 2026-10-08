@@ -1,22 +1,25 @@
-import { useState } from "react";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ReportsActionMenu } from "./reports-action-menu";
 
 const numberFormat = new Intl.NumberFormat("en-GB");
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-interface ColumnDef {
+export interface ColumnDef<T> {
   key: string;
   label: string;
-  render: (row: any) => React.ReactNode;
+  render: (row: T) => ReactNode;
   align?: "left" | "right";
 }
 
-interface ReportsDynamicTableProps {
-  columns: ColumnDef[];
-  rows: any[];
-  rowId: (row: any) => string;
+export interface ReportsDynamicTableProps<T> {
+  columns: ColumnDef<T>[];
+  rows: T[];
+  rowId: (row: T) => string;
+  page: number;
+  onPageChange: (page: number) => void;
+  onViewDetails: (row: T) => void;
+  onExportRow: (row: T) => void;
   pageSize?: number;
 }
 
@@ -31,43 +34,25 @@ const statusStyles: Record<string, string> = {
   suspended: "bg-destructive/10 text-destructive",
   draft: "bg-muted text-muted-foreground",
   closed: "bg-muted-foreground/20 text-muted-foreground",
+  new: "bg-primary/10 text-primary",
+  reviewing: "bg-warning/10 text-warning",
+  accepted: "bg-success/10 text-success",
 };
 
-export function ReportsDynamicTable({
+export function ReportsDynamicTable<T>({
   columns,
   rows,
   rowId,
+  page,
+  onPageChange,
+  onViewDetails,
+  onExportRow,
   pageSize = 8,
-}: ReportsDynamicTableProps) {
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
+}: ReportsDynamicTableProps<T>) {
   const totalPages = Math.ceil(rows.length / pageSize);
-  const start = (page - 1) * pageSize;
+  const currentPage = Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+  const start = (currentPage - 1) * pageSize;
   const pageRows = rows.slice(start, start + pageSize);
-
-  const allSelected =
-    pageRows.length > 0 && pageRows.every((r) => selected.has(rowId(r)));
-
-  function toggleAll() {
-    const next = new Set(selected);
-    if (allSelected) {
-      for (const r of pageRows) next.delete(rowId(r));
-    } else {
-      for (const r of pageRows) next.add(rowId(r));
-    }
-    setSelected(next);
-  }
-
-  function toggleRow(id: string) {
-    const next = new Set(selected);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelected(next);
-  }
 
   return (
     <Card className="overflow-hidden border-border">
@@ -75,15 +60,6 @@ export function ReportsDynamicTable({
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left">
-                <input
-                  type="checkbox"
-                  aria-label="Select all"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                  className="size-4 rounded border-input accent-primary"
-                />
-              </th>
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -94,67 +70,79 @@ export function ReportsDynamicTable({
                   {col.label}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground print:hidden">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {pageRows.map((row, rowIndex) => (
-              <tr
-                key={rowId(row)}
-                className={`hover:bg-muted/20 transition-colors ${rowIndex === pageRows.length - 1 ? "border-b border-border" : ""}`}
-              >
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    aria-label="Select row"
-                    checked={selected.has(rowId(row))}
-                    onChange={() => toggleRow(rowId(row))}
-                    className="size-4 rounded border-input accent-primary"
-                  />
-                </td>
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className={`px-4 py-3 text-sm text-foreground ${
-                      col.align === "right" ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {col.render(row)}
-                  </td>
-                ))}
-                <td className="px-4 py-3 text-right">
-                  <ReportsActionMenu
-                    actions={[
-                      { label: "View details", onClick: () => {} },
-                      { label: "Export row", onClick: () => {} },
-                    ]}
-                  />
+            {pageRows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + 1}
+                  className="px-4 py-12 text-center text-sm text-muted-foreground"
+                >
+                  No data found matching the selected filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              pageRows.map((row, rowIndex) => (
+                <tr
+                  key={rowId(row)}
+                  className={`hover:bg-muted/20 transition-colors ${
+                    rowIndex === pageRows.length - 1
+                      ? "border-b border-border"
+                      : ""
+                  }`}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={`px-4 py-3 text-sm text-foreground ${
+                        col.align === "right" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {col.render(row)}
+                    </td>
+                  ))}
+                  <td className="px-4 py-3 text-right print:hidden">
+                    <ReportsActionMenu
+                      actions={[
+                        {
+                          label: "View details",
+                          onClick: () => onViewDetails(row),
+                        },
+                        {
+                          label: "Export row",
+                          onClick: () => onExportRow(row),
+                        },
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-end px-4 py-2">
+      <div className="flex items-center justify-end px-4 py-2 print:hidden">
         <div className="flex items-center gap-2">
           <button
             type="button"
             className="rounded-md px-3 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-50"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
+            disabled={currentPage <= 1}
+            onClick={() => onPageChange(currentPage - 1)}
           >
             Previous
           </button>
           <span className="text-xs text-muted-foreground">
-            {page} / {totalPages}
+            {currentPage} / {totalPages || 1}
           </span>
           <button
             type="button"
             className="rounded-md px-3 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-50"
-            disabled={page >= totalPages}
-            onClick={() => setPage(page + 1)}
+            disabled={currentPage >= totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
           >
             Next
           </button>
