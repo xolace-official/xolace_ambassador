@@ -9,6 +9,7 @@ export const ROLE_PERMISSIONS: Record<PortalRole, readonly string[]> = {
   admin: [
     "overview",
     "manageAmbassadors",
+    "meetings",
     "missions",
     "analytics",
     "resources",
