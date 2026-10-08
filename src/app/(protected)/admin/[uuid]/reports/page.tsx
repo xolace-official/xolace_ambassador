@@ -9,6 +9,11 @@ export const metadata: Metadata = portalMetadata({
     "Program health, ambassador performance, mission outcomes, and exportable data.",
 });
 
-export default function Page() {
-  return <AdminReports />;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ uuid: string }>;
+}) {
+  const { uuid } = await params;
+  return <AdminReports uuid={uuid} />;
 }
