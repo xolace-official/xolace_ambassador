@@ -56,7 +56,7 @@ export default function AdminResourceDetail({
 
   const downloadUrl = useQuery(
     api.resources.getDownloadUrl,
-    resource?.storageId ? { storageId: resource.storageId } : "skip",
+    resource?.storageId ? { resourceId } : "skip",
   );
 
   if (resource === undefined) {
