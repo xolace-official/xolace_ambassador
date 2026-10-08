@@ -81,10 +81,10 @@ function getCurrentPeriodData(data: TimelinePoint[], period: TimelinePeriod) {
   const length =
     period === "monthly"
       ? new Date(
-        today.getUTCFullYear(),
-        today.getUTCMonth() + 1,
-        0,
-      ).getUTCDate()
+          today.getUTCFullYear(),
+          today.getUTCMonth() + 1,
+          0,
+        ).getUTCDate()
       : 7;
 
   return Array.from({ length }, (_, index) => {
@@ -138,21 +138,6 @@ export function AnalyticsTimelineChart({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex h-8 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="size-3 rounded accent-primary"
-              />
-              Aggregate
-            </label>
-            <label className="flex h-8 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                className="size-3 rounded accent-primary"
-              />
-              Individual
-            </label>
             <Select
               value={period}
               onValueChange={(value) => setPeriod(value as TimelinePeriod)}
@@ -189,9 +174,9 @@ export function AnalyticsTimelineChart({
                   return period === "monthly"
                     ? v.slice(-2).replace(/^0/, "")
                     : new Intl.DateTimeFormat("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                    }).format(new Date(`${v}T00:00:00Z`));
+                        day: "numeric",
+                        month: "short",
+                      }).format(new Date(`${v}T00:00:00Z`));
                 }}
               />
               <YAxis
