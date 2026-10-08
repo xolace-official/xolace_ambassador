@@ -14,6 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "https://res.cloudinary.com/dnucdwa71/image/upload/v1780659221/favicon_rfz0wq.png",
+  },
   title: "Xolace Ambassadors | Help Build a World Where People Feel Heard",
   description:
     "Join Xolace Ambassadors on campus and in communities to champion emotional wellbeing, destigmatize mental health, and create safe spaces for authentic human connection.",
