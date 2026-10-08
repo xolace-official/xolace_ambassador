@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import { XolaceLogo } from "@/components/layout/xolace-logo";
@@ -99,7 +99,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/60"
         >
           <p suppressHydrationWarning>
-            Â© {currentYear} Xolace. All rights reserved.
+            © {currentYear} Xolace. All rights reserved.
           </p>
           {/* <div className="flex items-center gap-1">
             Made with
