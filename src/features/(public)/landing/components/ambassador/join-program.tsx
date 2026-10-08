@@ -71,7 +71,7 @@ const applicationSchema = z.object({
     ["creator", "community", "growth", "creative", "production", "advocacy"],
     { error: "Choose a track." },
   ),
-  meetingSlotId: z.string().min(1, "Choose an available meeting time."),
+  meetingSlotId: z.string(),
   referralCode: z.string().trim().max(20, "Keep the referral code short."),
   whyXolace: z
     .string()
@@ -142,6 +142,8 @@ export default function JoinProgramForm() {
     handleSubmit,
     trigger,
     setValue,
+    setError: setFieldError,
+    clearErrors,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ApplicationForm>({
@@ -208,7 +210,7 @@ export default function JoinProgramForm() {
     const fieldsToValidate: (keyof ApplicationForm)[][] = [
       ["name", "email", "dateOfBirth", "location"],
       [],
-      ["track", "meetingSlotId", "whyXolace"],
+      ["track", "whyXolace"],
     ];
     const fields = fieldsToValidate[currentStep];
     if (fields.length > 0) {
@@ -226,8 +228,22 @@ export default function JoinProgramForm() {
         return;
       }
     }
+    if (currentStep === 2 && !validateMeetingSlot()) return;
     setError(null);
     setCurrentStep((s) => Math.min(s + 1, 2));
+  }
+
+  // Only required while slots exist; applicants are never blocked when none are
+  // available.
+  function validateMeetingSlot() {
+    if (meetingSlots && meetingSlots.length > 0 && !watch("meetingSlotId")) {
+      setFieldError("meetingSlotId", {
+        message: "Choose one of the available meeting times.",
+      });
+      return false;
+    }
+    clearErrors("meetingSlotId");
+    return true;
   }
 
   function handleStepBack() {
@@ -250,6 +266,11 @@ export default function JoinProgramForm() {
     if (emailExists) {
       setError("An application with this email is already on file.");
       setCurrentStep(0);
+      return;
+    }
+    if (meetingSlots && meetingSlots.length > 0 && !values.meetingSlotId) {
+      setError("Choose one of the available meeting times.");
+      setCurrentStep(2);
       return;
     }
 
@@ -286,7 +307,7 @@ export default function JoinProgramForm() {
         school: values.schoolOrCommunity || undefined,
         socials: socialsArray,
         trackInterest: values.track,
-        meetingSlotId: values.meetingSlotId,
+        meetingSlotId: values.meetingSlotId || undefined,
         whyXolace: values.whyXolace,
         referralCode: values.referralCode || undefined,
         image: imageStorageId as never,
@@ -732,35 +753,53 @@ export default function JoinProgramForm() {
                     >
                       Preferred meeting time
                     </label>
-                    <Controller
-                      control={control}
-                      name="meetingSlotId"
-                      render={({ field }) => (
-                        <Select
-                          value={field.value || undefined}
-                          onValueChange={field.onChange}
-                          disabled={!meetingSlots}
-                        >
-                          <SelectTrigger id="meeting-slot" className="w-full">
-                            <SelectValue placeholder="Choose an available time…" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {meetingSlots?.map((slot) => (
-                              <SelectItem key={slot.id} value={slot.id}>
-                                {slot.label} UTC
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <FieldError
-                      id="meeting-slot-error"
-                      message={errors.meetingSlotId?.message}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Times are shown in UTC.
-                    </p>
+                    {meetingSlots && meetingSlots.length === 0 ? (
+                      <output className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
+                        <Info
+                          aria-hidden="true"
+                          className="mt-0.5 size-4 shrink-0"
+                        />
+                        <span>
+                          No meeting times are available right now. Please check
+                          back later to book a slot.
+                        </span>
+                      </output>
+                    ) : (
+                      <>
+                        <Controller
+                          control={control}
+                          name="meetingSlotId"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value || undefined}
+                              onValueChange={field.onChange}
+                              disabled={!meetingSlots}
+                            >
+                              <SelectTrigger
+                                id="meeting-slot"
+                                className="w-full"
+                              >
+                                <SelectValue placeholder="Choose an available time…" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {meetingSlots?.map((slot) => (
+                                  <SelectItem key={slot.id} value={slot.id}>
+                                    {slot.label} UTC
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        <FieldError
+                          id="meeting-slot-error"
+                          message={errors.meetingSlotId?.message}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Times are shown in UTC.
+                        </p>
+                      </>
+                    )}
                   </div>
                   <Field
                     label="Why Xolace?"
