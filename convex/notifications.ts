@@ -118,6 +118,37 @@ export const createForAmbassadors = internalMutation({
   },
 });
 
+export const createForAdmins = internalMutation({
+  args: {
+    kind: notificationKind,
+    title: v.string(),
+    description: v.string(),
+    href: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admins = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "admin"))
+      .take(100);
+
+    for (const admin of admins) {
+      if (
+        admin.notificationPreferences &&
+        !admin.notificationPreferences[args.kind]
+      ) {
+        continue;
+      }
+      await insertNotification(ctx, {
+        recipientId: admin._id,
+        ...args,
+        href: `/admin/${admin._id}${args.href}`,
+      });
+    }
+    return null;
+  },
+});
+
 async function insertNotification(
   ctx: MutationCtx,
   args: {
