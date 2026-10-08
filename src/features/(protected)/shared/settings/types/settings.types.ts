@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const settingsSchema = z.object({
-  name: z.string().trim().min(2, "Enter a name with at least 2 characters."),
   location: z.string(),
   school: z.string(),
   dateOfBirth: z.string(),
@@ -47,7 +46,6 @@ export type Settings = {
 };
 
 export const emptyValues: SettingsFormValues = {
-  name: "",
   location: "",
   school: "",
   dateOfBirth: "",
