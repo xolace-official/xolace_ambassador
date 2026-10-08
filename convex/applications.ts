@@ -752,7 +752,10 @@ export const adminAccept = action({
       throw new Error("This application has already been accepted.");
     }
 
-    const temporaryPassword = `Xolace-${crypto.randomUUID().slice(0, 12)}`;
+    // Strip the uuid separators: it is emailed to a person to type, and a hyphen
+    // in the middle is easy to misread as a letter or dropped entirely. Still
+    // random per application, so it is never valid for another account.
+    const temporaryPassword = `Xolace-${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}`;
     try {
       await ctx.runAction(api.auth.signIn, {
         provider: "password",
