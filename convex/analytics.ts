@@ -59,15 +59,17 @@ export const getAnalytics = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const [contributions, ambassadors, missions, profiles] = await Promise.all([
-      ctx.db.query("contributions").collect(),
-      ctx.db
-        .query("users")
-        .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-        .collect(),
-      ctx.db.query("missions").collect(),
-      ctx.db.query("ambassadorProfiles").collect(),
-    ]);
+    const [contributions, ambassadors, missions, profiles, totals] =
+      await Promise.all([
+        ctx.db.query("contributions").take(5000),
+        ctx.db
+          .query("users")
+          .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+          .take(500),
+        ctx.db.query("missions").take(1000),
+        ctx.db.query("ambassadorProfiles").take(500),
+        ctx.db.query("ambassadorTotals").take(500),
+      ]);
 
     const approved = contributions.filter((c) => c.status === "approved");
     const pending = contributions.filter((c) => c.status === "pending");
@@ -129,13 +131,12 @@ export const getAnalytics = query({
     }));
 
     const levelMap = new Map<string, number>();
+    const totalsByUserId = new Map(
+      totals.map((total) => [total.userId, total]),
+    );
     for (const a of ambassadors) {
-      const profile = profiles.find((p) => p.userId === a._id);
-      const totals = await ctx.db
-        .query("ambassadorTotals")
-        .withIndex("by_userId", (q) => q.eq("userId", a._id))
-        .first();
-      const level = totals?.levelRank ?? 0;
+      const ambassadorTotals = totalsByUserId.get(a._id);
+      const level = ambassadorTotals?.levelRank ?? 1;
       const levelName = `Level ${level}`;
       levelMap.set(levelName, (levelMap.get(levelName) ?? 0) + 1);
     }
@@ -175,7 +176,12 @@ export const getAnalytics = query({
         totalContributions: approved.length,
         totalPeopleReached,
         pendingReviews: pending.length,
-        totalAmbassadors: ambassadors.length,
+        totalAmbassadors: ambassadors.filter((ambassador) => {
+          const profile = profiles.find(
+            (item) => item.userId === ambassador._id,
+          );
+          return profile?.status !== "suspended";
+        }).length,
         activeMissions: missions.filter((m) => m.status === "published").length,
       },
       timeline,
