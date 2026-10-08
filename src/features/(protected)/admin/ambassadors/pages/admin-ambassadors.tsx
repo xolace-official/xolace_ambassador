@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, usePaginatedQuery } from "convex/react";
+import {
+  useAction,
+  useMutation,
+  usePaginatedQuery,
+  useQuery,
+} from "convex/react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,6 +24,14 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +55,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
@@ -53,17 +67,12 @@ const parsePeopleTab = parseAsStringLiteral(PEOPLE_TABS)
 const parseSearch = parseAsString.withDefault("").withOptions({
   clearOnDefault: true,
 });
-const APPLICATION_STATUSES = [
-  "all",
-  "new",
-  "reviewing",
-  "accepted",
-  "rejected",
-] as const;
+const APPLICATION_STATUSES = ["all", "new", "reviewing", "rejected"] as const;
 const AMBASSADOR_STATUSES = ["all", "active", "paused", "suspended"] as const;
 
 export default function AdminAmbassadors({ uuid }: { uuid: string }) {
   const [tab, setTab] = useQueryState("view", parsePeopleTab);
+  const pendingApplications = useQuery(api.applications.adminPendingCount);
 
   return (
     <div className="flex flex-col gap-2">
@@ -84,6 +93,11 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
             key={value}
             type="button"
             aria-current={tab === value ? "page" : undefined}
+            aria-label={
+              value === "applications" && pendingApplications
+                ? `Applications, ${pendingApplications} unprocessed`
+                : undefined
+            }
             onClick={() => void setTab(value)}
             className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               tab === value
@@ -91,7 +105,17 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {value === "applications" ? "Applications" : "Ambassadors"}
+            <span>
+              {value === "applications" ? "Applications" : "Ambassadors"}
+            </span>
+            {value === "applications" && pendingApplications ? (
+              <Badge
+                variant="destructive"
+                aria-label={`${pendingApplications} unprocessed`}
+              >
+                {pendingApplications}
+              </Badge>
+            ) : null}
           </button>
         ))}
       </nav>
@@ -106,11 +130,19 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
 }
 
 function ApplicationsTable({ uuid }: { uuid: string }) {
+  const declineApplication = useAction(api.applications.adminDecline);
+  const [declineTarget, setDeclineTarget] = useState<{
+    id: Id<"applications">;
+    name: string;
+    email: string;
+  } | null>(null);
+  const [declineNote, setDeclineNote] = useState("");
+  const [declining, setDeclining] = useState(false);
   const [statusFilter, setStatusFilter] = useQueryState(
     "applicationStatus",
     parseAsStringLiteral(APPLICATION_STATUSES)
-      .withDefault("all")
-      .withOptions({ clearOnDefault: true }),
+      .withDefault("new")
+      .withOptions({ clearOnDefault: false }),
   );
   const { search, searchInput, setSearchInput } = usePeopleSearch();
   const { results, status, loadMore } = usePaginatedQuery(
@@ -128,20 +160,18 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
     results.length === 0 &&
     status === "Exhausted" &&
     !search &&
-    statusFilter === "all"
+    statusFilter === "new"
   ) {
     return (
       <EmptyState
         icon={UserRound}
         title={
-          search || statusFilter !== "all"
-            ? "No applications found"
-            : "No applications yet"
+          search ? "No applications found" : "No submitted applications yet"
         }
         description={
-          search || statusFilter !== "all"
+          search
             ? "Try another search or status filter."
-            : "Website applications will appear here when someone applies to join the ambassador program."
+            : "New website applications will appear here when someone applies to join the ambassador program."
         }
       />
     );
@@ -180,7 +210,6 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="new">Submitted</SelectItem>
                 <SelectItem value="reviewing">Reviewing</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="rejected">Declined</SelectItem>
               </SelectContent>
             </Select>
@@ -195,6 +224,9 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
           <TableRow>
             <TableHead>Applicant</TableHead>
             <TableHead className="hidden md:table-cell">Track</TableHead>
+            <TableHead className="hidden lg:table-cell">
+              Referral code
+            </TableHead>
             <TableHead className="hidden lg:table-cell">Location</TableHead>
             <TableHead className="hidden sm:table-cell">Submitted</TableHead>
             <TableHead>Status</TableHead>
@@ -218,6 +250,9 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
               <TableCell className="hidden md:table-cell">
                 {MISSION_CATEGORY_LABELS[application.trackInterest]}
               </TableCell>
+              <TableCell className="hidden max-w-36 truncate lg:table-cell">
+                {application.referralCode ?? "—"}
+              </TableCell>
               <TableCell className="hidden max-w-40 truncate lg:table-cell">
                 {application.location}
               </TableCell>
@@ -228,21 +263,45 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
                 <ApplicationStatus status={application.status} />
               </TableCell>
               <TableCell className="text-right">
-                <Button asChild size="sm" variant="ghost" className="min-h-11">
-                  <Link
-                    href={`/admin/${uuid}/ambassadors/applications/${application._id}?view=applications`}
-                    aria-label={`View ${application.name}'s application`}
+                <div className="flex justify-end gap-1">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-11"
                   >
-                    View
-                  </Link>
-                </Button>
+                    <Link
+                      href={`/admin/${uuid}/ambassadors/applications/${application._id}?view=applications`}
+                      aria-label={`View ${application.name}'s application`}
+                    >
+                      View
+                    </Link>
+                  </Button>
+                  {application.status !== "rejected" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-11 text-destructive hover:text-destructive"
+                      onClick={() =>
+                        setDeclineTarget({
+                          id: application._id,
+                          name: application.name,
+                          email: application.email,
+                        })
+                      }
+                    >
+                      Decline
+                    </Button>
+                  ) : null}
+                </div>
               </TableCell>
             </TableRow>
           ))}
           {pagination.visibleRows.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={7}
                 className="text-center text-muted-foreground"
               >
                 No applications match these filters.
@@ -252,6 +311,79 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
         </TableBody>
       </Table>
       <TablePagination {...pagination.controls} />
+      <Dialog
+        open={declineTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !declining) {
+            setDeclineTarget(null);
+            setDeclineNote("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline this application?</DialogTitle>
+            <DialogDescription>
+              Add the feedback that will be emailed to {declineTarget?.email}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label
+              htmlFor="applications-decline-note"
+              className="text-sm font-medium"
+            >
+              Feedback
+            </label>
+            <Textarea
+              id="applications-decline-note"
+              value={declineNote}
+              onChange={(event) => setDeclineNote(event.target.value)}
+              placeholder="Share a clear and respectful reason…"
+              rows={5}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={declining}
+              onClick={() => setDeclineTarget(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={
+                declining || declineNote.trim().length < 10 || !declineTarget
+              }
+              onClick={() => {
+                if (!declineTarget) return;
+                setDeclining(true);
+                void declineApplication({
+                  applicationId: declineTarget.id,
+                  note: declineNote,
+                })
+                  .then(() => {
+                    toast.success("Decline message sent.");
+                    setDeclineTarget(null);
+                    setDeclineNote("");
+                  })
+                  .catch((error: unknown) => {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Could not decline this application.",
+                    );
+                  })
+                  .finally(() => setDeclining(false));
+              }}
+            >
+              {declining ? "Sending…" : "Confirm decline"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -345,7 +477,9 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
           <TableRow>
             <TableHead>Ambassador</TableHead>
             <TableHead className="hidden md:table-cell">Track</TableHead>
-            <TableHead className="hidden lg:table-cell">Pod</TableHead>
+            <TableHead className="hidden lg:table-cell">
+              Referral code
+            </TableHead>
             <TableHead>Points</TableHead>
             <TableHead className="hidden sm:table-cell">Missions</TableHead>
             <TableHead className="hidden xl:table-cell">
@@ -375,7 +509,7 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
                   : "—"}
               </TableCell>
               <TableCell className="hidden max-w-36 truncate lg:table-cell">
-                {ambassador.podName ?? "—"}
+                {ambassador.referralCode ?? "—"}
               </TableCell>
               <TableCell className="tabular-nums">
                 {numberFormat.format(ambassador.points)}
@@ -430,17 +564,17 @@ function AmbassadorActions({
   href: string;
 }) {
   const setStatus = useMutation(api.ambassadors.adminSetStatus);
+  const [pendingStatus, setPendingStatus] = useState<
+    "paused" | "suspended" | null
+  >(null);
+  const [statusReason, setStatusReason] = useState("");
 
-  async function updateStatus(nextStatus: "active" | "paused" | "suspended") {
-    if (
-      nextStatus === "suspended" &&
-      !window.confirm(`Suspend ${name}’s ambassador access?`)
-    ) {
-      return;
-    }
-
+  async function updateStatus(
+    nextStatus: "active" | "paused" | "suspended",
+    reason?: string,
+  ) {
     try {
-      await setStatus({ ambassadorId, status: nextStatus });
+      await setStatus({ ambassadorId, status: nextStatus, reason });
       toast.success(
         nextStatus === "active"
           ? `${name}’s account is active.`
@@ -458,42 +592,103 @@ function AmbassadorActions({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="size-10"
-          aria-label={`Actions for ${name}`}
-        >
-          <MoreHorizontal aria-hidden="true" className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="bottom" collisionPadding={4}>
-        <DropdownMenuItem asChild>
-          <Link href={href}>View overview</Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {status === "active" ? (
-          <>
-            <DropdownMenuItem onSelect={() => void updateStatus("paused")}>
-              Pause account
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => void updateStatus("suspended")}
-              className="text-destructive focus:text-destructive"
-            >
-              Suspend access
-            </DropdownMenuItem>
-          </>
-        ) : (
-          <DropdownMenuItem onSelect={() => void updateStatus("active")}>
-            Reactivate account
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-10"
+            aria-label={`Actions for ${name}`}
+          >
+            <MoreHorizontal aria-hidden="true" className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="bottom" collisionPadding={4}>
+          <DropdownMenuItem asChild>
+            <Link href={href}>View overview</Link>
           </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator />
+          {status === "active" ? (
+            <>
+              <DropdownMenuItem onSelect={() => setPendingStatus("paused")}>
+                Pause account
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setPendingStatus("suspended")}
+                className="text-destructive focus:text-destructive"
+              >
+                Suspend access
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem onSelect={() => void updateStatus("active")}>
+              Reactivate account
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog
+        open={pendingStatus !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatus(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {pendingStatus === "suspended"
+                ? "Suspend ambassador access?"
+                : "Pause ambassador account?"}
+            </DialogTitle>
+            <DialogDescription>
+              {name} will not be able to access the ambassador dashboard until
+              the account is reactivated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label htmlFor={`status-reason-${ambassadorId}`} className="text-sm font-medium">
+              Reason
+            </label>
+            <Textarea
+              id={`status-reason-${ambassadorId}`}
+              value={statusReason}
+              onChange={(event) => setStatusReason(event.target.value)}
+              placeholder="Explain why access is being paused or suspended…"
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setPendingStatus(null);
+                setStatusReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={
+                pendingStatus === "suspended" ? "destructive" : "default"
+              }
+              onClick={() => {
+                if (pendingStatus === null) return;
+                void updateStatus(pendingStatus, statusReason);
+                setPendingStatus(null);
+                setStatusReason("");
+              }}
+              disabled={statusReason.trim().length < 10}
+            >
+              Confirm {pendingStatus === "suspended" ? "suspension" : "pause"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -503,7 +698,7 @@ function ApplicationStatus({
   status: "new" | "reviewing" | "accepted" | "rejected";
 }) {
   const label = {
-    new: "Submitted",
+    new: "New",
     reviewing: "Reviewing",
     accepted: "Accepted",
     rejected: "Declined",
@@ -516,7 +711,11 @@ function ApplicationStatus({
         ? "bg-muted text-muted-foreground"
         : "bg-warning text-warning-foreground";
 
-  return <Badge className={`capitalize ${className}`}>{label}</Badge>;
+  return (
+    <Badge className={`min-w-20 justify-center capitalize ${className}`}>
+      {label}
+    </Badge>
+  );
 }
 
 function AmbassadorStatus({
@@ -531,26 +730,30 @@ function AmbassadorStatus({
         ? "bg-destructive text-destructive-foreground"
         : "bg-warning text-warning-foreground";
 
-  return <Badge className={`capitalize ${className}`}>{status}</Badge>;
+  return (
+    <Badge className={`min-w-20 justify-center capitalize ${className}`}>
+      {status}
+    </Badge>
+  );
 }
 
 function usePeopleSearch() {
   const [search, setSearch] = useQueryState("search", parseSearch);
   const [searchInput, setSearchInput] = useState(search);
-  const localSearch = useRef<string | null>(null);
+  const pendingSearch = useRef<string | null>(null);
 
   useEffect(() => {
-    if (localSearch.current === search) {
-      localSearch.current = null;
+    if (pendingSearch.current === search) {
+      pendingSearch.current = null;
       return;
     }
     setSearchInput(search);
   }, [search]);
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      const nextSearch = searchInput.trim() || null;
-      localSearch.current = nextSearch;
-      void setSearch(nextSearch);
+      const nextSearch = searchInput.trim();
+      pendingSearch.current = nextSearch;
+      void setSearch(nextSearch || null);
     }, 300);
     return () => window.clearTimeout(timeout);
   }, [searchInput, setSearch]);
@@ -577,7 +780,7 @@ function TableControls({
       <Input
         aria-label="Search by name"
         className="h-10 pl-9"
-        placeholder="Search by name…"
+        placeholder="Search by name or referral code…"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
       />
