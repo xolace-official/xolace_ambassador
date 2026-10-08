@@ -186,7 +186,7 @@ const NavBar = () => {
                 asChild
                 className="w-full py-4 rounded-full font-extrabold text-base shadow-xl shadow-primary/25"
               >
-                <Link href="/login" onClick={closeMenu}>
+                <Link href="/login?from=landing" onClick={closeMenu}>
                   Visit Ambassador Portal
                 </Link>
               </Button>
