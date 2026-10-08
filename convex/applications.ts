@@ -32,6 +32,9 @@ const applicationStatusValidator = v.union(
 
 const meetingSlotIdValidator = v.string();
 
+const EMAIL_LOGO_URL =
+  "https://res.cloudinary.com/dnucdwa71/image/upload/v1780657998/main-logo_ip0ag6.png";
+
 function getMeetingSlot(id: string) {
   return DEFAULT_MEETING_SLOTS.find((slot) => slot.id === id);
 }
@@ -479,9 +482,8 @@ export const sendApplicationReceived = internalAction({
     if (details === null) return null;
     const email = applicationReceivedEmail({
       name: details.name,
-      scheduleUrl: process.env.MEETING_SCHEDULING_URL ?? "",
       selectedSlot: details.meetingSlotLabel,
-      logoUrl: `${baseUrl()}/icon.png`,
+      logoUrl: EMAIL_LOGO_URL,
     });
     await sendEmail(details.email, email);
     return null;
@@ -531,7 +533,7 @@ export const adminScheduleMeeting = action({
       name: details.name,
       scheduleUrl,
       selectedSlot: details.meetingSlotLabel,
-      logoUrl: `${baseUrl()}/icon.png`,
+      logoUrl: EMAIL_LOGO_URL,
     });
     // Schedule first so a failing email provider never blocks the meeting.
     await ctx.runMutation(internal.applications.markMeetingScheduled, args);
@@ -582,7 +584,7 @@ export const adminDecline = action({
     const email = declinedApplicationEmail({
       name: details.name,
       note,
-      logoUrl: `${baseUrl()}/icon.png`,
+      logoUrl: EMAIL_LOGO_URL,
     });
     await sendEmail(details.email, email);
     await ctx.runMutation(internal.applications.markApplicationDeclined, {
@@ -674,8 +676,12 @@ export const acceptApplication = internalMutation({
       });
     }
 
+    // The account is created by the password provider, which only sets the
+    // email. Carry the name from the application so the ambassador is not
+    // nameless in the portal and in the admin list.
     await ctx.db.patch(args.userId, {
       role: "ambassador",
+      name: application.name,
       passwordSetupRequired: true,
     });
 
@@ -787,7 +793,7 @@ export const adminAccept = action({
       loginUrl: `${baseUrl()}/login`,
       referralCode,
       selectedSlot: details.meetingSlotLabel,
-      logoUrl: `${baseUrl()}/icon.png`,
+      logoUrl: EMAIL_LOGO_URL,
     });
     const emailed = await trySendEmail(details.email, email);
 
@@ -797,6 +803,35 @@ export const adminAccept = action({
       });
     }
     return emailed;
+  },
+});
+
+// One-time repair for accounts created before `acceptApplication` started
+// copying the application name. Only fills names that are missing, so re-running
+// is a no-op and it never overwrites a name someone already has.
+export const backfillAmbassadorNames = internalMutation({
+  args: {},
+  returns: v.object({ scanned: v.number(), updated: v.number() }),
+  // No requireAdmin here on purpose: `internalMutation` is already absent from
+  // the public API, so no client can reach this. Adding an identity check would
+  // only block the CLI/dashboard invocation this repair exists for.
+  handler: async (ctx) => {
+    const accepted = await ctx.db
+      .query("applications")
+      .withIndex("by_status", (q) => q.eq("status", "accepted"))
+      .collect();
+
+    let updated = 0;
+    for (const application of accepted) {
+      const ambassadorId = application.ambassadorId;
+      if (ambassadorId === undefined) continue;
+      const user = await ctx.db.get(ambassadorId);
+      if (user === null) continue;
+      if ((user.name ?? "").trim().length > 0) continue;
+      await ctx.db.patch(user._id, { name: application.name });
+      updated++;
+    }
+    return { scanned: accepted.length, updated };
   },
 });
 
@@ -820,12 +855,13 @@ async function sendEmail(
   email: { subject: string; html: string; text: string },
 ) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) {
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+  if (!apiKey || !fromEmail) {
     throw new Error(
       "Configure RESEND_API_KEY and RESEND_FROM_EMAIL before sending email.",
     );
   }
+  const from = `Xolace Ambassador Team <${fromEmail}>`;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
