@@ -110,6 +110,21 @@ export const adminList = query({
   },
 });
 
+export const adminPendingCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+
+    return (
+      await ctx.db
+        .query("contributions")
+        .withIndex("by_status", (q) => q.eq("status", "pending"))
+        .take(5000)
+    ).length;
+  },
+});
+
 export const adminGet = query({
   args: { contributionId: v.string() },
   returns: v.union(adminContributionValidator, v.null()),
