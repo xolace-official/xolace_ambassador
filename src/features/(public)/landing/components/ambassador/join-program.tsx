@@ -71,6 +71,8 @@ const applicationSchema = z.object({
     ["creator", "community", "growth", "creative", "production", "advocacy"],
     { error: "Choose a track." },
   ),
+  meetingSlotId: z.string().min(1, "Choose an available meeting time."),
+  referralCode: z.string().trim().max(20, "Keep the referral code short."),
   whyXolace: z
     .string()
     .trim()
@@ -87,6 +89,8 @@ const initialFormData = {
   location: "",
   schoolOrCommunity: "",
   track: "creator" as const,
+  meetingSlotId: "",
+  referralCode: "",
   whyXolace: "",
 };
 
@@ -118,6 +122,10 @@ const reassurances = [
 
 export default function JoinProgramForm() {
   const submitApplication = useMutation(api.applications.submit);
+  const [currentTime] = React.useState(() => Date.now());
+  const meetingSlots = useQuery(api.applications.listMeetingSlots, {
+    now: currentTime,
+  });
   const requestUploadUrl = useAction(api.applications.requestUploadUrl);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
@@ -133,12 +141,21 @@ export default function JoinProgramForm() {
     control,
     handleSubmit,
     trigger,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<ApplicationForm>({
     resolver: zodResolver(applicationSchema),
     defaultValues: initialFormData,
   });
+
+  React.useEffect(() => {
+    const referralCode = new URLSearchParams(window.location.search)
+      .get("ref")
+      ?.trim()
+      .toUpperCase();
+    if (referralCode) setValue("referralCode", referralCode);
+  }, [setValue]);
 
   const email = watch("email");
   const selectedTrack = watch("track");
@@ -191,7 +208,7 @@ export default function JoinProgramForm() {
     const fieldsToValidate: (keyof ApplicationForm)[][] = [
       ["name", "email", "dateOfBirth", "location"],
       [],
-      ["track", "whyXolace"],
+      ["track", "meetingSlotId", "whyXolace"],
     ];
     const fields = fieldsToValidate[currentStep];
     if (fields.length > 0) {
@@ -269,7 +286,9 @@ export default function JoinProgramForm() {
         school: values.schoolOrCommunity || undefined,
         socials: socialsArray,
         trackInterest: values.track,
+        meetingSlotId: values.meetingSlotId,
         whyXolace: values.whyXolace,
+        referralCode: values.referralCode || undefined,
         image: imageStorageId as never,
       });
       toast.success("Application submitted successfully!");
@@ -529,6 +548,22 @@ export default function JoinProgramForm() {
                         />
                       )}
                     </Field>
+                    <Field
+                      label="Referral code (optional)"
+                      id="referral-code"
+                      error={errors.referralCode?.message}
+                    >
+                      {(fieldProps) => (
+                        <Input
+                          id="referral-code"
+                          placeholder="AMB-XXXXXXXX…"
+                          autoComplete="off"
+                          spellCheck={false}
+                          {...fieldProps}
+                          {...register("referralCode")}
+                        />
+                      )}
+                    </Field>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -688,6 +723,43 @@ export default function JoinProgramForm() {
                         className="mt-0.5 size-3.5 shrink-0"
                       />
                       {TRACK_HINTS[selectedTrack]}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="meeting-slot"
+                      className="text-sm font-medium"
+                    >
+                      Preferred meeting time
+                    </label>
+                    <Controller
+                      control={control}
+                      name="meetingSlotId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value || undefined}
+                          onValueChange={field.onChange}
+                          disabled={!meetingSlots}
+                        >
+                          <SelectTrigger id="meeting-slot" className="w-full">
+                            <SelectValue placeholder="Choose an available time…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {meetingSlots?.map((slot) => (
+                              <SelectItem key={slot.id} value={slot.id}>
+                                {slot.label} UTC
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError
+                      id="meeting-slot-error"
+                      message={errors.meetingSlotId?.message}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Times are shown in UTC.
                     </p>
                   </div>
                   <Field
