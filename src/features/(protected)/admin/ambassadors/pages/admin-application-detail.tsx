@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { ExternalLink, UserRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,15 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
@@ -25,36 +34,82 @@ export default function AdminApplicationDetail({
   applicationId: string;
 }) {
   const [busy, setBusy] = useState(false);
+  const [acceptOpen, setAcceptOpen] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [declineNote, setDeclineNote] = useState("");
   const application = useQuery(api.applications.adminGet, { applicationId });
   const imageUrl = useQuery(
     api.applications.adminGetImageUrl,
     application?.image ? { storageId: application.image } : "skip",
   );
-  const review = useMutation(api.applications.adminReview);
+  const accept = useAction(api.applications.adminAccept);
+  const scheduleMeeting = useAction(api.applications.adminScheduleMeeting);
+  const decline = useAction(api.applications.adminDecline);
 
-  async function updateStatus(status: "reviewing" | "accepted" | "rejected") {
-    if (status === "rejected" && !window.confirm("Decline this application?")) {
-      return;
-    }
-
+  async function scheduleApplicationMeeting() {
     setBusy(true);
     try {
-      await review({
+      const emailed = await scheduleMeeting({
         applicationId: applicationId as Id<"applications">,
-        status,
       });
-      toast.success(
-        status === "reviewing"
-          ? "Application marked as reviewing."
-          : status === "accepted"
-            ? "Application accepted."
-            : "Application declined.",
-      );
+      if (emailed) {
+        toast.success("Meeting scheduled and invitation sent.");
+      } else {
+        toast.warning(
+          "Meeting scheduled, but the invitation email could not be sent.",
+        );
+      }
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not update this application.",
+          : "Could not schedule the meeting.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function declineApplication() {
+    setBusy(true);
+    try {
+      await decline({
+        applicationId: applicationId as Id<"applications">,
+        note: declineNote,
+      });
+      setDeclineOpen(false);
+      setDeclineNote("");
+      toast.success("Decline message sent.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not decline this application.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function acceptApplication() {
+    setBusy(true);
+    try {
+      const emailed = await accept({
+        applicationId: applicationId as Id<"applications">,
+      });
+      setAcceptOpen(false);
+      if (emailed) {
+        toast.success("Ambassador account created and invitation sent.");
+      } else {
+        toast.warning(
+          "Ambassador account created, but the invitation email could not be sent.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not accept this application.",
       );
     } finally {
       setBusy(false);
@@ -130,9 +185,9 @@ export default function AdminApplicationDetail({
                 variant="outline"
                 size="sm"
                 disabled={busy}
-                onClick={() => void updateStatus("reviewing")}
+                onClick={() => void scheduleApplicationMeeting()}
               >
-                Mark reviewing
+                Schedule meeting
               </Button>
             ) : null}
             <Button
@@ -140,7 +195,7 @@ export default function AdminApplicationDetail({
               variant="outline"
               size="sm"
               disabled={busy}
-              onClick={() => void updateStatus("rejected")}
+              onClick={() => setDeclineOpen(true)}
             >
               Decline
             </Button>
@@ -148,13 +203,84 @@ export default function AdminApplicationDetail({
               type="button"
               size="sm"
               disabled={busy}
-              onClick={() => void updateStatus("accepted")}
+              onClick={() => setAcceptOpen(true)}
             >
               Accept applicant
             </Button>
           </div>
         ) : null}
       </header>
+
+      <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Accept this application?</DialogTitle>
+            <DialogDescription>
+              This creates an ambassador account for {application.email},
+              generates a referral code, and emails a temporary password. The
+              applicant must set a new password before accessing the portal.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAcceptOpen(false)}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void acceptApplication()}
+              disabled={busy}
+            >
+              {busy ? "Sending invitation…" : "Accept and send invitation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={declineOpen} onOpenChange={setDeclineOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Decline this application?</DialogTitle>
+            <DialogDescription>
+              Add the feedback that will be sent to {application.email}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label htmlFor="decline-note" className="text-sm font-medium">
+              Feedback
+            </label>
+            <Textarea
+              id="decline-note"
+              value={declineNote}
+              onChange={(event) => setDeclineNote(event.target.value)}
+              placeholder="Share a clear and respectful reason…"
+              rows={5}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeclineOpen(false)}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void declineApplication()}
+              disabled={busy || declineNote.trim().length < 10}
+            >
+              {busy ? "Sending…" : "Confirm decline"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="gap-0 border-border p-5 sm:p-7">
         <h2 className="text-lg font-semibold text-foreground">
@@ -163,6 +289,9 @@ export default function AdminApplicationDetail({
         <dl className="mt-4 grid gap-x-6 sm:grid-cols-2">
           <Detail label="Interested track">
             {MISSION_CATEGORY_LABELS[application.trackInterest]}
+          </Detail>
+          <Detail label="Preferred meeting time">
+            {application.meetingSlotLabel ?? "Not selected"}
           </Detail>
           <Detail label="Date of birth">
             {application.dateOfBirth
@@ -175,6 +304,9 @@ export default function AdminApplicationDetail({
           <Detail label="Location">{application.location}</Detail>
           <Detail label="School or community">
             {application.school || "Not provided"}
+          </Detail>
+          <Detail label="Referral code">
+            {application.referralCode || "Not provided"}
           </Detail>
           <Detail label="Social profiles">
             {application.socials && application.socials.length > 0 ? (
