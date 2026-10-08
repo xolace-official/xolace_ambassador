@@ -77,7 +77,7 @@ export const listPublished = query({
     }
     return await ctx.db
       .query("resources")
-      .withIndex("by_published", (q) => q.eq("published", true))
+      .withIndex("by_published_and_sortOrder", (q) => q.eq("published", true))
       .order("desc")
       .paginate(args.paginationOpts);
   },
@@ -90,6 +90,7 @@ export const listAll = query({
     await requireAdmin(ctx);
     return await ctx.db
       .query("resources")
+      .withIndex("by_sortOrder")
       .order("desc")
       .paginate(args.paginationOpts);
   },
@@ -111,11 +112,16 @@ export const getById = query({
 });
 
 export const getDownloadUrl = query({
-  args: { storageId: v.id("_storage") },
+  args: { resourceId: v.string() },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args) => {
-    await requireRole(ctx);
-    return await ctx.storage.getUrl(args.storageId);
+    const user = await requireRole(ctx);
+    const id = ctx.db.normalizeId("resources", args.resourceId);
+    if (id === null) return null;
+    const resource = await ctx.db.get(id);
+    if (resource === null || resource.storageId === undefined) return null;
+    if (user.role !== "admin" && !resource.published) return null;
+    return await ctx.storage.getUrl(resource.storageId);
   },
 });
 
@@ -146,6 +152,7 @@ export const create = internalMutation({
   returns: v.id("resources"),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    validateResource(args);
     return await ctx.db.insert("resources", {
       title: args.title.trim(),
       description: args.description.trim(),
@@ -186,6 +193,7 @@ export const update = internalMutation({
     if (existing === null) {
       throw new Error("Resource not found.");
     }
+    validateResource(args);
     await ctx.db.patch(args.resourceId, {
       title: args.title.trim(),
       description: args.description.trim(),
@@ -203,6 +211,35 @@ export const update = internalMutation({
     return null;
   },
 });
+
+function validateResource(args: {
+  title: string;
+  description: string;
+  kind: "link" | "file" | "content" | "video";
+  url?: string;
+  embedUrl?: string;
+  content?: string;
+  storageId?: string;
+}) {
+  if (!args.title.trim() || args.title.trim().length > 160) {
+    throw new Error("Enter a resource title under 160 characters.");
+  }
+  if (!args.description.trim() || args.description.trim().length > 500) {
+    throw new Error("Enter a description under 500 characters.");
+  }
+  if (args.kind === "link" && !args.url?.trim()) {
+    throw new Error("Add a URL for link resources.");
+  }
+  if (args.kind === "file" && !args.storageId) {
+    throw new Error("Upload a file for file resources.");
+  }
+  if (args.kind === "content" && !args.content?.trim()) {
+    throw new Error("Add content for content resources.");
+  }
+  if (args.kind === "video" && !args.embedUrl?.trim() && !args.url?.trim()) {
+    throw new Error("Add a video URL or embed URL.");
+  }
+}
 
 export const remove = internalMutation({
   args: { resourceId: v.id("resources") },
