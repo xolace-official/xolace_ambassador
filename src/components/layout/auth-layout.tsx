@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
@@ -55,13 +55,10 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             viewport={{ once: true }}
             className="flex flex-col items-center justify-between gap-2 font-light text-muted-foreground/30 md:flex-row md:gap-4"
           >
-            <p suppressHydrationWarning>Â© {currentYear} Xolace Inc</p>
+            <p suppressHydrationWarning>© {currentYear} Xolace Inc</p>
           </motion.div>
 
-          <div className="flex flex-row gap-2 text-muted-foreground/60">
-            <p>Contact Us</p>
-            <p>English</p>
-          </div>
+          <p className="text-muted-foreground/60">Contact Us</p>
         </div>
       </div>
     </div>
