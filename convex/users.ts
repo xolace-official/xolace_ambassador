@@ -1,5 +1,17 @@
+import {
+  invalidateSessions,
+  modifyAccountCredentials,
+} from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+  mutation,
+  query,
+} from "./_generated/server";
 import { getSessionUser, requireUser } from "./model/auth";
 
 export const getMe = query({
@@ -23,6 +35,13 @@ export const current = query({
     const image = user.avatarStorageId
       ? await ctx.storage.getUrl(user.avatarStorageId)
       : (user.image ?? null);
+    const profile =
+      user.role === "ambassador"
+        ? await ctx.db
+            .query("ambassadorProfiles")
+            .withIndex("by_userId", (q) => q.eq("userId", user._id))
+            .first()
+        : null;
 
     return {
       _id: user._id,
@@ -31,6 +50,10 @@ export const current = query({
       name: user.name ?? null,
       image,
       email: user.email ?? null,
+      referralCode: profile?.referralCode ?? null,
+      passwordSetupRequired: user.passwordSetupRequired ?? false,
+      programStatus: profile?.status ?? null,
+      programStatusReason: profile?.statusReason ?? null,
     };
   },
 });
@@ -42,14 +65,89 @@ export const ensureProfile = mutation({
   handler: async (ctx) => {
     const user = await requireUser(ctx);
 
-    if (user.uuid !== undefined) {
-      return user.uuid;
+    const uuid = user.uuid ?? crypto.randomUUID();
+    if (user.uuid === undefined) {
+      await ctx.db.patch(user._id, { uuid });
     }
 
-    const uuid = crypto.randomUUID();
-    await ctx.db.patch(user._id, { uuid });
+    if (user.role === "ambassador") {
+      const profile = await ctx.db
+        .query("ambassadorProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .first();
+      const referralCode =
+        profile?.referralCode ?? (await createReferralCode(ctx));
+
+      if (profile === null) {
+        await ctx.db.insert("ambassadorProfiles", {
+          userId: user._id,
+          referralCode,
+          status: "active",
+        });
+      } else if (profile.referralCode === undefined) {
+        await ctx.db.patch(profile._id, { referralCode });
+      }
+    }
 
     return uuid;
+  },
+});
+
+async function createReferralCode(ctx: MutationCtx) {
+  for (;;) {
+    const referralCode = `AMB-${crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
+    const existing = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_referralCode", (q) => q.eq("referralCode", referralCode))
+      .first();
+    if (existing === null) return referralCode;
+  }
+}
+
+export const passwordSetupUser = internalQuery({
+  args: {},
+  returns: v.union(
+    v.object({ userId: v.id("users"), email: v.string() }),
+    v.null(),
+  ),
+  handler: async (ctx) => {
+    const user = await getSessionUser(ctx);
+    if (user?.passwordSetupRequired !== true || !user.email) return null;
+    return { userId: user._id, email: user.email };
+  },
+});
+
+export const clearPasswordSetupRequired = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, { passwordSetupRequired: false });
+    return null;
+  },
+});
+
+export const setPassword = action({
+  args: { newPassword: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (args.newPassword.length < 8) {
+      throw new Error("Choose a password with at least 8 characters.");
+    }
+
+    const user = await ctx.runQuery(internal.users.passwordSetupUser, {});
+    if (user === null) {
+      throw new Error("Your password is already configured.");
+    }
+
+    await modifyAccountCredentials(ctx, {
+      provider: "password",
+      account: { id: user.email, secret: args.newPassword },
+    });
+    await invalidateSessions(ctx, { userId: user.userId });
+    await ctx.runMutation(internal.users.clearPasswordSetupRequired, {
+      userId: user.userId,
+    });
+    return null;
   },
 });
 
