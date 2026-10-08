@@ -86,7 +86,6 @@ export function PortalSettings({
   useEffect(() => {
     if (!settings) return;
     form.reset({
-      name: settings.name ?? "",
       location: settings.profile?.location ?? "",
       school: settings.profile?.school ?? "",
       dateOfBirth: settings.profile?.dateOfBirth ?? "",
