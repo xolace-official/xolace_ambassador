@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { parseAsString } from "nuqs/server";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
@@ -75,10 +75,19 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
     parseAsString.withDefault(""),
   );
   const [searchInput, setSearchInput] = useState(search);
-  useEffect(() => setSearchInput(search), [search]);
+  const pendingSearch = useRef<string | null>(null);
   useEffect(() => {
+    if (pendingSearch.current === search) {
+      pendingSearch.current = null;
+      return;
+    }
+    setSearchInput(search);
+  }, [search]);
+  useEffect(() => {
+    const nextSearch = searchInput.trim();
     const timeout = window.setTimeout(() => {
-      void setSearch(searchInput || null);
+      pendingSearch.current = nextSearch;
+      void setSearch(nextSearch || null);
     }, 300);
     return () => window.clearTimeout(timeout);
   }, [searchInput, setSearch]);
