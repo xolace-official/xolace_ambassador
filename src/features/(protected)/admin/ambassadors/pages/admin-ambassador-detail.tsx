@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { MapPin, Users } from "lucide-react";
+import { Copy, MapPin } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
 
@@ -24,7 +24,6 @@ const DETAIL_TABS = [
   "overview",
   "missions",
   "analytics",
-  "community",
   "reports",
   "rewards",
   "impact",
@@ -115,10 +114,10 @@ export default function AdminAmbassadorDetail({
                 {ambassador.profile.location}
               </span>
             ) : null}
-            {ambassador.profile?.podName ? (
+            {ambassador.profile?.referralCode ? (
               <span className="inline-flex items-center gap-1.5">
-                <Users aria-hidden="true" className="size-4" />
-                {ambassador.profile.podName}
+                <Copy aria-hidden="true" className="size-4" />
+                {ambassador.profile.referralCode}
               </span>
             ) : null}
             <span>
@@ -165,8 +164,6 @@ export default function AdminAmbassadorDetail({
         />
       ) : tab === "analytics" ? (
         <Analytics ambassador={ambassador} />
-      ) : tab === "community" ? (
-        <Community ambassador={ambassador} />
       ) : tab === "reports" ? (
         <ContributionTable
           title="Impact reports"
@@ -205,8 +202,8 @@ function Overview({ ambassador }: { ambassador: AmbassadorData }) {
               ? MISSION_CATEGORY_LABELS[ambassador.profile.track]
               : "Not assigned"}
           </Detail>
-          <Detail label="Pod">
-            {ambassador.profile?.podName ?? "Not assigned"}
+          <Detail label="Referral code">
+            {ambassador.profile?.referralCode ?? "Not generated"}
           </Detail>
           <Detail label="Safety acknowledgement">
             {ambassador.profile?.safetyAcknowledgedAt
@@ -253,47 +250,6 @@ function Analytics({ ambassador }: { ambassador: AmbassadorData }) {
       <MetricCard label="Referrals" value={totals?.referrals ?? 0} />
       <MetricCard label="Events" value={totals?.eventCount ?? 0} />
     </section>
-  );
-}
-
-function Community({ ambassador }: { ambassador: AmbassadorData }) {
-  return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <Card className="gap-2 border-border p-5 sm:p-6">
-        <h2 className="text-lg font-semibold text-foreground">
-          Community group
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {ambassador.profile?.podName ?? "No pod assigned"}
-        </p>
-      </Card>
-      <Card className="gap-0 border-border p-5 sm:p-6">
-        <h2 className="text-lg font-semibold text-foreground">Events</h2>
-        {ambassador.events.length ? (
-          <ul className="mt-3 divide-y divide-border">
-            {ambassador.events.map((event) => (
-              <li key={event._id} className="flex justify-between gap-3 py-3">
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-foreground">
-                    {event.title}
-                  </span>
-                  <time className="text-xs text-muted-foreground">
-                    {dateFormat.format(new Date(event.startsAt))}
-                  </time>
-                </span>
-                <Badge variant="outline" className="h-fit capitalize">
-                  {event.status}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-sm text-muted-foreground">
-            No event participation recorded.
-          </p>
-        )}
-      </Card>
-    </div>
   );
 }
 
@@ -400,7 +356,7 @@ function ContributionTable({
                 </TableCell>
                 <TableCell>
                   <Badge
-                    className={contributionStatusClass(contribution.status)}
+                    className={`min-w-20 justify-center ${contributionStatusClass(contribution.status)}`}
                   >
                     {contribution.status}
                   </Badge>
