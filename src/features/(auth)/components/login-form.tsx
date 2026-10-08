@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "convex/react";
 import { LogIn } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
@@ -26,9 +26,14 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const searchParams = useSearchParams();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingAccess, setAwaitingAccess] = useState(false);
+
+  // Set by the setup-password page after a successful change. The token is gone
+  // by then, so this is the only signal the user has that the save worked.
+  const justSetPassword = searchParams.get("passwordSet") === "1";
 
   // Gets the currently authenticated user from Convex.
   const user = useQuery(api.users.current);
@@ -120,6 +125,19 @@ export function LoginForm() {
           Enter your credentials to manage the account.
         </p> */}
       </div>
+
+      {justSetPassword ? (
+        <div
+          aria-live="polite"
+          className="rounded-xl border border-border/60 bg-muted/40 p-4 text-sm leading-6 text-muted-foreground"
+        >
+          <span className="font-medium text-foreground">
+            Your password is set.
+          </span>{" "}
+          Sign in with the password you just chose and you will go straight to
+          your dashboard.
+        </div>
+      ) : null}
 
       <FieldGroup>
         <Field data-invalid={!!errors.email}>
