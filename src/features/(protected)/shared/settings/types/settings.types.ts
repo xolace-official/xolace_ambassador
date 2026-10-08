@@ -41,6 +41,7 @@ export type Settings = {
     status: "active" | "paused" | "suspended";
     track: string | null;
     podName: string | null;
+    referralCode: string | null;
     safetyAcknowledgedAt: number | null;
   } | null;
 };
