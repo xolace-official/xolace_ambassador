@@ -22,42 +22,32 @@ export default function AdminDashboard() {
 
   const { summary, timeline } = analytics;
 
-  // Build sparkline arrays from last 12 data points
-  const ambassadorTrend = [
-    Math.round(summary.totalAmbassadors * 0.75),
-    Math.round(summary.totalAmbassadors * 0.88),
-    summary.totalAmbassadors,
-  ];
+  const ambassadorTrend = [summary.totalAmbassadors];
   const contributionTrend = timeline.slice(-12).map((t) => t.contributions);
-  const pendingTrend = [
-    Math.round(summary.pendingReviews * 0.75),
-    Math.round(summary.pendingReviews * 0.88),
-    summary.pendingReviews,
-  ];
+  const pendingTrend = [summary.pendingReviews];
 
   return (
-    <div className="space-y-5  sm:space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <section
         aria-label="Program overview"
-        className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3"
+        className="grid overflow-hidden gap-0 rounded-2xl  sm:grid-cols-3"
       >
         <DashboardStatCard
           label="Total active ambassadors"
           value={summary.totalAmbassadors.toLocaleString("en-GB")}
-          periodLabel="Since 2 September"
+          periodLabel="Current"
           trend={ambassadorTrend}
         />
         <DashboardStatCard
           label="Program impact"
           value={summary.totalContributions.toLocaleString("en-GB")}
-          periodLabel="Since 2 September"
+          periodLabel="Current"
           trend={contributionTrend}
-          deltaLabel="This month"
         />
         <DashboardStatCard
           label="Pending reviews"
           value={summary.pendingReviews.toLocaleString("en-GB")}
-          periodLabel="Since 2 September"
+          periodLabel="Current"
           trend={pendingTrend}
         />
       </section>
@@ -74,7 +64,7 @@ export default function AdminDashboard() {
         <AdminPendingReviews reviews={pendingReviews} uuid={uuid} />
         <Card className="rounded-2xl border-border py-0 shadow-none">
           <CardContent className="p-3 sm:p-4">
-            <h2 className="font-semibold text-foreground">Headmaps</h2>
+            <h2 className="font-semibold text-foreground">Heatmap</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Contribution activity across the program.
             </p>
