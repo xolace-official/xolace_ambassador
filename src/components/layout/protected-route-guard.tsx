@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
+import { PortalAccessOverlay } from "@/components/layout/portal-access-overlay";
 import type { PortalRole } from "@/types/portal.type";
 import { api } from "../../../convex/_generated/api";
 
@@ -45,24 +46,58 @@ export function ProtectedRouteGuard({
       return;
     }
 
+    if (user?.passwordSetupRequired) {
+      router.replace("/setup-password");
+      return;
+    }
+
     if (portalRole !== accountRole || uuid !== user?._id) {
       router.replace(`/${accountRole}/${user?._id}/dashboard`);
     }
-  }, [isLoading, isSignedIn, accountRole, portalRole, uuid, user?._id, router]);
+  }, [
+    isLoading,
+    isSignedIn,
+    accountRole,
+    portalRole,
+    uuid,
+    user?._id,
+    user?.passwordSetupRequired,
+    router,
+  ]);
 
   useEffect(() => {
-    if (isSignedIn && user?.uuid === null) {
+    if (
+      isSignedIn &&
+      (user?.uuid === null ||
+        (user?.role === "ambassador" && user.referralCode === null))
+    ) {
       ensureProfile().catch((err) => {
         console.error("Failed to provision portal uuid:", err);
       });
     }
-  }, [isSignedIn, user?.uuid, ensureProfile]);
+  }, [isSignedIn, user?.uuid, user?.role, user?.referralCode, ensureProfile]);
 
   if (isLoading || !isSignedIn || !accountRole || !isOwnDashboard) {
     return <GuardLoading />;
   }
 
-  return <>{children}</>;
+  const blockedStatus =
+    user?.role === "ambassador" &&
+    user.programStatus !== null &&
+    user.programStatus !== "active"
+      ? user.programStatus
+      : null;
+
+  return blockedStatus ? (
+    <PortalAccessOverlay
+      status={blockedStatus}
+      reason={user?.programStatusReason ?? null}
+    >
+      {children}
+    </PortalAccessOverlay>
+  ) : (
+    children
+  );
 }
 
 function GuardLoading() {
