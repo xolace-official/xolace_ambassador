@@ -98,6 +98,7 @@ export default function AdminMissions({
     api.leaderboard.adminSetPublicationStatus,
     missionSetId ? { missionSetId: missionSetId as Id<"missionSets"> } : "skip",
   );
+  const pendingSubmissions = useQuery(api.contributions.adminPendingCount);
   const togglePublication = useMutation(api.leaderboard.adminTogglePublication);
 
   return (
@@ -176,7 +177,15 @@ export default function AdminMissions({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {value === "impact" ? "Impact" : value}
+            <span>{value === "impact" ? "Impact" : value}</span>
+            {value === "submissions" && pendingSubmissions ? (
+              <Badge
+                variant="destructive"
+                aria-label={`${pendingSubmissions} pending`}
+              >
+                {pendingSubmissions}
+              </Badge>
+            ) : null}
           </button>
         ))}
       </nav>
