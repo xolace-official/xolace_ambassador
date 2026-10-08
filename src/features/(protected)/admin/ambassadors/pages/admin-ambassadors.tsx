@@ -648,7 +648,10 @@ function AmbassadorActions({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <label htmlFor={`status-reason-${ambassadorId}`} className="text-sm font-medium">
+            <label
+              htmlFor={`status-reason-${ambassadorId}`}
+              className="text-sm font-medium"
+            >
               Reason
             </label>
             <Textarea
