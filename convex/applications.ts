@@ -97,6 +97,42 @@ export const generateUploadUrl = internalMutation({
   },
 });
 
+// Slots that are in the future, active, and not already booked. Shared by the
+// public form query and the submit validation so the two can never disagree.
+async function availableMeetingSlots(
+  ctx: Parameters<typeof requireAdmin>[0],
+  now: number,
+) {
+  const configured = await ctx.db
+    .query("meetingSlots")
+    .withIndex("by_active_and_startsAt", (q) =>
+      q.eq("active", true).gt("startsAt", now),
+    )
+    .order("asc")
+    .take(100);
+  const slots =
+    configured.length > 0
+      ? configured.map((slot) => ({
+          id: slot.slotKey,
+          startsAt: slot.startsAt,
+        }))
+      : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > now);
+  const available = await Promise.all(
+    slots.map(async (slot) => {
+      const booking = await ctx.db
+        .query("applications")
+        .withIndex("by_meetingSlotId", (q) => q.eq("meetingSlotId", slot.id))
+        .first();
+      return booking?.status === undefined || booking.status === "rejected"
+        ? slot
+        : null;
+    }),
+  );
+  return available.filter(
+    (slot): slot is { id: string; startsAt: number } => slot !== null,
+  );
+}
+
 export const listMeetingSlots = query({
   args: { now: v.number() },
   returns: v.array(
@@ -107,37 +143,11 @@ export const listMeetingSlots = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const configured = await ctx.db
-      .query("meetingSlots")
-      .withIndex("by_active_and_startsAt", (q) =>
-        q.eq("active", true).gt("startsAt", args.now),
-      )
-      .order("asc")
-      .take(100);
-    const slots =
-      configured.length > 0
-        ? configured.map((slot) => ({
-            id: slot.slotKey,
-            startsAt: slot.startsAt,
-          }))
-        : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > args.now);
-    const available = await Promise.all(
-      slots.map(async (slot) => {
-        const booking = await ctx.db
-          .query("applications")
-          .withIndex("by_meetingSlotId", (q) => q.eq("meetingSlotId", slot.id))
-          .first();
-        return booking?.status === undefined || booking.status === "rejected"
-          ? slot
-          : null;
-      }),
-    );
-    return available
-      .filter((slot): slot is { id: string; startsAt: number } => slot !== null)
-      .map((slot) => ({
-        ...slot,
-        label: formatMeetingSlot(slot.startsAt),
-      }));
+    const available = await availableMeetingSlots(ctx, args.now);
+    return available.map((slot) => ({
+      ...slot,
+      label: formatMeetingSlot(slot.startsAt),
+    }));
   },
 });
 
@@ -159,7 +169,7 @@ export const submit = mutation({
     whyXolace: v.string(),
     trackInterest: trackValidator,
     referralCode: v.optional(v.string()),
-    meetingSlotId: meetingSlotIdValidator,
+    meetingSlotId: v.optional(meetingSlotIdValidator),
     image: v.id("_storage"),
   },
   returns: v.id("applications"),
@@ -175,31 +185,46 @@ export const submit = mutation({
     }));
     const whyXolace = args.whyXolace.trim();
     const referralCode = args.referralCode?.trim().toUpperCase() || undefined;
-    const configuredMeetingSlot = await ctx.db
-      .query("meetingSlots")
-      .withIndex("by_slotKey", (q) => q.eq("slotKey", args.meetingSlotId))
-      .first();
-    const meetingSlot =
-      configuredMeetingSlot ?? getMeetingSlot(args.meetingSlotId);
-    if (meetingSlot === undefined || meetingSlot.startsAt <= Date.now()) {
-      throw new Error("Choose one of the available meeting times.");
-    }
-    if (configuredMeetingSlot?.active === false) {
-      throw new Error("Choose one of the available meeting times.");
-    }
-    const existingSlotApplication = await ctx.db
-      .query("applications")
-      .withIndex("by_meetingSlotId", (q) =>
-        q.eq("meetingSlotId", args.meetingSlotId),
-      )
-      .first();
-    if (
-      existingSlotApplication?.status !== undefined &&
-      existingSlotApplication.status !== "rejected"
-    ) {
-      throw new Error(
-        "That meeting time has already been taken. Choose another time.",
-      );
+    const now = Date.now();
+
+    // The meeting time is required while slots exist, but an applicant must not
+    // be blocked from applying when none are available.
+    let meetingSlot: { id: string; startsAt: number } | undefined;
+    const requestedSlotId = args.meetingSlotId;
+    if (requestedSlotId !== undefined) {
+      const configuredMeetingSlot = await ctx.db
+        .query("meetingSlots")
+        .withIndex("by_slotKey", (q) => q.eq("slotKey", requestedSlotId))
+        .first();
+      const candidate =
+        configuredMeetingSlot ?? getMeetingSlot(requestedSlotId);
+      if (
+        candidate === undefined ||
+        candidate.startsAt <= now ||
+        configuredMeetingSlot?.active === false
+      ) {
+        throw new Error("Choose one of the available meeting times.");
+      }
+      const existingSlotApplication = await ctx.db
+        .query("applications")
+        .withIndex("by_meetingSlotId", (q) =>
+          q.eq("meetingSlotId", requestedSlotId),
+        )
+        .first();
+      if (
+        existingSlotApplication?.status !== undefined &&
+        existingSlotApplication.status !== "rejected"
+      ) {
+        throw new Error(
+          "That meeting time has already been taken. Choose another time.",
+        );
+      }
+      meetingSlot = { id: requestedSlotId, startsAt: candidate.startsAt };
+    } else {
+      const available = await availableMeetingSlots(ctx, now);
+      if (available.length > 0) {
+        throw new Error("Choose one of the available meeting times.");
+      }
     }
 
     if (name.length < 2 || name.length > 120) {
@@ -264,9 +289,13 @@ export const submit = mutation({
       whyXolace,
       trackInterest: args.trackInterest,
       referralCode,
-      meetingSlotId: args.meetingSlotId,
-      meetingSlotLabel: formatMeetingSlot(meetingSlot.startsAt),
-      meetingSlotStartsAt: meetingSlot.startsAt,
+      ...(meetingSlot
+        ? {
+            meetingSlotId: meetingSlot.id,
+            meetingSlotLabel: formatMeetingSlot(meetingSlot.startsAt),
+            meetingSlotStartsAt: meetingSlot.startsAt,
+          }
+        : {}),
       image: args.image,
       status: "new",
     });
