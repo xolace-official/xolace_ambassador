@@ -62,9 +62,9 @@ export function PortalProfile({
           <CardContent className="relative flex flex-col items-center p-4 text-center sm:items-start sm:p-6 sm:text-left">
             <Link
               href={`/${portalRole}/${uuid}/profile/edit`}
-              className="absolute right-5 top-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-muted px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-8 sm:top-8"
+              className="absolute right-4 top-4 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-muted px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-8 sm:top-8 sm:min-h-10 sm:gap-2 sm:px-3 sm:text-sm"
             >
-              <Pencil aria-hidden="true" className="size-4" />
+              <Pencil aria-hidden="true" className="size-3.5 sm:size-4" />
               <span className="hidden sm:inline">Edit profile</span>
               <span className="sm:hidden">Edit</span>
             </Link>
@@ -96,7 +96,7 @@ export function PortalProfile({
                 {details.bio}
               </p>
             ) : null}
-            <div className="mt-4 grid w-full gap-4 border-t border-border pt-4 text-left sm:grid-cols-3">
+            <div className="mt-4 grid w-full grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4 text-left sm:grid-cols-3 sm:gap-y-4">
               <ProfileDetail
                 icon={GraduationCap}
                 label="School or organization"
