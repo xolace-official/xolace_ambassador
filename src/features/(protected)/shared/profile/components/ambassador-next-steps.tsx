@@ -42,11 +42,11 @@ export function AmbassadorNextSteps({
 
   return (
     <Card>
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <CardContent className="p-3.5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-4">
           <div>
             <h2 className="font-semibold text-foreground">Your next step</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
               Small, consistent actions help you make a meaningful impact with
               Xolace.
             </p>
@@ -59,7 +59,7 @@ export function AmbassadorNextSteps({
         {nextStep ? (
           <Link
             href={`/ambassador/${uuid}/${nextStep.href}`}
-            className="mt-5 flex min-h-12 items-center justify-between gap-4 rounded-xl border border-border p-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-3 flex min-h-11 items-center justify-between gap-4 rounded-xl border border-border p-2.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:mt-5 sm:min-h-12 sm:p-3"
           >
             <span className="flex min-w-0 items-center gap-3">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
