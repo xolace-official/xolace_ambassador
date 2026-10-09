@@ -43,6 +43,10 @@ function toggleThemeWithTransition(
   document.startViewTransition(() => setTheme(next));
 }
 
+// The theme follows the device, so the toggle is off by default. Kept wired up
+// and functional: flip this to true to bring it back without touching anything else.
+const SHOW_THEME_TOGGLE = false;
+
 export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,8 +60,8 @@ export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
   const [, roleSegment, uuid] = pathname.split("/");
 
   const { resolvedTheme, setTheme } = useTheme();
-  // Theme is unknown until after hydration â€” the mounted check avoids a
-  // server/client mismatch on the icon shown.
+  // Theme is unknown until after hydration, so the mounted check keeps the icon
+  // from mismatching between server and client.
   const themeMounted = useSyncExternalStore(
     subscribeNever,
     () => true,
@@ -225,21 +229,23 @@ export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
           </span>
         </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={(event) => {
-            event.preventDefault();
-            toggleThemeWithTransition(
-              event.currentTarget as Element,
-              isDark ? "light" : "dark",
-              setTheme,
-            );
-          }}
-        >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </Button>
+        {SHOW_THEME_TOGGLE ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={(event) => {
+              event.preventDefault();
+              toggleThemeWithTransition(
+                event.currentTarget as Element,
+                isDark ? "light" : "dark",
+                setTheme,
+              );
+            }}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
+        ) : null}
 
         <Button
           type="button"
