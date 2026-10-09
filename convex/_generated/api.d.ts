@@ -27,6 +27,7 @@ import type * as model_auth from "../model/auth.js";
 import type * as notifications from "../notifications.js";
 import type * as programConfig from "../programConfig.js";
 import type * as provisioning from "../provisioning.js";
+import type * as publicAmbassadors from "../publicAmbassadors.js";
 import type * as reports from "../reports.js";
 import type * as resources from "../resources.js";
 import type * as rewards from "../rewards.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   programConfig: typeof programConfig;
   provisioning: typeof provisioning;
+  publicAmbassadors: typeof publicAmbassadors;
   reports: typeof reports;
   resources: typeof resources;
   rewards: typeof rewards;
