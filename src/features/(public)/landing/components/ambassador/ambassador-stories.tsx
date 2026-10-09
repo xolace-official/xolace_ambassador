@@ -1,11 +1,11 @@
 ﻿"use client";
 
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { useQuery } from "convex/react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import VoiceSpotlightPlayer from "@/components/ui/voice-spotlight-player";
-import { OFFICIAL_AMBASSADORS } from "@/constants";
+import Link from "next/link";
+import { api } from "../../../../../../convex/_generated/api";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,158 +33,129 @@ const colorStrips = [
   "from-foreground/90 to-foreground/60",
 ];
 
-function pickThreeRandom<T>(arr: T[]): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy.slice(0, 3);
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export default function AmbassadorStories() {
-  const [featuredAmbassadors, setFeaturedAmbassadors] = useState<
-    typeof OFFICIAL_AMBASSADORS
-  >([]);
-  const [isRotating, setIsRotating] = useState(false);
+  // Newest onboarded first; falls back to all-time order when there are none.
+  const recent = useQuery(api.publicAmbassadors.list, {
+    order: "recent",
+    limit: 3,
+  });
+  const allTime = useQuery(api.publicAmbassadors.list, {
+    order: "points",
+    limit: 3,
+  });
 
-  const shuffleCards = () => {
-    setIsRotating(true);
-    setFeaturedAmbassadors(pickThreeRandom(OFFICIAL_AMBASSADORS));
-    setTimeout(() => setIsRotating(false), 500);
-  };
-
-  useEffect(() => {
-    setFeaturedAmbassadors(pickThreeRandom(OFFICIAL_AMBASSADORS));
-  }, []);
+  const featured = (recent ?? []).length > 0 ? (recent ?? []) : (allTime ?? []);
+  const loading = recent === undefined && allTime === undefined;
 
   return (
     <section
       id="stories"
-      className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-background scroll-mt-20 overflow-hidden"
+      className="relative w-full overflow-hidden scroll-mt-20 bg-background px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
     >
-      <div className="relative z-10 max-w-6xl mx-auto space-y-12 sm:space-y-16">
-        <div className="flex flex-col">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true, margin: "-50px" }}
-            className="space-y-2.5 "
-          >
-            <div className="w-full flex items-center justify-between gap-4 pt-2 border-t border-border/40">
-              <p className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wide">
-                Meet the Ambassadors
-              </p>
-              <motion.a
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true, margin: "-50px" }}
-                href="/ambassadors"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-primary hover:gap-2.5 transition-[gap] duration-300"
-              >
-                Meet all ambassadors
-                <ArrowRight aria-hidden="true" className="w-4 h-4" />
-              </motion.a>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight max-w-3xl">
-              Real people. Real reasons for showing up.
-            </h2>
-          </motion.div>
-
-          <div className="flex items-center justify-between gap-4 border-t border-border/40">
-            <button
-              type="button"
-              onClick={shuffleCards}
-              aria-label="Shuffle featured ambassadors"
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border/60 transition-colors cursor-pointer active:scale-95 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <RefreshCw
-                aria-hidden="true"
-                className={`w-3.5 h-3.5 text-primary ${isRotating ? "animate-spin" : ""}`}
-              />
-              Shuffle Cards
-            </button>
-
-            <motion.a
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true, margin: "-50px" }}
-              href="/ambassadors"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-primary hover:gap-2.5 transition-[gap] duration-300"
-            >
-              Meet all ambassadors
-              <ArrowRight aria-hidden="true" className="w-4 h-4" />
-            </motion.a>
-          </div>
-        </div>
-
+      <div className="relative z-10 mx-auto max-w-6xl space-y-8 sm:space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true, margin: "-50px" }}
+          className="space-y-2.5"
         >
-          <VoiceSpotlightPlayer />
+          <div className="flex w-full items-center justify-between gap-4 pt-2">
+            <p className="text-xs font-semibold tracking-wide text-primary uppercase sm:text-sm">
+              Meet the Ambassadors
+            </p>
+            <Link
+              href="/ambassadors"
+              className="inline-flex items-center gap-1.5 text-xs font-extrabold text-primary transition-[gap] duration-300 hover:gap-2.5"
+            >
+              Meet all ambassadors
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </div>
+          <h2 className="max-w-3xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            Real people. Real reasons for showing up.
+          </h2>
         </motion.div>
 
-        {featuredAmbassadors.length > 0 ? (
+        {loading ? (
+          <div className="flex h-48 items-center justify-center sm:h-64">
+            <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : featured.length > 0 ? (
           <motion.div
-            key={featuredAmbassadors.map((a) => a.id).join("-")}
             variants={containerVariants}
             initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-3 gap-7"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-7"
           >
-            {featuredAmbassadors.map((ambassador, index) => {
+            {featured.map((ambassador, index) => {
               const stripColor = colorStrips[index % colorStrips.length];
 
               return (
                 <motion.div
                   key={ambassador.id}
                   variants={itemVariants}
-                  className="bg-card border border-border/60 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-[box-shadow,transform] duration-300 flex flex-col justify-between"
+                  className="flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card shadow-lg transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-2xl"
                 >
                   <div
-                    className={`relative h-20 bg-linear-to-br ${stripColor}`}
+                    className={`relative h-16 bg-linear-to-br ${stripColor}`}
                   >
-                    <div className="absolute left-6 -bottom-8 w-16 h-16 rounded-full bg-card border-4 border-card shadow-md overflow-hidden">
-                      <Image
-                        src={ambassador.image}
-                        alt={ambassador.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover object-top"
-                      />
+                    <div className="absolute bottom-0 left-5 flex size-14 translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-muted shadow-md">
+                      {ambassador.image ? (
+                        <Image
+                          src={ambassador.image}
+                          alt={ambassador.name}
+                          fill
+                          sizes="56px"
+                          className="object-cover object-top"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="text-sm font-bold text-muted-foreground"
+                        >
+                          {initials(ambassador.name)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="pt-11 px-6 pb-6 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <p className="font-bold text-lg text-foreground leading-snug">
+
+                  <div className="flex flex-1 flex-col justify-between gap-2 px-5 pt-9 pb-5">
+                    <div>
+                      <p className="text-base font-bold leading-snug text-foreground">
                         {ambassador.name}
                       </p>
+                      {ambassador.location ? (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          {ambassador.location}
+                        </p>
+                      ) : null}
                     </div>
-                    <blockquote className="text-foreground/75 text-sm leading-relaxed italic line-clamp-4">
-                      &ldquo;
-                      {
-                        "I want to help break the stigma around talking about what we carry."
-                      }
-                      &rdquo;
-                    </blockquote>
-                    <p className="text-xs font-semibold text-muted-foreground pt-1">
-                      {ambassador.location}
-                    </p>
+
+                    {ambassador.bio ? (
+                      <blockquote className="line-clamp-3 border-l-2 border-primary/40 pl-3 text-sm leading-relaxed text-foreground/75 italic">
+                        {ambassador.bio}
+                      </blockquote>
+                    ) : null}
                   </div>
                 </motion.div>
               );
             })}
           </motion.div>
         ) : (
-          <div className="h-64 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+          <p className="rounded-2xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
+            Our ambassadors are being onboarded. Check back shortly.
+          </p>
         )}
       </div>
     </section>
