@@ -1,10 +1,11 @@
 ﻿"use client";
 
+import { useQuery } from "convex/react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { OFFICIAL_AMBASSADORS } from "@/constants";
+import { api } from "../../../../../../convex/_generated/api";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,22 +27,37 @@ const itemVariants = {
   },
 };
 
-// Picks N random items from an array.
-function pickRandom<T>(arr: T[], count: number): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy.slice(0, count);
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export default function HeroSection() {
-  // Pick exactly 3 random ambassadors for the overlapping circles display
-  const randomThreeAmbassadors = useMemo(
-    () => pickRandom(OFFICIAL_AMBASSADORS, 3),
-    [],
-  );
+  const leaderboard = useQuery(api.publicAmbassadors.list, {
+    order: "points",
+    limit: 3,
+  });
+  // Only one ambassador currently has a totals row, so the leaderboard query can
+  // come back short. Top up with the newest onboarded to still fill three.
+  const newest = useQuery(api.publicAmbassadors.list, {
+    order: "recent",
+    limit: 3,
+  });
+
+  const circleAmbassadors = useMemo(() => {
+    const seen = new Set<string>();
+    return [...(leaderboard ?? []), ...(newest ?? [])]
+      .filter((ambassador) => {
+        if (seen.has(ambassador.id)) return false;
+        seen.add(ambassador.id);
+        return true;
+      })
+      .slice(0, 3);
+  }, [leaderboard, newest]);
 
   return (
     <section className="relative w-full overflow-hidden bg-background">
@@ -125,26 +141,28 @@ export default function HeroSection() {
               className="flex items-center gap-3 pt-2"
             >
               <div aria-hidden="true" className="flex -space-x-2.5">
-                {randomThreeAmbassadors.map((ambassador) => (
+                {circleAmbassadors.map((ambassador) => (
                   <div
                     key={ambassador.id}
-                    className="relative w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-muted shadow-sm"
+                    className="relative flex size-8 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-primary/10 shadow-sm"
                     title={ambassador.name}
                   >
-                    <Image
-                      src={ambassador.image}
-                      alt={ambassador.name}
-                      fill
-                      sizes="32px"
-                      className="object-cover object-top"
-                    />
+                    {ambassador.image ? (
+                      <Image
+                        src={ambassador.image}
+                        alt=""
+                        fill
+                        sizes="32px"
+                        className="object-cover object-top"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold text-primary">
+                        {initials(ambassador.name)}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
-              <span className="text-sm font-semibold text-foreground/55">
-                {OFFICIAL_AMBASSADORS.length}+ ambassadors already building
-                this.
-              </span>
             </motion.div>
           </motion.div>
 
