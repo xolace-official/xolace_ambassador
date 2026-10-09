@@ -96,7 +96,7 @@ export function PortalProfile({
                 {details.bio}
               </p>
             ) : null}
-            <div className="mt-4 grid w-full grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4 text-left sm:grid-cols-3 sm:gap-y-4">
+            <div className="mt-4 grid w-full grid-cols-2 gap-x-4 gap-y-5 border-t border-border pt-4 text-left sm:grid-cols-3 sm:gap-y-4">
               <ProfileDetail
                 icon={GraduationCap}
                 label="School or organization"
