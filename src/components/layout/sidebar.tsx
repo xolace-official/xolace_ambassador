@@ -67,6 +67,13 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
     }
   }
 
+  // The drawer sits at z-50 on mobile, the same layer as the dialog, so opening
+  // one over the other left both visible. Close the drawer first.
+  function openSignOutDialog() {
+    onClose();
+    setSignOutOpen(true);
+  }
+
   return (
     <>
       {isOpen && (
@@ -182,7 +189,7 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
 
           <button
             type="button"
-            onClick={() => setSignOutOpen(true)}
+            onClick={openSignOutDialog}
             disabled={isSigningOut}
             className="mt-1 flex h-8 w-full items-center gap-3 rounded-md px-3 text-left text-destructive/80 transition-colors hover:bg-foreground/5 hover:text-destructive"
           >
