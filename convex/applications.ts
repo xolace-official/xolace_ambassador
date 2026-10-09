@@ -787,20 +787,16 @@ export const adminAccept = action({
     if (userId === null)
       throw new Error("The ambassador account could not be found.");
 
-    const referralCode = await ctx.runMutation(
-      internal.applications.acceptApplication,
-      {
-        applicationId: args.applicationId,
-        userId,
-      },
-    );
+    await ctx.runMutation(internal.applications.acceptApplication, {
+      applicationId: args.applicationId,
+      userId,
+    });
 
     const email = acceptedApplicationEmail({
       name: details.name,
       email: details.email,
       temporaryPassword,
       loginUrl: loginUrl(),
-      referralCode: referralCode ?? "",
       selectedSlot: details.meetingSlotLabel,
       logoUrl: EMAIL_LOGO_URL,
     });
