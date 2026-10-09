@@ -4,7 +4,7 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -800,7 +800,7 @@ export const adminAccept = action({
       email: details.email,
       temporaryPassword,
       loginUrl: loginUrl(),
-      referralCode,
+      referralCode: referralCode ?? "",
       selectedSlot: details.meetingSlotLabel,
       logoUrl: EMAIL_LOGO_URL,
     });
@@ -816,11 +816,16 @@ export const adminAccept = action({
 });
 
 // One-time repair for accounts created before `acceptApplication` started
-// copying the application name. Only fills names that are missing, so re-running
-// is a no-op and it never overwrites a name someone already has.
-export const backfillAmbassadorNames = internalMutation({
+// carrying the name and photo across from the application. Only fills what is
+// missing, so re-running is a no-op and it never overwrites anything a user
+// has since set themselves.
+export const backfillAmbassadorProfiles = internalMutation({
   args: {},
-  returns: v.object({ scanned: v.number(), updated: v.number() }),
+  returns: v.object({
+    scanned: v.number(),
+    namesUpdated: v.number(),
+    imagesUpdated: v.number(),
+  }),
   // No requireAdmin here on purpose: `internalMutation` is already absent from
   // the public API, so no client can reach this. Adding an identity check would
   // only block the CLI/dashboard invocation this repair exists for.
@@ -830,17 +835,35 @@ export const backfillAmbassadorNames = internalMutation({
       .withIndex("by_status", (q) => q.eq("status", "accepted"))
       .collect();
 
-    let updated = 0;
+    let namesUpdated = 0;
+    let imagesUpdated = 0;
     for (const application of accepted) {
       const ambassadorId = application.ambassadorId;
       if (ambassadorId === undefined) continue;
       const user = await ctx.db.get(ambassadorId);
       if (user === null) continue;
-      if ((user.name ?? "").trim().length > 0) continue;
-      await ctx.db.patch(user._id, { name: application.name });
-      updated++;
+
+      const patch: {
+        name?: string;
+        avatarStorageId?: Id<"_storage">;
+      } = {};
+
+      if ((user.name ?? "").trim().length === 0) {
+        patch.name = application.name;
+        namesUpdated++;
+      }
+      if (
+        user.avatarStorageId === undefined &&
+        application.image !== undefined
+      ) {
+        patch.avatarStorageId = application.image;
+        imagesUpdated++;
+      }
+      if (Object.keys(patch).length > 0) {
+        await ctx.db.patch(user._id, patch);
+      }
     }
-    return { scanned: accepted.length, updated };
+    return { scanned: accepted.length, namesUpdated, imagesUpdated };
   },
 });
 
