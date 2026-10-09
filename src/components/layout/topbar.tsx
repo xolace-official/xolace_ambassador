@@ -150,7 +150,10 @@ export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
   }, [isLoading, isAuthenticated, router]);
 
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between px-4 md:p-4">
+    // Opaque so the scrolling column cannot show through. Top padding clears the
+    // notch on a phone; md:p-4 restores an even box on desktop, where the inset
+    // is zero and would otherwise leave the row sitting high.
+    <header className="sticky top-0 z-header flex h-12 shrink-0 items-center justify-between bg-dashboard-background px-4 pt-[max(0.25rem,env(safe-area-inset-top))] md:p-4">
       <div className="flex items-center gap-2 md:gap-4">
         {parent ? (
           <Button
