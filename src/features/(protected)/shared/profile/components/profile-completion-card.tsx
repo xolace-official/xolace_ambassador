@@ -22,7 +22,7 @@ export function ProfileCompletionCard({
 }) {
   return (
     <Card className="h-fit">
-      <CardContent className="space-y-4 p-4 sm:space-y-5 sm:p-5">
+      <CardContent className="space-y-3 p-3.5 sm:space-y-5 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-foreground">
@@ -44,13 +44,13 @@ export function ProfileCompletionCard({
         {completion < 100 ? (
           <Link
             href={`/${role}/${uuid}/profile/edit`}
-            className="inline-flex min-h-10 items-center rounded-lg text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-9 items-center rounded-lg text-xs font-medium text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-10 sm:text-sm"
           >
             Complete your profile
           </Link>
         ) : null}
         {role === "ambassador" && profile?.safetyAcknowledgedAt ? (
-          <div className="flex items-center gap-2 text-sm text-success">
+          <div className="flex items-center gap-2 text-xs text-success sm:text-sm">
             <CheckCircle2 aria-hidden="true" className="size-4" />
             Safety acknowledgement completed
           </div>
