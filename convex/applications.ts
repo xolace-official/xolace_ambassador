@@ -683,6 +683,11 @@ export const acceptApplication = internalMutation({
     await ctx.db.patch(args.userId, {
       role: "ambassador",
       name: application.name,
+      // The portal reads the avatar from the user row, so the photo uploaded
+      // with the application has to be handed over or it never appears.
+      ...(application.image !== undefined
+        ? { avatarStorageId: application.image }
+        : {}),
       passwordSetupRequired: true,
     });
 
