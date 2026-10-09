@@ -205,7 +205,7 @@ export default function Sidebar({ role, uuid, isOpen, onClose }: SidebarProps) {
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
       <Dialog open={signOutOpen} onOpenChange={setSignOutOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)]">
           <DialogHeader>
             <DialogTitle>Sign out?</DialogTitle>
             <DialogDescription>
