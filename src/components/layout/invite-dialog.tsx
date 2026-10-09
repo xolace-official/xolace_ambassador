@@ -71,7 +71,7 @@ export function InviteDialog({
         </DialogTrigger>
       ) : null}
 
-      <DialogContent>
+      <DialogContent className="w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle>Send an invite</DialogTitle>
           <DialogDescription>
