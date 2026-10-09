@@ -650,6 +650,10 @@ export const acceptApplication = internalMutation({
       ]),
     );
 
+    // whyXolace is the applicant's own answer to why they applied; the portal
+    // shows it as the profile bio, so it has to be carried over explicitly.
+    const bio = application.whyXolace.trim();
+
     if (profile === null) {
       await ctx.db.insert("ambassadorProfiles", {
         userId: args.userId,
@@ -659,6 +663,7 @@ export const acceptApplication = internalMutation({
         location: application.location,
         school: application.school,
         dateOfBirth: application.dateOfBirth,
+        bio,
         socials: {
           tiktok: socials.tiktok,
           instagram: socials.instagram,
@@ -673,6 +678,7 @@ export const acceptApplication = internalMutation({
       await ctx.db.patch(profile._id, {
         referralCode,
         status: "active",
+        ...(profile.bio ? {} : { bio }),
         onboardedAt: profile.onboardedAt ?? Date.now(),
       });
     }
@@ -821,6 +827,7 @@ export const backfillAmbassadorProfiles = internalMutation({
     scanned: v.number(),
     namesUpdated: v.number(),
     imagesUpdated: v.number(),
+    biosUpdated: v.number(),
   }),
   // No requireAdmin here on purpose: `internalMutation` is already absent from
   // the public API, so no client can reach this. Adding an identity check would
@@ -833,6 +840,7 @@ export const backfillAmbassadorProfiles = internalMutation({
 
     let namesUpdated = 0;
     let imagesUpdated = 0;
+    let biosUpdated = 0;
     for (const application of accepted) {
       const ambassadorId = application.ambassadorId;
       if (ambassadorId === undefined) continue;
@@ -858,8 +866,23 @@ export const backfillAmbassadorProfiles = internalMutation({
       if (Object.keys(patch).length > 0) {
         await ctx.db.patch(user._id, patch);
       }
+
+      const profile = await ctx.db
+        .query("ambassadorProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .first();
+      const bio = application.whyXolace.trim();
+      if (profile !== null && !profile.bio && bio.length > 0) {
+        await ctx.db.patch(profile._id, { bio });
+        biosUpdated++;
+      }
     }
-    return { scanned: accepted.length, namesUpdated, imagesUpdated };
+    return {
+      scanned: accepted.length,
+      namesUpdated,
+      imagesUpdated,
+      biosUpdated,
+    };
   },
 });
 
