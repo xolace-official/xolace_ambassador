@@ -372,13 +372,14 @@ export default function JoinProgramForm() {
           viewport={{ once: true, margin: "-50px" }}
           className="space-y-8 lg:pt-6"
         >
-          <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-wide text-primary">
-              Ready?
-            </p>
-            <h2 className="text-3xl font-bold md:text-balance sm:text-4xl">
-              You don&apos;t have to be an expert. You just have to care.
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold md:text-balance sm:text-3xl">
+              Want to join our Ambassador Program?
             </h2>
+            <p className="text-base leading-relaxed text-foreground/70">
+              Be part of a global movement making mental health support
+              accessible to everyone.
+            </p>
           </div>
           <div className="space-y-4">
             {reassurances.map((text, index) => (
