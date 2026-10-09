@@ -21,8 +21,10 @@ function paragraph(text: string) {
 
 function detail(label: string, value: string) {
   return `<tr>
-<td style="padding:8px 0;font-size:15px;color:${BRAND.muted};white-space:nowrap">${label}</td>
-<td style="padding:8px 0;font-size:15px;color:${BRAND.ink};font-weight:600;text-align:right;word-break:break-word">${value}</td>
+<td style="padding:10px 0;border-top:1px solid ${BRAND.border}">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.muted}">${escapeHtml(label)}</p>
+<p style="margin:4px 0 0;font-size:16px;font-weight:600;color:${BRAND.ink};word-break:break-all">${value}</p>
+</td>
 </tr>`;
 }
 
@@ -186,7 +188,6 @@ export function acceptedApplicationEmail(args: {
   email: string;
   temporaryPassword: string;
   loginUrl: string;
-  referralCode: string;
   selectedSlot: string | null;
   logoUrl: string;
 }) {
@@ -200,18 +201,20 @@ export function acceptedApplicationEmail(args: {
         paragraph(
           "Congratulations and welcome to the Xolace Ambassadors Program. Your application has been accepted, and we are excited to have you with us.",
         ) +
-        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;padding:20px;border:1px solid ${BRAND.border};border-radius:12px;background:${BRAND.page}">
-${detail("Email", escapeHtml(args.email))}
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid ${BRAND.border};border-radius:14px;background:${BRAND.page}">
+<tr><td style="padding:4px 20px 18px">
+<p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:${BRAND.muted}">Use these details to sign in for the first time.</p>
+${detail("Email address", escapeHtml(args.email))}
 ${detail("Temporary password", escapeHtml(args.temporaryPassword))}
-${detail("Referral code", escapeHtml(args.referralCode))}
 ${args.selectedSlot ? detail("Meeting time", escapeHtml(args.selectedSlot)) : ""}
+</td></tr>
 </table>` +
         paragraph(
-          "Sign in with the temporary password below. You will be asked to create a new password before you can enter the portal.",
+          "Sign in with the temporary password above. You will be asked to create a new password before you can enter the portal.",
         ) +
         `<div style="margin:28px 0">${button("Visit portal", args.loginUrl)}</div>` +
         `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">Please keep these account details private and do not forward this email.</p>`,
     }),
-    text: `Hi ${args.name},\n\nCongratulations and welcome to the Xolace Ambassadors Program. Your application has been accepted.\n\nEmail: ${args.email}\nTemporary password: ${args.temporaryPassword}\nReferral code: ${args.referralCode}\nMeeting time: ${args.selectedSlot ?? "Not selected"}\n\nVisit the portal: ${args.loginUrl}\n\nYou will be asked to create a new password before entering the portal. Please keep these details private.`,
+    text: `Hi ${args.name},\n\nCongratulations and welcome to the Xolace Ambassadors Program. Your application has been accepted.\n\nUse these details to sign in for the first time.\n\nEmail address: ${args.email}\nTemporary password: ${args.temporaryPassword}\nMeeting time: ${args.selectedSlot ?? "Not selected"}\n\nVisit the portal: ${args.loginUrl}\n\nYou will be asked to create a new password before entering the portal. Please keep these details private.`,
   };
 }
