@@ -17,6 +17,7 @@ import {
   acceptedApplicationEmail,
   applicationReceivedEmail,
   declinedApplicationEmail,
+  loginUrl,
   meetingScheduledEmail,
 } from "./emailTemplates";
 import { DEFAULT_MEETING_SLOTS, formatMeetingSlot } from "./meetingSlots";
@@ -793,7 +794,7 @@ export const adminAccept = action({
       name: details.name,
       email: details.email,
       temporaryPassword,
-      loginUrl: `${baseUrl()}/login`,
+      loginUrl: loginUrl(),
       referralCode,
       selectedSlot: details.meetingSlotLabel,
       logoUrl: EMAIL_LOGO_URL,
@@ -847,10 +848,6 @@ async function createReferralCode(ctx: Parameters<typeof requireAdmin>[0]) {
       .first();
     if (existing === null) return referralCode;
   }
-}
-
-function baseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 async function sendEmail(
