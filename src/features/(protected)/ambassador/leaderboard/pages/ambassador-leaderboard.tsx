@@ -64,9 +64,12 @@ export default function AmbassadorLeaderboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      {/* flex-wrap plus justify-between made each wrapped line spread apart, so
+          the period tabs landed hard right on their own row. Column on mobile
+          with the tabs self-end keeps them on the right; row from sm up. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageDescription page="ambassadorLeaderboard" className="max-w-2xl" />
-        <div className="flex items-center gap-1 rounded-full border border-border bg-background p-1">
+        <div className="flex w-fit items-center gap-1 self-end rounded-full border border-border bg-background p-1 sm:self-auto">
           {periodOptions.map((option) => (
             <button
               key={option}
