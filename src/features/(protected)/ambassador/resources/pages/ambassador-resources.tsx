@@ -133,7 +133,10 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
 
       {/* Filter bar & Search */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Scrolls sideways on narrow screens instead of wrapping, so the row
+            stays one line. `overscroll-x-contain` stops the page itself from
+            scrolling once the pills reach the edge. */}
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
           {CATEGORIES.map((cat) => {
             const isActive = category === cat;
             return (
@@ -142,7 +145,7 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => void setCategory(cat)}
-                className={`h-8 rounded-full px-3 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "border border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
