@@ -239,15 +239,15 @@ export default function AmbassadorMissions() {
       ) : null}
 
       {user?._id ? (
-        <Card className="mt-8 flex flex-col gap-4 border-border bg-muted/30 p-5 sm:flex-row sm:items-center sm:p-6">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <BookOpenCheck aria-hidden="true" className="size-5" />
+        <Card className="mt-8 flex flex-col gap-3 border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:size-11">
+            <BookOpenCheck aria-hidden="true" className="size-4 sm:size-5" />
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold text-foreground">
               Looking for a place to start?
             </h2>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 hidden text-sm leading-6 text-muted-foreground sm:block">
               Explore practical guides and resources to help you choose your
               next contribution.
             </p>
