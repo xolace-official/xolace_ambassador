@@ -2,20 +2,12 @@
 
 import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { currentYear } from "@/features/(public)/landing/components/ambassador/footer";
 import { XolaceLogo } from "./xolace-logo";
 
-// `useSearchParams` opts out of static prerendering, so this needs the Suspense
-// boundary below or the /login build fails.
 function BackToLanding() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-
-  if (searchParams.get("from") !== "landing") {
-    return null;
-  }
 
   return (
     <button
@@ -38,9 +30,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <div className="flex shrink-0 items-center justify-between md:px-8">
           <XolaceLogo size="sm" />
 
-          <Suspense fallback={null}>
-            <BackToLanding />
-          </Suspense>
+          <BackToLanding />
         </div>
 
         <div className="flex flex-1 items-center justify-center">
