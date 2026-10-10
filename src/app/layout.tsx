@@ -80,7 +80,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    // next-themes sets the dark class on <html> from a pre-hydration script, so
+    // the server and client markup cannot agree. Without this React logs a
+    // hydration mismatch for the class attribute.
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
         <ThemeProvider>
           <NuqsAdapter>
