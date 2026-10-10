@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useConvexAuth } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
