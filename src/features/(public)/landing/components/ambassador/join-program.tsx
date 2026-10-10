@@ -457,6 +457,7 @@ export default function JoinProgramForm() {
                       >
                         {imagePreview ? (
                           <>
+                            {/* biome-ignore lint/performance/noImgElement: imagePreview is a FileReader data: URL, which the next/image optimizer cannot fetch. */}
                             <img
                               src={imagePreview}
                               alt="Profile preview"
