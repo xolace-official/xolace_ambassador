@@ -446,6 +446,32 @@ export const adminReview = mutation({
   },
 });
 
+export const adminDeleteApplication = mutation({
+  args: { applicationId: v.id("applications") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const application = await ctx.db.get(args.applicationId);
+    if (application === null) {
+      throw new AuthError(404, "Application not found.");
+    }
+    // An accepted application has a live ambassador account behind it. Removing
+    // that is a different decision, made from the ambassadors tab.
+    if (application.status === "accepted") {
+      throw new Error("An accepted application cannot be deleted here.");
+    }
+
+    // The uploaded photo has no other owner, so deleting the row would orphan
+    // the file in storage forever.
+    if (application.image !== undefined) {
+      await ctx.storage.delete(application.image);
+    }
+
+    await ctx.db.delete(args.applicationId);
+    return null;
+  },
+});
+
 const emailDetailsValidator = v.object({
   name: v.string(),
   email: v.string(),
