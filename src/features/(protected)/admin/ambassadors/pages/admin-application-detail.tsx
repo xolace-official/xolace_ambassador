@@ -2,6 +2,7 @@
 
 import { useAction, useQuery } from "convex/react";
 import { ExternalLink, UserRound } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -146,9 +147,11 @@ export default function AdminApplicationDetail({
         <div className="flex min-w-0 items-start gap-4">
           <div className="shrink-0">
             {imageUrl ? (
-              <img
+              <Image
                 src={imageUrl}
                 alt={`${application.name}'s profile`}
+                width={64}
+                height={64}
                 className="size-16 rounded-full border border-border object-cover"
               />
             ) : (
