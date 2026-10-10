@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import Image from "next/image";
@@ -27,8 +27,8 @@ export default function WhyAmbassadors() {
 
           <p className="text-base sm:text-lg text-foreground/75 leading-relaxed">
             Xolace creates safe spaces for the feelings too quiet or heavy to
-            put into words â€” making it normal to speak the true thing before
-            it becomes a crisis.
+            put into words — making it normal to speak the true thing before it
+            becomes a crisis.
           </p>
 
           <div className="border-l-4 border-primary bg-primary/5 rounded-r-2xl p-4 sm:p-5 text-base sm:text-lg font-semibold text-foreground">
