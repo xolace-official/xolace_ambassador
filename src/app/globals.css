@@ -164,10 +164,13 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
-  --z-header: 40;
-  --z-overlay: 40;
-  --z-modal: 50;
-  --z-toast: 60;
+  /* Namespace must be `--z-index-*`: Tailwind only emits `z-*` utilities from
+     that prefix. Declared as `--z-*` these were silently dropped, so every
+     dialog overlay, topbar and dropdown was stacking on DOM order alone. */
+  --z-index-header: 40;
+  --z-index-overlay: 40;
+  --z-index-modal: 50;
+  --z-index-toast: 60;
 
   --color-brand-linkedin: var(--brand-linkedin);
   --color-brand-github: var(--brand-github);
