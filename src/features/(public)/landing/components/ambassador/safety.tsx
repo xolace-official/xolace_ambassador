@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Check, XCircle } from "lucide-react";
 import { motion } from "motion/react";
