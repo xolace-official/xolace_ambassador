@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { LogOut, ShieldCheck, Sparkles, UserPlus, X } from "lucide-react";
