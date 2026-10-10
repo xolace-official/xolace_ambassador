@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useAction,
-  useMutation,
-  usePaginatedQuery,
-  useQuery,
-} from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -130,14 +125,14 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
 }
 
 function ApplicationsTable({ uuid }: { uuid: string }) {
-  const declineApplication = useAction(api.applications.adminDecline);
-  const [declineTarget, setDeclineTarget] = useState<{
+  const deleteApplication = useMutation(
+    api.applications.adminDeleteApplication,
+  );
+  const [deleteTarget, setDeleteTarget] = useState<{
     id: Id<"applications">;
     name: string;
-    email: string;
   } | null>(null);
-  const [declineNote, setDeclineNote] = useState("");
-  const [declining, setDeclining] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useQueryState(
     "applicationStatus",
     parseAsStringLiteral(APPLICATION_STATUSES)
@@ -277,23 +272,21 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
                       View
                     </Link>
                   </Button>
-                  {application.status !== "rejected" ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="min-h-11 text-destructive hover:text-destructive"
-                      onClick={() =>
-                        setDeclineTarget({
-                          id: application._id,
-                          name: application.name,
-                          email: application.email,
-                        })
-                      }
-                    >
-                      Decline
-                    </Button>
-                  ) : null}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="min-h-11 text-destructive hover:text-destructive"
+                    aria-label={`Delete ${application.name}'s application`}
+                    onClick={() =>
+                      setDeleteTarget({
+                        id: application._id,
+                        name: application.name,
+                      })
+                    }
+                  >
+                    Delete
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -312,74 +305,53 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
       </Table>
       <TablePagination {...pagination.controls} />
       <Dialog
-        open={declineTarget !== null}
+        open={deleteTarget !== null}
         onOpenChange={(open) => {
-          if (!open && !declining) {
-            setDeclineTarget(null);
-            setDeclineNote("");
+          if (!open && !deleting) {
+            setDeleteTarget(null);
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Decline this application?</DialogTitle>
+            <DialogTitle>Delete this application?</DialogTitle>
             <DialogDescription>
-              Add the feedback that will be emailed to {declineTarget?.email}.
+              {deleteTarget?.name}’s application and uploaded photo will be
+              permanently removed. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <label
-              htmlFor="applications-decline-note"
-              className="text-sm font-medium"
-            >
-              Feedback
-            </label>
-            <Textarea
-              id="applications-decline-note"
-              value={declineNote}
-              onChange={(event) => setDeclineNote(event.target.value)}
-              placeholder="Share a clear and respectful reason…"
-              rows={5}
-            />
-          </div>
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              disabled={declining}
-              onClick={() => setDeclineTarget(null)}
+              disabled={deleting}
+              onClick={() => setDeleteTarget(null)}
             >
               Cancel
             </Button>
             <Button
               type="button"
               variant="destructive"
-              disabled={
-                declining || declineNote.trim().length < 10 || !declineTarget
-              }
+              disabled={deleting || !deleteTarget}
               onClick={() => {
-                if (!declineTarget) return;
-                setDeclining(true);
-                void declineApplication({
-                  applicationId: declineTarget.id,
-                  note: declineNote,
-                })
+                if (!deleteTarget) return;
+                setDeleting(true);
+                void deleteApplication({ applicationId: deleteTarget.id })
                   .then(() => {
-                    toast.success("Decline message sent.");
-                    setDeclineTarget(null);
-                    setDeclineNote("");
+                    toast.success("Application deleted.");
+                    setDeleteTarget(null);
                   })
                   .catch((error: unknown) => {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : "Could not decline this application.",
+                        : "Could not delete this application.",
                     );
                   })
-                  .finally(() => setDeclining(false));
+                  .finally(() => setDeleting(false));
               }}
             >
-              {declining ? "Sending…" : "Confirm decline"}
+              {deleting ? "Deleting…" : "Delete application"}
             </Button>
           </DialogFooter>
         </DialogContent>
