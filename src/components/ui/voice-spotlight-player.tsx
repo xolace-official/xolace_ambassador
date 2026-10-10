@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Pause, Play, Quote, Volume2 } from "lucide-react";
 import { motion } from "motion/react";
@@ -83,7 +83,7 @@ export default function VoiceSpotlightPlayer() {
               {activeQuote.name}
             </span>
             <span>
-              {activeQuote.role} â€¢ {activeQuote.campus}
+              {activeQuote.role} • {activeQuote.campus}
             </span>
           </div>
           <span className="font-mono text-xs font-semibold bg-secondary px-2.5 py-1 rounded-md">
