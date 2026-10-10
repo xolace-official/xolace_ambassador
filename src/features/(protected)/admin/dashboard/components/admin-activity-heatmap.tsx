@@ -27,25 +27,26 @@ export function AdminActivityHeatmap({ data }: { data: HeatCell[] }) {
   const cols = 7;
   const rows = Math.ceil(cells.length / cols);
 
-  // Pad to fill the grid
-  const padded: (HeatCell | null)[] = [
-    ...Array(rows * cols - cells.length).fill(null),
-    ...cells,
+  // Pad to fill the grid. Keys are assigned here rather than taken from the map
+  // index so the leading blanks keep a stable identity as the data grows.
+  const slots: { key: string; cell: HeatCell | null }[] = [
+    ...Array.from({ length: rows * cols - cells.length }, (_, i) => ({
+      key: `pad-${i}`,
+      cell: null,
+    })),
+    ...cells.map((cell) => ({ key: cell.date, cell })),
   ];
 
   return (
-    <div aria-label="Activity heatmap">
+    <div role="img" aria-label="Activity heatmap">
       <div
         className="grid gap-1"
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
       >
-        {padded.map((cell, i) => {
+        {slots.map(({ key, cell }) => {
           if (!cell) {
             return (
-              <div
-                key={`empty-${i}`}
-                className="aspect-square rounded-sm bg-muted/30"
-              />
+              <div key={key} className="aspect-square rounded-sm bg-muted/30" />
             );
           }
           const level = getLevel(cell.contributions, max);
@@ -58,7 +59,7 @@ export function AdminActivityHeatmap({ data }: { data: HeatCell[] }) {
           ];
           return (
             <div
-              key={cell.date}
+              key={key}
               className={`aspect-square rounded-sm ${opacityMap[level]}`}
               title={`${cell.date}: ${cell.contributions} contributions`}
             />
