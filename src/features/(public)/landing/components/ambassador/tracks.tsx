@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Clapperboard,
@@ -94,7 +94,7 @@ export default function Tracks() {
           </h2>
           <p className="text-lg text-foreground/60 md:text-balance">
             Every ambassador contributes differently. Pick the track that
-            matches how you already show up in the world â€” you can grow into
+            matches how you already show up in the world — you can grow into
             others as you go.
           </p>
         </motion.div>
@@ -172,7 +172,7 @@ export default function Tracks() {
           viewport={{ once: true, margin: "-50px" }}
           className="text-center text-foreground/60 text-sm"
         >
-          Not sure which one fits? You can shift tracks anytime â€” most
+          Not sure which one fits? You can shift tracks anytime — most
           ambassadors do.
         </motion.p>
       </div>
