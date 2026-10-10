@@ -80,7 +80,7 @@ Xolace Ambassadors &middot; Building a world where people feel heard.<br />
 // fallback would silently ship dead buttons to applicants, so an unconfigured
 // deployment resolves to the real domain instead.
 export function baseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "https://xolaceinc.com";
+  return process.env.NEXT_PUBLIC_APP_URL ?? "https://ambassador.xolaceinc.com";
 }
 
 export function loginUrl() {
