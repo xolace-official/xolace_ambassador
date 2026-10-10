@@ -1,4 +1,4 @@
-﻿import { Award, Globe, Heart, Users } from "lucide-react";
+import { Award, Globe, Heart, Users } from "lucide-react";
 
 // Ambassador photos are still on the old Supabase storage bucket, used here as
 // a static file host only. Migrate to Convex file storage and delete this.
