@@ -36,7 +36,7 @@ const steps = [
 ];
 
 // Station positions along the winding path, as a % of the 1180-wide
-// viewBox and a fixed px height â€” mirrors the path's control points below.
+// viewBox and a fixed px height — mirrors the path's control points below.
 const stationPositions = [
   { xPct: 5.76, topPx: 70 },
   { xPct: 23.73, topPx: 10 },
@@ -153,9 +153,13 @@ export default function HowItWorks() {
           viewport={{ once: true, margin: "-50px" }}
           className="relative max-w-2xl lg:hidden"
         >
+          {/* Carries the desktop connector across to mobile: same primary colour and the
+            same 2px-on / 12px-off rhythm as the path's strokeDasharray="2 12".
+            Full opacity rather than the path's 0.3 — at 1px wide, that opacity
+            is not perceptible against the background. */}
           <div
             aria-hidden="true"
-            className="absolute left-6 top-2 bottom-2 w-px bg-border hidden sm:block"
+            className="absolute left-6 top-2 bottom-2 w-px bg-[repeating-linear-gradient(to_bottom,var(--color-primary)_0_2px,transparent_2px_14px)]"
           />
           {steps.map((step, index) => (
             <motion.li
