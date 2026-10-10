@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { ArrowRight, CalendarDays, Clock, Video } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -139,9 +140,11 @@ export function AdminMeetings({ uuid }: { uuid: string }) {
               {upcoming.map((meeting) => (
                 <li key={meeting._id} className="flex items-start gap-3 py-3.5">
                   {meeting.imageUrl ? (
-                    <img
+                    <Image
                       src={meeting.imageUrl}
                       alt=""
+                      width={40}
+                      height={40}
                       className="size-10 shrink-0 rounded-full object-cover"
                     />
                   ) : (
