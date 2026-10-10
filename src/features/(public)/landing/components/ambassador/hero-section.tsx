@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useQuery } from "convex/react";
 import { motion } from "motion/react";
@@ -112,7 +112,7 @@ export default function HeroSection() {
             >
               Xolace Ambassadors believe emotional wellbeing shouldn&apos;t be
               something we only talk about when things get bad. You don&apos;t
-              have to be an expert â€” you just have to care.
+              have to be an expert — you just have to care.
             </motion.p>
 
             <motion.div
