@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
