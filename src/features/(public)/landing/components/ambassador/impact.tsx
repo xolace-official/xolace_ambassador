@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "motion/react";
 import { STATS } from "@/constants";
@@ -49,8 +49,8 @@ export default function Impact() {
             Still early. Already real.
           </h2>
           <p className="text-lg text-foreground/60 md:text-balance pb-8">
-            These are actual numbers, not projections â€” and they grow with
-            every ambassador who joins.
+            These are actual numbers, not projections — and they grow with every
+            ambassador who joins.
           </p>
         </motion.div>
 
