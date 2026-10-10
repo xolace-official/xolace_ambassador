@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { GraduationCap, KeyRound, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
