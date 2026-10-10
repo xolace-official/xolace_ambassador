@@ -2,17 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction, useMutation, useQuery } from "convex/react";
-import {
-  ArrowLeft,
-  BookOpen,
-  FileText,
-  Image,
-  Layers,
-  LinkIcon,
-  Loader2,
-  Upload,
-  Video,
-} from "lucide-react";
+import { FileText, LinkIcon, Loader2, Upload, Video } from "lucide-react";
 import { useRouter as useNextRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
