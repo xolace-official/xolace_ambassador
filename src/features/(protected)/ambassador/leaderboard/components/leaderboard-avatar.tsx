@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface LeaderboardAvatarProps {
   name: string;
   image: string | null;
@@ -20,11 +22,14 @@ export function LeaderboardAvatar({
   size,
 }: LeaderboardAvatarProps) {
   const className = size === "lg" ? "size-10 text-sm" : "size-8 text-xs";
+  const px = size === "lg" ? 40 : 32;
 
   return image ? (
-    <img
+    <Image
       src={image}
       alt={`${name}'s profile`}
+      width={px}
+      height={px}
       className={`${className} shrink-0 rounded-full object-cover`}
     />
   ) : (
