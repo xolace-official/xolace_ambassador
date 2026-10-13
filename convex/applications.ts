@@ -723,6 +723,25 @@ export const acceptApplication = internalMutation({
       passwordSetupRequired: true,
     });
 
+    const ambassadorTotals = await ctx.db
+      .query("ambassadorTotals")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
+    if (ambassadorTotals === null) {
+      await ctx.db.insert("ambassadorTotals", {
+        userId: args.userId,
+        points: 0,
+        levelRank: 1,
+        contributionsApproved: 0,
+        missionsCompleted: 0,
+        peopleReached: 0,
+        installs: 0,
+        referrals: 0,
+        contentCount: 0,
+        eventCount: 0,
+      });
+    }
+
     if (application.referralCode !== undefined) {
       const referrerProfile = await ctx.db
         .query("ambassadorProfiles")
