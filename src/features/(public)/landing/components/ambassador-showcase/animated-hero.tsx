@@ -1,9 +1,36 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { Award, Globe, Heart, Users } from "lucide-react";
 import { motion } from "motion/react";
-import { STATS } from "@/constants";
+import { formatCompactPlus } from "@/lib/format-compact-plus";
+import { api } from "../../../../../../convex/_generated/api";
 
 const AnimatedHero = () => {
+  const summary = useQuery(api.publicAmbassadors.summary);
+  const stats = [
+    {
+      icon: Users,
+      label: "Active Ambassadors",
+      value: formatCompactPlus(summary?.activeAmbassadors ?? 0),
+    },
+    {
+      icon: Globe,
+      label: "Countries",
+      value: formatCompactPlus(summary?.countries ?? 0),
+    },
+    {
+      icon: Heart,
+      label: "Lives Impacted",
+      value: formatCompactPlus(summary?.peopleReached ?? 0),
+    },
+    {
+      icon: Award,
+      label: "Events Hosted",
+      value: formatCompactPlus(summary?.eventsHosted ?? 0),
+    },
+  ];
+
   return (
     <section className="relative overflow-hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -47,7 +74,7 @@ const AnimatedHero = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mt-12"
         >
-          {STATS.map((stat, index) => (
+          {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, scale: 0.9 }}
