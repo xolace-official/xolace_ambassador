@@ -102,8 +102,12 @@ export function PortalSettings({
   async function onSubmit(values: SettingsFormValues) {
     try {
       await updateSettings(values);
-      setEditing(false);
       toast.success("Profile saved");
+      if (profileEdit && profileHref) {
+        router.push(profileHref);
+        return;
+      }
+      setEditing(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not save your profile.",
