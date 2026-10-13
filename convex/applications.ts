@@ -704,7 +704,19 @@ export const acceptApplication = internalMutation({
       await ctx.db.patch(profile._id, {
         referralCode,
         status: "active",
-        ...(profile.bio ? {} : { bio }),
+        track: application.trackInterest,
+        location: application.location,
+        school: application.school,
+        dateOfBirth: application.dateOfBirth,
+        bio,
+        socials: {
+          tiktok: socials.tiktok,
+          instagram: socials.instagram,
+          x: socials.x,
+          youtube: socials.youtube,
+          linkedin: socials.linkedin,
+          snapchat: socials.snapchat,
+        },
         onboardedAt: profile.onboardedAt ?? Date.now(),
       });
     }
