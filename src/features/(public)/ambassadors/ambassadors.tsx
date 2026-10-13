@@ -8,9 +8,9 @@ import AnimatedCta from "../landing/components/ambassador-showcase/animated-cta"
 import AnimatedHero from "../landing/components/ambassador-showcase/animated-hero";
 
 const PAGE_SIZE = 8;
-// The query caps at 48, so this ceiling keeps the button honest once the last
-// page is showing rather than looping on an empty fetch.
-const MAX_SHOWN = 48;
+// Keep the public query bounded while allowing normal-sized programs to show
+// every active ambassador instead of silently stopping at the old 48-record cap.
+const MAX_SHOWN = 500;
 
 const Ambassadors = () => {
   const ambassadors = useQuery(api.publicAmbassadors.list, {
