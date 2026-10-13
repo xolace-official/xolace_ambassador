@@ -1,6 +1,5 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { type QueryCtx, query } from "./_generated/server";
+import { query } from "./_generated/server";
 
 // The public showcase is deliberately unauthenticated: anyone can read who is in
 // the program. It lives in its own file so the whole public surface can be
@@ -36,11 +35,18 @@ const publicAmbassadorValidator = v.object({
   ),
 });
 
-const MAX_LIMIT = 48;
+const MAX_LIMIT = 500;
 
 // "points" mirrors the all-time leaderboard: highest scoring first.
 // "recent" is the newest onboarded first, used for the showcase section.
 const orderValidator = v.union(v.literal("points"), v.literal("recent"));
+
+const publicSummaryValidator = v.object({
+  activeAmbassadors: v.number(),
+  countries: v.number(),
+  peopleReached: v.number(),
+  eventsHosted: v.number(),
+});
 
 // An empty handle means the platform column was filled with a blank string
 // rather than left empty. Publish it as absent so the card does not render a
@@ -48,18 +54,6 @@ const orderValidator = v.union(v.literal("points"), v.literal("recent"));
 function handle(value: string | undefined): string | null {
   const trimmed = value?.trim() ?? "";
   return trimmed.length > 0 ? trimmed : null;
-}
-
-async function profileFor(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-): Promise<Doc<"ambassadorProfiles"> | null> {
-  const profile = await ctx.db
-    .query("ambassadorProfiles")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .first();
-  if (profile === null || profile.status !== "active") return null;
-  return profile;
 }
 
 export const list = query({
@@ -72,40 +66,33 @@ export const list = query({
     const limit = Math.min(args.limit ?? 24, MAX_LIMIT);
     const order = args.order ?? "points";
 
-    // Leaderboard order starts from the totals index, which is already sorted
-    // by points; only ambassadors with a totals row can rank.
-    const ranked = await ctx.db
-      .query("ambassadorTotals")
-      .withIndex("by_points")
-      .order("desc")
+    const profiles = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
       .take(limit);
 
-    const byId = new Map<Id<"users">, Id<"ambassadorProfiles">>();
+    const totals = await Promise.all(
+      profiles.map(async (profile) => {
+        const total = await ctx.db
+          .query("ambassadorTotals")
+          .withIndex("by_userId", (q) => q.eq("userId", profile.userId))
+          .first();
+        return [profile.userId, total?.points ?? 0] as const;
+      }),
+    );
+    const pointsByUserId = new Map(totals);
 
-    const candidates =
-      order === "points"
-        ? await Promise.all(
-            ranked.map(async (total) => {
-              const profile = await profileFor(ctx, total.userId);
-              if (profile === null) return null;
-              byId.set(total.userId, profile._id);
-              return profile;
-            }),
-          )
-        : await ctx.db
-            .query("ambassadorProfiles")
-            .withIndex("by_status", (q) => q.eq("status", "active"))
-            .take(limit);
-
-    const profiles = (
-      candidates.filter((p) => p !== null) as Doc<"ambassadorProfiles">[]
-    )
-      .sort(
-        (a, b) =>
-          (b.onboardedAt ?? b._creationTime) -
-          (a.onboardedAt ?? a._creationTime),
-      )
-      .slice(0, limit);
+    profiles.sort((a, b) => {
+      if (order === "points") {
+        return (
+          (pointsByUserId.get(b.userId) ?? 0) -
+          (pointsByUserId.get(a.userId) ?? 0)
+        );
+      }
+      return (
+        (b.onboardedAt ?? b._creationTime) - (a.onboardedAt ?? a._creationTime)
+      );
+    });
 
     const rows = await Promise.all(
       profiles.map(async (profile) => {
@@ -117,7 +104,7 @@ export const list = query({
         const name = user.name?.trim() ?? "";
         if (name.length === 0) return null;
 
-        const [totals, image] = await Promise.all([
+        const [total, image] = await Promise.all([
           ctx.db
             .query("ambassadorTotals")
             .withIndex("by_userId", (q) => q.eq("userId", user._id))
@@ -135,10 +122,10 @@ export const list = query({
           track: profile.track ?? null,
           bio: profile.bio ?? null,
           joinedAt: profile.onboardedAt ?? user._creationTime,
-          peopleReached: totals?.peopleReached ?? 0,
-          missionsCompleted: totals?.missionsCompleted ?? 0,
-          eventsHosted: totals?.eventCount ?? 0,
-          contributions: totals?.contributionsApproved ?? 0,
+          peopleReached: total?.peopleReached ?? 0,
+          missionsCompleted: total?.missionsCompleted ?? 0,
+          eventsHosted: total?.eventCount ?? 0,
+          contributions: total?.contributionsApproved ?? 0,
           socials: profile.socials
             ? {
                 tiktok: handle(profile.socials.tiktok),
@@ -154,5 +141,39 @@ export const list = query({
     );
 
     return rows.filter((row) => row !== null);
+  },
+});
+
+export const summary = query({
+  args: {},
+  returns: publicSummaryValidator,
+  handler: async (ctx) => {
+    const profiles = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .take(MAX_LIMIT);
+
+    const locations = new Set<string>();
+    let peopleReached = 0;
+    let eventsHosted = 0;
+
+    for (const profile of profiles) {
+      const location = profile.location?.trim();
+      if (location) locations.add(location.toLowerCase());
+
+      const totals = await ctx.db
+        .query("ambassadorTotals")
+        .withIndex("by_userId", (q) => q.eq("userId", profile.userId))
+        .first();
+      peopleReached += totals?.peopleReached ?? 0;
+      eventsHosted += totals?.eventCount ?? 0;
+    }
+
+    return {
+      activeAmbassadors: profiles.length,
+      countries: locations.size,
+      peopleReached,
+      eventsHosted,
+    };
   },
 });
