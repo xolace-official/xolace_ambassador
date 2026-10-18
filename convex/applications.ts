@@ -37,10 +37,6 @@ const meetingSlotIdValidator = v.string();
 const EMAIL_LOGO_URL =
   "https://res.cloudinary.com/dnucdwa71/image/upload/v1780657998/main-logo_ip0ag6.png";
 
-function getMeetingSlot(id: string) {
-  return DEFAULT_MEETING_SLOTS.find((slot) => slot.id === id);
-}
-
 const socialValidator = v.object({
   platform: v.string(),
   handle: v.string(),
@@ -104,24 +100,24 @@ export const generateUploadUrl = internalMutation({
 
 // Slots that are in the future, active, and not already booked. Shared by the
 // public form query and the submit validation so the two can never disagree.
+// The defaults apply only while no slots have been configured at all; once the
+// table has rows, disabled or past slots must not bring the defaults back.
 async function availableMeetingSlots(
   ctx: Parameters<typeof requireAdmin>[0],
   now: number,
 ) {
-  const configured = await ctx.db
-    .query("meetingSlots")
-    .withIndex("by_active_and_startsAt", (q) =>
-      q.eq("active", true).gt("startsAt", now),
-    )
-    .order("asc")
-    .take(100);
-  const slots =
-    configured.length > 0
-      ? configured.map((slot) => ({
-          id: slot.slotKey,
-          startsAt: slot.startsAt,
-        }))
-      : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > now);
+  const isConfigured = (await ctx.db.query("meetingSlots").first()) !== null;
+  const slots = isConfigured
+    ? (
+        await ctx.db
+          .query("meetingSlots")
+          .withIndex("by_active_and_startsAt", (q) =>
+            q.eq("active", true).gt("startsAt", now),
+          )
+          .order("asc")
+          .take(100)
+      ).map((slot) => ({ id: slot.slotKey, startsAt: slot.startsAt }))
+    : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > now);
   const available = await Promise.all(
     slots.map(async (slot) =>
       (await isMeetingSlotBooked(ctx, slot.id)) ? null : slot,
@@ -190,31 +186,18 @@ export const submit = mutation({
     // be blocked from applying when none are available.
     let meetingSlot: { id: string; startsAt: number } | undefined;
     const requestedSlotId = args.meetingSlotId;
+    const available = await availableMeetingSlots(ctx, now);
     if (requestedSlotId !== undefined) {
-      const configuredMeetingSlot = await ctx.db
-        .query("meetingSlots")
-        .withIndex("by_slotKey", (q) => q.eq("slotKey", requestedSlotId))
-        .first();
-      const candidate =
-        configuredMeetingSlot ?? getMeetingSlot(requestedSlotId);
-      if (
-        candidate === undefined ||
-        candidate.startsAt <= now ||
-        configuredMeetingSlot?.active === false
-      ) {
-        throw new Error("Choose one of the available meeting times.");
-      }
-      if (await isMeetingSlotBooked(ctx, requestedSlotId)) {
+      meetingSlot = available.find((slot) => slot.id === requestedSlotId);
+      if (meetingSlot === undefined) {
         throw new Error(
-          "That meeting time has already been taken. Choose another time.",
+          (await isMeetingSlotBooked(ctx, requestedSlotId))
+            ? "That meeting time has already been taken. Choose another time."
+            : "Choose one of the available meeting times.",
         );
       }
-      meetingSlot = { id: requestedSlotId, startsAt: candidate.startsAt };
-    } else {
-      const available = await availableMeetingSlots(ctx, now);
-      if (available.length > 0) {
-        throw new Error("Choose one of the available meeting times.");
-      }
+    } else if (available.length > 0) {
+      throw new Error("Choose one of the available meeting times.");
     }
 
     if (name.length < 2 || name.length > 120) {
