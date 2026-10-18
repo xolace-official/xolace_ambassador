@@ -148,7 +148,12 @@ export const getRewards = query({
         reason: entry.reason,
         ...(entry.actionKey ? { actionKey: entry.actionKey } : {}),
       })),
-      recognitions,
+      recognitions: recognitions.map((recognition) => ({
+        _id: recognition._id,
+        _creationTime: recognition._creationTime,
+        kind: recognition.kind,
+        note: recognition.note,
+      })),
     };
   },
 });
