@@ -1,6 +1,5 @@
 "use client";
 
-import { usePaginatedQuery } from "convex/react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
@@ -24,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useStablePaginatedQuery } from "@/hooks/use-stable-query";
 import { parseAsPage } from "@/lib/url-state";
 import { api } from "../../../../../../convex/_generated/api";
 
@@ -38,8 +38,9 @@ export function AdminMeetingsAll() {
   const {
     results,
     status: loadStatus,
+    isStale,
     loadMore,
-  } = usePaginatedQuery(
+  } = useStablePaginatedQuery(
     api.meetings.adminAllMeetings,
     { status: status === "all" ? undefined : status },
     { initialNumItems: PAGE_SIZE },
@@ -96,7 +97,11 @@ export function AdminMeetingsAll() {
       </div>
 
       <Card className="gap-0 overflow-hidden p-0">
-        <Table aria-label="All scheduled meetings">
+        <Table
+          aria-label="All scheduled meetings"
+          aria-busy={isStale}
+          className={`transition-opacity ${isStale ? "opacity-60" : ""}`}
+        >
           <TableHeader className="bg-muted">
             <TableRow>
               <TableHead>Ambassador</TableHead>

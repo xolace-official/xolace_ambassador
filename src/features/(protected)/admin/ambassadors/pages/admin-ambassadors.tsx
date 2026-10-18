@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -51,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useStablePaginatedQuery } from "@/hooks/use-stable-query";
 import { parseAsPage } from "@/lib/url-state";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
@@ -141,7 +142,7 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
       .withOptions({ clearOnDefault: false }),
   );
   const { search, searchInput, setSearchInput } = usePeopleSearch();
-  const { results, status, loadMore } = usePaginatedQuery(
+  const { results, status, isStale, loadMore } = useStablePaginatedQuery(
     api.applications.adminList,
     {
       status: statusFilter === "all" ? undefined : statusFilter,
@@ -219,7 +220,10 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
       </div>
       <Table
         aria-label="Ambassador applications"
-        className="[&_td]:px-3 [&_td]:py-2 [&_th]:px-3"
+        aria-busy={isStale}
+        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${
+          isStale ? "opacity-60" : ""
+        }`}
       >
         <TableHeader className="bg-muted">
           <TableRow>
@@ -374,7 +378,7 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
       .withOptions({ clearOnDefault: true }),
   );
   const { search, searchInput, setSearchInput } = usePeopleSearch();
-  const { results, status, loadMore } = usePaginatedQuery(
+  const { results, status, isStale, loadMore } = useStablePaginatedQuery(
     api.ambassadors.adminList,
     {
       status: statusFilter === "all" ? undefined : statusFilter,
@@ -454,7 +458,10 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
       </div>
       <Table
         aria-label="Active ambassadors"
-        className="[&_td]:px-3 [&_td]:py-2 [&_th]:px-3"
+        aria-busy={isStale}
+        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${
+          isStale ? "opacity-60" : ""
+        }`}
       >
         <TableHeader className="bg-muted">
           <TableRow>

@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStableQuery } from "@/hooks/use-stable-query";
 import type { Mission, MissionCategory } from "@/types/missions.type";
 import {
   MISSION_CATEGORIES,
@@ -88,11 +89,20 @@ export default function AmbassadorMissions() {
     }
   }, [missionSet, missionSets, setMissionSet, setPage]);
 
-  const rows = useQuery(api.missions.list, {
-    track: trackArg,
-    missionSetId: selectedMissionSet?._id as Id<"missionSets"> | undefined,
-    now,
-  });
+  // Wait for the sets so the first load does not briefly show the unscoped
+  // list before swapping to the selected set.
+  const rows = useStableQuery(
+    api.missions.list,
+    missionSets === undefined
+      ? "skip"
+      : {
+          track: trackArg,
+          missionSetId: selectedMissionSet?._id as
+            | Id<"missionSets">
+            | undefined,
+          now,
+        },
+  );
 
   const all = useMemo(() => (rows ?? []).map((row) => toMission(row)), [rows]);
 

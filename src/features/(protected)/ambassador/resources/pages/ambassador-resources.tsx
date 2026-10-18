@@ -1,6 +1,5 @@
 "use client";
 
-import { usePaginatedQuery } from "convex/react";
 import {
   BookOpen,
   Clock,
@@ -22,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useStablePaginatedQuery } from "@/hooks/use-stable-query";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
@@ -95,7 +95,7 @@ export default function AmbassadorResources({ uuid }: { uuid?: string }) {
     results: resources,
     status: resourceStatus,
     loadMore,
-  } = usePaginatedQuery(
+  } = useStablePaginatedQuery(
     api.resources.listPublished,
     { search: search.trim() || undefined },
     { initialNumItems: 12 },

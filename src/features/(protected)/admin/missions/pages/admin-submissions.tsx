@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStablePaginatedQuery } from "@/hooks/use-stable-query";
 import { api } from "../../../../../../convex/_generated/api";
 
 const STATUSES = [
@@ -79,8 +80,9 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
   const {
     results,
     status: pageStatus,
+    isStale,
     loadMore,
-  } = usePaginatedQuery(
+  } = useStablePaginatedQuery(
     api.contributions.adminList,
     { status: status === "all" ? undefined : status },
     { initialNumItems: 8 },
@@ -116,7 +118,8 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
         </Select>
       </div>
 
-      {pageStatus === "LoadingFirstPage" ? (
+      {pageStatus === "LoadingFirstPage" ||
+      (isStale && results.length === 0) ? (
         <div className="divide-y divide-border rounded-lg bg-card px-3 sm:px-4">
           {["one", "two", "three", "four", "five", "six"].map((key) => (
             <div
@@ -185,7 +188,12 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
           />
         </div>
       ) : (
-        <ul className="divide-y divide-border rounded-lg bg-card px-3 sm:px-4">
+        <ul
+          aria-busy={isStale}
+          className={`divide-y divide-border rounded-lg bg-card px-3 transition-opacity sm:px-4 ${
+            isStale ? "opacity-60" : ""
+          }`}
+        >
           {results.map((submission) => (
             <li key={submission._id} className="min-w-0">
               <Link

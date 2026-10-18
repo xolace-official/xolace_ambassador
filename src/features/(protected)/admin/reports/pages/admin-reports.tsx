@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { useQueryState } from "nuqs";
 import {
   parseAsInteger,
@@ -9,6 +8,7 @@ import {
 } from "nuqs/server";
 import { useEffect, useRef, useState } from "react";
 import { PageDescription } from "@/components/shared/page-description";
+import { useStableQuery } from "@/hooks/use-stable-query";
 import { api } from "../../../../../../convex/_generated/api";
 import {
   type ColumnDef,
@@ -180,7 +180,7 @@ export default function AdminReports({ uuid }: { uuid: string }) {
     ]).withDefault("all"),
   );
 
-  const reports = useQuery(api.reports.getReports, {
+  const reports = useStableQuery(api.reports.getReports, {
     reportType: reportType ?? undefined,
     search: search || undefined,
     period: period ?? undefined,

@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { useQueryState } from "nuqs";
 import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
+import { useStableQuery } from "@/hooks/use-stable-query";
 import { api } from "../../../../../../convex/_generated/api";
 import { LeaderboardPagination } from "../components/leaderboard-pagination";
 import { LeaderboardPodium } from "../components/leaderboard-podium";
@@ -31,7 +31,7 @@ export default function AmbassadorLeaderboard() {
       .withOptions({ clearOnDefault: true }),
   );
 
-  const leaderboard = useQuery(
+  const leaderboard = useStableQuery(
     api.leaderboard.getLeaderboard,
     period === "lastMission" ? { period } : {},
   );

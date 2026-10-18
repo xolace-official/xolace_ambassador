@@ -11,6 +11,7 @@ import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useStableQuery } from "@/hooks/use-stable-query";
 import { api } from "../../../../../../convex/_generated/api";
 import { AddSlotDialog } from "../components/add-slot-dialog";
 
@@ -35,11 +36,13 @@ export function AdminMeetings({ uuid }: { uuid: string }) {
   const today = startOfUtcDay(now);
   const tomorrow = today + 86_400_000;
 
-  const todayMeetings = useQuery(api.meetings.adminTodayMeetings, {
+  // `now` ticks every minute; hold the last result so the lists do not
+  // flash empty on each tick.
+  const todayMeetings = useStableQuery(api.meetings.adminTodayMeetings, {
     startOfDay: today,
     endOfDay: tomorrow,
   });
-  const upcoming = useQuery(api.meetings.adminUpcomingMeetings, { now });
+  const upcoming = useStableQuery(api.meetings.adminUpcomingMeetings, { now });
   const slots = useQuery(api.meetings.adminListSlots);
   const ensureDefaults = useMutation(api.meetings.adminEnsureDefaults);
   const toggleSlot = useMutation(api.meetings.adminToggleSlot);

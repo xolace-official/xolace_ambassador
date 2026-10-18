@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStablePaginatedQuery } from "@/hooks/use-stable-query";
 import {
   MISSION_CATEGORIES,
   MISSION_CATEGORY_LABELS,
@@ -214,8 +215,9 @@ function MissionListing({
   const {
     results,
     status: pageStatus,
+    isStale,
     loadMore,
-  } = usePaginatedQuery(
+  } = useStablePaginatedQuery(
     api.missions.adminList,
     {
       missionSetId: missionSetId
@@ -290,7 +292,8 @@ function MissionListing({
         </div>
       </div>
 
-      {pageStatus === "LoadingFirstPage" ? (
+      {pageStatus === "LoadingFirstPage" ||
+      (isStale && results.length === 0) ? (
         <div className="grid gap-5 md:grid-cols-2">
           {["one", "two", "three", "four", "five", "six"].map((key) => (
             <div
@@ -318,7 +321,12 @@ function MissionListing({
           }
         />
       ) : (
-        <div className="grid gap-5 md:grid-cols-2">
+        <div
+          aria-busy={isStale}
+          className={`grid gap-5 transition-opacity md:grid-cols-2 ${
+            isStale ? "opacity-60" : ""
+          }`}
+        >
           {results.map((mission) => (
             <Card
               key={mission._id}
