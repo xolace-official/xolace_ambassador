@@ -1,4 +1,8 @@
 import {
+  invalidateSessions,
+  modifyAccountCredentials,
+} from "@convex-dev/auth/server";
+import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
@@ -6,6 +10,7 @@ import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
+  type ActionCtx,
   action,
   internalAction,
   internalMutation,
@@ -615,6 +620,27 @@ export const userIdByEmail = internalQuery({
   },
 });
 
+// An account with no role and no ambassador profile was never provisioned by
+// an acceptance — in practice the leftover of an `adminAccept` that failed
+// part-way. Admins and ambassadors always have a role, so they never match.
+export const unprovisionedUserIdByEmail = internalQuery({
+  args: { email: v.string() },
+  returns: v.union(v.id("users"), v.null()),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+    if (user === null || user.role !== undefined) return null;
+    const profile = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+    return profile === null ? user._id : null;
+  },
+});
+
 export const acceptApplication = internalMutation({
   args: {
     applicationId: v.id("applications"),
@@ -790,10 +816,8 @@ export const adminAccept = action({
       throw new Error("This application has already been accepted.");
     }
 
-    // Strip the uuid separators: it is emailed to a person to type, and a hyphen
-    // in the middle is easy to misread as a letter or dropped entirely. Still
-    // random per application, so it is never valid for another account.
-    const temporaryPassword = `Xolace-${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}`;
+    const temporaryPassword = generateTemporaryPassword();
+    let userId: Id<"users"> | null = null;
     try {
       await ctx.runAction(api.auth.signIn, {
         provider: "password",
@@ -805,15 +829,30 @@ export const adminAccept = action({
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("already exists") || message.includes("already")) {
+      if (!message.includes("already")) throw error;
+
+      // A previous attempt may have created the account and then failed
+      // before the acceptance was saved. That leftover has no role or profile,
+      // so it can be taken over: new credentials replace whatever it was
+      // created with and any session on it is ended. Anything else is a real
+      // account and must not be touched.
+      userId = await ctx.runQuery(
+        internal.applications.unprovisionedUserIdByEmail,
+        { email: details.email },
+      );
+      if (userId === null) {
         throw new Error(
           "An account already exists for this email. Provision it manually before accepting this application.",
         );
       }
-      throw error;
+      await modifyAccountCredentials(ctx, {
+        provider: "password",
+        account: { id: details.email, secret: temporaryPassword },
+      });
+      await invalidateSessions(ctx, { userId });
     }
 
-    const userId = await ctx.runQuery(internal.applications.userIdByEmail, {
+    userId ??= await ctx.runQuery(internal.applications.userIdByEmail, {
       email: details.email,
     });
     if (userId === null)
@@ -824,24 +863,109 @@ export const adminAccept = action({
       userId,
     });
 
-    const email = acceptedApplicationEmail({
-      name: details.name,
-      email: details.email,
+    return await sendInvitation(
+      ctx,
+      args.applicationId,
+      details,
       temporaryPassword,
-      loginUrl: loginUrl(),
-      selectedSlot: details.meetingSlotLabel,
-      logoUrl: EMAIL_LOGO_URL,
-    });
-    const emailed = await trySendEmail(details.email, email);
-
-    if (emailed) {
-      await ctx.runMutation(internal.applications.markInvitationSent, {
-        applicationId: args.applicationId,
-      });
-    }
-    return emailed;
+    );
   },
 });
+
+export const invitationResendDetails = internalQuery({
+  args: { applicationId: v.id("applications") },
+  returns: v.object({
+    details: emailDetailsValidator,
+    userId: v.id("users"),
+  }),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const application = await ctx.db.get(args.applicationId);
+    if (application === null)
+      throw new AuthError(404, "Application not found.");
+    if (
+      application.status !== "accepted" ||
+      application.ambassadorId === undefined
+    ) {
+      throw new Error(
+        "Only accepted applications have an invitation to resend.",
+      );
+    }
+    const user = await ctx.db.get(application.ambassadorId);
+    if (user === null) {
+      throw new Error("The ambassador account could not be found.");
+    }
+    // Once the ambassador has chosen their own password the invitation has done
+    // its job; issuing new credentials then would lock them out of the account
+    // they are already using.
+    if (user.passwordSetupRequired !== true) {
+      throw new Error(
+        "This ambassador has already set their password, so there is no invitation to resend.",
+      );
+    }
+    return { details: emailDetails(application), userId: user._id };
+  },
+});
+
+// Recovery path for an acceptance whose invitation email never arrived. The
+// original temporary password only ever existed in that email, so it cannot be
+// resent; instead a fresh one replaces it and any session that might have been
+// started with the old one is ended.
+export const adminResendInvitation = action({
+  args: { applicationId: v.id("applications") },
+  returns: v.boolean(),
+  handler: async (ctx, args): Promise<boolean> => {
+    const { details, userId } = await ctx.runQuery(
+      internal.applications.invitationResendDetails,
+      { applicationId: args.applicationId },
+    );
+
+    const temporaryPassword = generateTemporaryPassword();
+    await modifyAccountCredentials(ctx, {
+      provider: "password",
+      account: { id: details.email, secret: temporaryPassword },
+    });
+    await invalidateSessions(ctx, { userId });
+
+    return await sendInvitation(
+      ctx,
+      args.applicationId,
+      details,
+      temporaryPassword,
+    );
+  },
+});
+
+// Strip the uuid separators: it is emailed to a person to type, and a hyphen in
+// the middle is easy to misread as a letter or dropped entirely. Still random
+// per invitation, so it is never valid for another account.
+function generateTemporaryPassword() {
+  return `Xolace-${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}`;
+}
+
+async function sendInvitation(
+  ctx: ActionCtx,
+  applicationId: Id<"applications">,
+  details: { name: string; email: string; meetingSlotLabel: string | null },
+  temporaryPassword: string,
+) {
+  const email = acceptedApplicationEmail({
+    name: details.name,
+    email: details.email,
+    temporaryPassword,
+    loginUrl: loginUrl(),
+    selectedSlot: details.meetingSlotLabel,
+    logoUrl: EMAIL_LOGO_URL,
+  });
+  const emailed = await trySendEmail(details.email, email);
+
+  if (emailed) {
+    await ctx.runMutation(internal.applications.markInvitationSent, {
+      applicationId,
+    });
+  }
+  return emailed;
+}
 
 // One-time repair for accounts created before `acceptApplication` started
 // carrying the name and photo across from the application. Only fills what is

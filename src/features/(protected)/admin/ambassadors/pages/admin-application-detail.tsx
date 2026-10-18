@@ -44,6 +44,7 @@ export default function AdminApplicationDetail({
     application?.image ? { storageId: application.image } : "skip",
   );
   const accept = useAction(api.applications.adminAccept);
+  const resendInvitation = useAction(api.applications.adminResendInvitation);
   const scheduleMeeting = useAction(api.applications.adminScheduleMeeting);
   const decline = useAction(api.applications.adminDecline);
 
@@ -111,6 +112,30 @@ export default function AdminApplicationDetail({
         error instanceof Error
           ? error.message
           : "Could not accept this application.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendApplicationInvitation() {
+    setBusy(true);
+    try {
+      const emailed = await resendInvitation({
+        applicationId: applicationId as Id<"applications">,
+      });
+      if (emailed) {
+        toast.success("A new invitation with fresh credentials was sent.");
+      } else {
+        toast.warning(
+          "New credentials were issued, but the invitation email could not be sent. Try again shortly.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not resend the invitation.",
       );
     } finally {
       setBusy(false);
@@ -209,6 +234,24 @@ export default function AdminApplicationDetail({
               onClick={() => setAcceptOpen(true)}
             >
               Accept applicant
+            </Button>
+          </div>
+        ) : null}
+        {application.status === "accepted" ? (
+          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+            {application.invitationSentAt === null ? (
+              <p className="text-sm text-muted-foreground">
+                The invitation email has not been delivered.
+              </p>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => void resendApplicationInvitation()}
+            >
+              {busy ? "Sending…" : "Resend invitation"}
             </Button>
           </div>
         ) : null}
