@@ -234,6 +234,24 @@ async function visibleMissionSetId(
   );
 }
 
+// Upper bound on `ambassadorTotals` rows, which hold one row per ambassador.
+const MAX_AMBASSADORS = 1000;
+// The pending queue is a working set admins drain, not a history table.
+const MAX_PENDING = 500;
+// Admin charts cover a recent window instead of the full contribution history.
+const CHART_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
+const MAX_CHART_CONTRIBUTIONS = 2000;
+
+async function recentApprovedContributions(ctx: QueryCtx, since: number) {
+  return await ctx.db
+    .query("contributions")
+    .withIndex("by_status", (q) =>
+      q.eq("status", "approved").gte("_creationTime", since),
+    )
+    .order("desc")
+    .take(MAX_CHART_CONTRIBUTIONS);
+}
+
 export const adminStats = query({
   args: {},
   returns: v.object({
@@ -245,25 +263,30 @@ export const adminStats = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const contributions = await ctx.db.query("contributions").collect();
-    const approved = contributions.filter((c) => c.status === "approved");
+    // Totals come from the per-ambassador rollup, which every approval
+    // updates, so the stat cards never scan `contributions`.
+    const [totals, pending] = await Promise.all([
+      ctx.db.query("ambassadorTotals").take(MAX_AMBASSADORS),
+      ctx.db
+        .query("contributions")
+        .withIndex("by_status", (q) => q.eq("status", "pending"))
+        .take(MAX_PENDING),
+    ]);
 
-    const totalPoints = approved.reduce(
-      (sum, c) => sum + (c.awardedPoints ?? 0),
-      0,
-    );
-    const totalPeopleReached = approved
-      .filter((c) => c.kind === "people_reached")
-      .reduce((sum, c) => sum + (c.quantity ?? 0), 0);
-    const pendingCount = contributions.filter(
-      (c) => c.status === "pending",
-    ).length;
+    let totalPoints = 0;
+    let totalContributions = 0;
+    let totalPeopleReached = 0;
+    for (const row of totals) {
+      totalPoints += row.points;
+      totalContributions += row.contributionsApproved;
+      totalPeopleReached += row.peopleReached;
+    }
 
     return {
       totalPoints,
-      totalContributions: approved.length,
+      totalContributions,
       totalPeopleReached,
-      pendingCount,
+      pendingCount: pending.length,
     };
   },
 });
@@ -279,8 +302,10 @@ export const adminByKind = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const contributions = await ctx.db.query("contributions").collect();
-    const approved = contributions.filter((c) => c.status === "approved");
+    const approved = await recentApprovedContributions(
+      ctx,
+      Date.now() - CHART_WINDOW_MS,
+    );
 
     const byKind = new Map<string, number>();
     for (const c of approved) {
@@ -309,12 +334,9 @@ export const adminTimeline = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const [contributions, missions] = await Promise.all([
-      ctx.db.query("contributions").collect(),
-      ctx.db.query("missions").collect(),
-    ]);
-
-    const approved = contributions.filter((c) => c.status === "approved");
+    const now = Date.now();
+    const since = now - CHART_WINDOW_MS;
+    const approved = await recentApprovedContributions(ctx, since);
 
     const byDay = new Map<
       string,
@@ -334,15 +356,8 @@ export const adminTimeline = query({
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, counts]) => ({ date, ...counts }));
 
-    const missionStarts = missions.map((m) => m.startsAt);
-    const missionEnds = missions.map((m) => m.endsAt);
-    const minDate =
-      missionStarts.length > 0 ? Math.min(...missionStarts) : Date.now();
-    const maxDate =
-      missionEnds.length > 0 ? Math.max(...missionEnds) : Date.now();
-
     return {
-      dateRange: { min: minDate, max: maxDate },
+      dateRange: { min: since, max: now },
       data,
     };
   },

@@ -80,7 +80,7 @@ export default function AdminImpact() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ImpactChartCard
-          title="Impact over time"
+          title="Impact over time (last 90 days)"
           isEmpty={timelineData.length === 0}
           emptyTitle="No data yet"
           emptyDescription="Impact data will appear here once ambassadors start contributing."
@@ -142,7 +142,7 @@ export default function AdminImpact() {
         </ImpactChartCard>
 
         <ImpactChartCard
-          title="By contribution type"
+          title="By contribution type (last 90 days)"
           isEmpty={chartData.length === 0}
           emptyTitle="No contributions yet"
           emptyDescription="Contribution breakdown will appear here once ambassadors start submitting."
