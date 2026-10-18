@@ -1,10 +1,11 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Footer from "@/components/ambassador/footer";
-import NavBar from "@/components/layout/nav-bar";
-import ScrollProgressBar from "@/components/ui/scroll-progress-bar";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import "./globals.css";
+import { ThemedToaster } from "@/components/providers/ThemedToaster";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,6 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "https://res.cloudinary.com/dnucdwa71/image/upload/v1780659221/favicon_rfz0wq.png",
+  },
   title: "Xolace Ambassadors | Help Build a World Where People Feel Heard",
   description:
     "Join Xolace Ambassadors on campus and in communities to champion emotional wellbeing, destigmatize mental health, and create safe spaces for authentic human connection.",
@@ -76,12 +80,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    // next-themes sets the dark class on <html> from a pre-hydration script, so
+    // the server and client markup cannot agree. Without this React logs a
+    // hydration mismatch for the class attribute.
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground bg-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
-        <ScrollProgressBar />
-        <NavBar />
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <ThemeProvider>
+          <NuqsAdapter>
+            <ConvexClientProvider>
+              {children}
+              <ThemedToaster />
+            </ConvexClientProvider>
+          </NuqsAdapter>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

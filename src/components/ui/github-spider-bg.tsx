@@ -46,6 +46,8 @@ export default function GithubSpiderBg({
     { from: 8, to: 9 },
   ];
 
+  const nodesById = new Map(nodes.map((n) => [n.id, n]));
+
   return (
     <div
       aria-hidden="true"
@@ -56,11 +58,16 @@ export default function GithubSpiderBg({
         viewBox="0 0 1200 480"
         preserveAspectRatio="none"
         fill="none"
+        role="presentation"
       >
-        {/* Connecting spider lines */}
         {edges.map((edge, index) => {
-          const start = nodes.find((n) => n.id === edge.from)!;
-          const end = nodes.find((n) => n.id === edge.to)!;
+          const start = nodesById.get(edge.from);
+          const end = nodesById.get(edge.to);
+
+          if (!start || !end) {
+            return null;
+          }
+
           return (
             <g key={`${edge.from}-${edge.to}`}>
               <line
@@ -73,7 +80,6 @@ export default function GithubSpiderBg({
                 strokeWidth="1.2"
                 strokeDasharray="4 6"
               />
-              {/* Pulse beam along path */}
               <motion.circle
                 r="2.5"
                 fill="var(--color-primary)"
@@ -98,7 +104,6 @@ export default function GithubSpiderBg({
           );
         })}
 
-        {/* Node points */}
         {nodes.map((node) => (
           <g key={node.id}>
             <circle
