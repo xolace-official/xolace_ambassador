@@ -510,7 +510,7 @@ export const submit = mutation({
             );
           }
           for (const storageId of imageStorageIds) {
-            const metadata = await ctx.storage.getMetadata(storageId);
+            const metadata = await ctx.db.system.get("_storage", storageId);
             if (
               metadata === null ||
               !metadata.contentType?.startsWith("image/") ||

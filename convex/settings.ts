@@ -130,7 +130,7 @@ export const saveAvatar = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireRole(ctx);
-    const metadata = await ctx.storage.getMetadata(args.storageId);
+    const metadata = await ctx.db.system.get("_storage", args.storageId);
 
     if (
       metadata === null ||
