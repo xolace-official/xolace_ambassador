@@ -10,7 +10,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { requireAdmin } from "./model/auth";
+import { requireAdmin, requireRole } from "./model/auth";
 
 const setStatus = v.union(
   v.literal("draft"),
@@ -69,6 +69,47 @@ export const adminList = query({
   },
 });
 
+export const listForAmbassador = query({
+  args: { now: v.number() },
+  returns: v.array(
+    v.object({
+      _id: v.id("missionSets"),
+      name: v.string(),
+      startsAt: v.number(),
+      endsAt: v.number(),
+      isCurrent: v.boolean(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    await requireRole(ctx);
+    const published = await ctx.db
+      .query("missionSets")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .take(100);
+    const active = published
+      .filter(
+        (missionSet) =>
+          missionSet.startsAt <= args.now && missionSet.endsAt >= args.now,
+      )
+      .sort((a, b) => b.startsAt - a.startsAt)[0];
+    const recent = published
+      .filter((missionSet) => missionSet.startsAt <= args.now)
+      .sort((a, b) => b.startsAt - a.startsAt)
+      .filter((missionSet) => missionSet._id !== active?._id)
+      .slice(0, 1);
+    const selectable =
+      active === undefined ? recent.slice(0, 1) : [active, ...recent];
+
+    return selectable.map((missionSet) => ({
+      _id: missionSet._id,
+      name: missionSet.name,
+      startsAt: missionSet.startsAt,
+      endsAt: missionSet.endsAt,
+      isCurrent: missionSet._id === active?._id,
+    }));
+  },
+});
+
 export const adminCreate = mutation({
   args: {
     name: v.string(),
@@ -92,7 +133,7 @@ export const adminCreate = mutation({
     if (args.endsAt <= args.startsAt) {
       throw new Error("Choose an end time after the start time.");
     }
-    await assertNoActiveSet(ctx, args.status, null);
+    await assertNoActiveSet(ctx, args.status, null, args.startsAt, args.endsAt);
 
     const missionSetId = await ctx.db.insert("missionSets", {
       name,
@@ -166,7 +207,13 @@ export const adminUpdate = mutation({
     if (args.endsAt <= args.startsAt) {
       throw new Error("Choose an end time after the start time.");
     }
-    await assertNoActiveSet(ctx, args.status, args.missionSetId);
+    await assertNoActiveSet(
+      ctx,
+      args.status,
+      args.missionSetId,
+      args.startsAt,
+      args.endsAt,
+    );
 
     await ctx.db.patch(args.missionSetId, {
       name,
@@ -223,10 +270,11 @@ async function assertNoActiveSet(
   ctx: MutationCtx,
   status: "draft" | "published" | "published_next" | "closed",
   currentId: string | null,
+  startsAt: number,
+  endsAt: number,
 ) {
   if (status !== "published") return;
 
-  const now = Date.now();
   const publishedSets = await ctx.db
     .query("missionSets")
     .withIndex("by_status", (q) => q.eq("status", "published"))
@@ -234,8 +282,8 @@ async function assertNoActiveSet(
   const activeSet = publishedSets.find(
     (missionSet) =>
       missionSet._id !== currentId &&
-      missionSet.startsAt <= now &&
-      missionSet.endsAt >= now,
+      missionSet.startsAt < endsAt &&
+      startsAt < missionSet.endsAt,
   );
 
   if (activeSet !== undefined) {

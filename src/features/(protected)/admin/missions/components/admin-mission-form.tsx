@@ -47,7 +47,9 @@ const missionSchema = z.object({
     .string()
     .trim()
     .min(30, "Add a brief with at least 30 characters."),
-  track: z.enum(MISSION_CATEGORIES),
+  tracks: z
+    .array(z.enum(MISSION_CATEGORIES))
+    .min(1, "Choose at least one mission track."),
   points: z
     .number({ error: "Enter a whole number of points." })
     .int("Enter a whole number of points.")
@@ -88,6 +90,7 @@ type AdminMissionInitialValues = Pick<
   | "summary"
   | "description"
   | "track"
+  | "tracks"
   | "points"
   | "difficulty"
   | "status"
@@ -114,6 +117,14 @@ export function AdminMissionForm({
     {},
     { initialNumItems: 50 },
   );
+  const selectedMissionSet = missionSets?.find(
+    (missionSet) =>
+      missionSet._id === (initial?.missionSetId ?? initialMissionSetId),
+  );
+  const cannotCreateInSelectedSet =
+    !initial &&
+    (selectedMissionSet === undefined ||
+      selectedMissionSet.endsAt <= Date.now());
   const {
     register,
     control,
@@ -125,7 +136,7 @@ export function AdminMissionForm({
       title: initial?.title ?? "",
       summary: initial?.summary ?? "",
       description: initial?.description ?? "",
-      track: initial?.track,
+      tracks: initial?.tracks ?? (initial?.track ? [initial.track] : []),
       points: initial?.points,
       difficulty: initial?.difficulty,
       submissionFields:
@@ -148,12 +159,14 @@ export function AdminMissionForm({
         await updateMission({
           ...values,
           missionId: initial._id,
+          track: values.tracks[0],
           missionSetId,
           submissionFields: values.submissionFields,
         });
       } else {
         await createMission({
           ...values,
+          track: values.tracks[0],
           missionSetId,
           submissionFields: values.submissionFields,
           status: values.status === "closed" ? "draft" : values.status,
@@ -339,6 +352,7 @@ export function AdminMissionForm({
                                 </SelectItem>
                                 <SelectItem value="url">Link</SelectItem>
                                 <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="image">Images</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
@@ -436,6 +450,14 @@ export function AdminMissionForm({
                     from Mission Sets to update its displayed name.
                   </FieldDescription>
                 ) : null}
+                {!initial &&
+                selectedMissionSet?.endsAt !== undefined &&
+                selectedMissionSet.endsAt <= Date.now() ? (
+                  <output className="text-sm text-muted-foreground">
+                    This mission set has expired. Choose an active mission set
+                    before creating a mission.
+                  </output>
+                ) : null}
                 <FieldError errors={[errors.missionSetId]} />
               </Field>
             </section>
@@ -458,34 +480,58 @@ export function AdminMissionForm({
                 </p>
               </div>
               <FieldGroup>
-                <Field data-invalid={!!errors.track}>
-                  <FieldLabel htmlFor="track">Mission track</FieldLabel>
+                <Field data-invalid={!!errors.tracks}>
+                  <FieldLabel>Mission tracks</FieldLabel>
                   <Controller
                     control={control}
-                    name="track"
+                    name="tracks"
                     render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          id="track"
-                          aria-invalid={!!errors.track}
-                          className="w-full"
-                        >
-                          <SelectValue placeholder="Choose a track" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      <div className="space-y-2 rounded-lg border border-border p-3">
+                        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-foreground">
+                          <input
+                            type="checkbox"
+                            checked={
+                              field.value.length === MISSION_CATEGORIES.length
+                            }
+                            onChange={(event) =>
+                              field.onChange(
+                                event.target.checked
+                                  ? [...MISSION_CATEGORIES]
+                                  : [],
+                              )
+                            }
+                            className="size-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          />
+                          All tracks
+                        </label>
+                        <div className="grid gap-1 sm:grid-cols-2">
                           {MISSION_CATEGORIES.map((track) => (
-                            <SelectItem key={track} value={track}>
+                            <label
+                              key={track}
+                              className="flex min-h-11 items-center gap-3 rounded-md px-2 text-sm text-foreground hover:bg-muted"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={field.value.includes(track)}
+                                onChange={(event) =>
+                                  field.onChange(
+                                    event.target.checked
+                                      ? [...field.value, track]
+                                      : field.value.filter(
+                                          (value) => value !== track,
+                                        ),
+                                  )
+                                }
+                                className="size-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              />
                               {MISSION_CATEGORY_LABELS[track]}
-                            </SelectItem>
+                            </label>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </div>
+                      </div>
                     )}
                   />
-                  <FieldError errors={[errors.track]} />
+                  <FieldError errors={[errors.tracks]} />
                 </Field>
 
                 <Field data-invalid={!!errors.difficulty}>
@@ -578,9 +624,15 @@ export function AdminMissionForm({
             type="submit"
             size="lg"
             className="w-full sm:w-auto"
-            disabled={isSubmitting}
+            disabled={isSubmitting || cannotCreateInSelectedSet}
           >
-            {isSubmitting ? "Creating mission…" : "Create mission"}
+            {isSubmitting
+              ? initial
+                ? "Updating mission…"
+                : "Creating mission…"
+              : initial
+                ? "Update mission"
+                : "Create mission"}
           </Button>
         </div>
       </form>

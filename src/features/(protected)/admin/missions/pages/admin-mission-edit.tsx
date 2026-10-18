@@ -42,6 +42,7 @@ export default function AdminMissionEdit({
         summary: mission.summary,
         description: mission.description,
         track: mission.track,
+        tracks: mission.tracks,
         points: mission.points,
         difficulty: mission.difficulty,
         status: mission.status,

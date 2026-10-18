@@ -28,7 +28,7 @@ export function MissionCard({
       </div>
 
       <div className="px-5 pt-4">
-        <h2 className="text-lg font-semibold leading-snug tracking-tight text-card-foreground">
+        <h2 className="line-clamp-2 min-h-12 overflow-hidden break-words text-lg font-semibold leading-snug tracking-tight text-card-foreground">
           <Link
             href={href}
             className="rounded-sm after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"

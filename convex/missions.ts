@@ -23,6 +23,7 @@ const adminMissionValidator = v.object({
   summary: v.string(),
   description: v.string(),
   track: trackValidator,
+  tracks: v.optional(v.array(trackValidator)),
   actionKey: v.optional(v.string()),
   points: v.number(),
   difficulty: v.union(
@@ -51,6 +52,7 @@ const adminMissionValidator = v.object({
           v.literal("long_text"),
           v.literal("url"),
           v.literal("number"),
+          v.literal("image"),
         ),
         required: v.boolean(),
       }),
@@ -59,6 +61,33 @@ const adminMissionValidator = v.object({
 });
 
 type Submission = Doc<"contributions">;
+
+async function withResponseImageUrls(ctx: QueryCtx, submission: Submission) {
+  return {
+    ...submission,
+    responses: submission.responses
+      ? await Promise.all(
+          submission.responses.map(async (response) => {
+            const imageUrls = response.imageStorageIds
+              ? (
+                  await Promise.all(
+                    response.imageStorageIds.map((storageId) =>
+                      ctx.storage.getUrl(storageId),
+                    ),
+                  )
+                ).filter((url): url is string => url !== null)
+              : undefined;
+            return {
+              fieldKey: response.fieldKey,
+              label: response.label,
+              value: response.value,
+              imageUrls: imageUrls?.length ? imageUrls : undefined,
+            };
+          }),
+        )
+      : undefined,
+  };
+}
 
 export const adminList = query({
   args: {
@@ -176,6 +205,7 @@ export const adminCreate = mutation({
     summary: v.string(),
     description: v.string(),
     track: trackValidator,
+    tracks: v.optional(v.array(trackValidator)),
     points: v.number(),
     difficulty: v.union(
       v.literal("beginner"),
@@ -192,6 +222,7 @@ export const adminCreate = mutation({
             v.literal("long_text"),
             v.literal("url"),
             v.literal("number"),
+            v.literal("image"),
           ),
           required: v.boolean(),
         }),
@@ -243,6 +274,15 @@ export const adminCreate = mutation({
       );
     }
 
+    const selectedTracks = args.tracks ?? [args.track];
+    if (
+      selectedTracks.length === 0 ||
+      selectedTracks.length > 6 ||
+      new Set(selectedTracks).size !== selectedTracks.length
+    ) {
+      throw new Error("Choose at least one unique mission track.");
+    }
+
     const now = Date.now();
 
     if (missionSet.endsAt <= now) {
@@ -261,7 +301,8 @@ export const adminCreate = mutation({
       slug: `${slugBase || "mission"}-${crypto.randomUUID().slice(0, 8)}`,
       summary: args.summary.trim(),
       description: args.description.trim(),
-      track: args.track,
+      track: selectedTracks[0] ?? args.track,
+      tracks: selectedTracks,
       points: args.points,
       difficulty: args.difficulty,
       status: args.status,
@@ -299,6 +340,7 @@ export const adminUpdate = mutation({
     summary: v.string(),
     description: v.string(),
     track: trackValidator,
+    tracks: v.optional(v.array(trackValidator)),
     points: v.number(),
     difficulty: v.union(
       v.literal("beginner"),
@@ -319,6 +361,7 @@ export const adminUpdate = mutation({
             v.literal("long_text"),
             v.literal("url"),
             v.literal("number"),
+            v.literal("image"),
           ),
           required: v.boolean(),
         }),
@@ -352,12 +395,22 @@ export const adminUpdate = mutation({
       throw new Error("Add no more than 6 submission fields.");
     }
 
+    const selectedTracks = args.tracks ?? [args.track];
+    if (
+      selectedTracks.length === 0 ||
+      selectedTracks.length > 6 ||
+      new Set(selectedTracks).size !== selectedTracks.length
+    ) {
+      throw new Error("Choose at least one unique mission track.");
+    }
+
     await ctx.db.patch(args.missionId, {
       title: args.title.trim(),
       missionSetId: args.missionSetId,
       summary: args.summary.trim(),
       description: args.description.trim(),
-      track: args.track,
+      track: selectedTracks[0] ?? args.track,
+      tracks: selectedTracks,
       points: args.points,
       difficulty: args.difficulty,
       status: args.status,
@@ -388,34 +441,32 @@ export const adminUpdate = mutation({
 
 export type OpenState = "available" | "expired";
 
-function openState(mission: Doc<"missions">, now: number): OpenState {
-  return now > mission.endsAt ? "expired" : "available";
+function openState(endsAt: number, now: number): OpenState {
+  return now >= endsAt ? "expired" : "available";
 }
 
-async function visibleMissionSetId(
+async function selectableMissionSetIds(
   ctx: QueryCtx,
   now: number,
-): Promise<Id<"missionSets"> | null> {
+): Promise<Id<"missionSets">[]> {
   const published = await ctx.db
     .query("missionSets")
     .withIndex("by_status", (q) => q.eq("status", "published"))
     .take(100);
-  const active = published.find(
-    (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
-  );
-  if (active !== undefined) return active._id;
+  const active = published
+    .filter(
+      (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
+    )
+    .sort((a, b) => b.startsAt - a.startsAt)[0];
+  const recent = published
+    .filter((missionSet) => missionSet.startsAt <= now)
+    .sort((a, b) => b.startsAt - a.startsAt)
+    .filter((missionSet) => missionSet._id !== active?._id)
+    .slice(0, 1);
 
-  const next = await ctx.db
-    .query("missionSets")
-    .withIndex("by_status", (q) => q.eq("status", "published_next"))
-    .take(100);
-  return (
-    next
-      .filter(
-        (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
-      )
-      .sort((a, b) => a.startsAt - b.startsAt)[0]?._id ?? null
-  );
+  return active === undefined
+    ? recent.map((missionSet) => missionSet._id)
+    : [active._id, ...recent.map((missionSet) => missionSet._id)];
 }
 
 // Newest submission per mission. The index is ordered by `_creationTime`, so
@@ -444,6 +495,7 @@ async function latestByMission(
 export const list = query({
   args: {
     track: v.optional(trackValidator),
+    missionSetId: v.optional(v.id("missionSets")),
     // The wall clock is an argument, not `Date.now()` in here — a query is not
     // re-run when time passes, so a deadline would silently go stale.
     now: v.number(),
@@ -468,12 +520,35 @@ export const list = query({
             .order("desc")
             .take(MAX_MISSIONS);
 
-    const activeSetId = await visibleMissionSetId(ctx, args.now);
+    const ambassadorProfile =
+      user.role === "ambassador"
+        ? await ctx.db
+            .query("ambassadorProfiles")
+            .withIndex("by_userId", (q) => q.eq("userId", user._id))
+            .first()
+        : null;
+    const userTrack = ambassadorProfile?.track;
+    if (user.role === "ambassador" && userTrack === undefined) {
+      return [];
+    }
+    const trackRows = rows.filter((mission) => {
+      if (userTrack === undefined) return false;
+      return (mission.tracks ?? [mission.track]).includes(userTrack);
+    });
+
+    const selectableSetIds = await selectableMissionSetIds(ctx, args.now);
+    const selectedSetId = args.missionSetId ?? selectableSetIds[0] ?? null;
+    if (
+      args.missionSetId !== undefined &&
+      !selectableSetIds.includes(args.missionSetId)
+    ) {
+      return [];
+    }
     const activeRows = [];
-    for (const mission of rows) {
+    for (const mission of trackRows) {
       if (mission.missionSetId === undefined) {
         if (
-          activeSetId === null &&
+          selectedSetId === null &&
           mission.startsAt <= args.now &&
           mission.endsAt >= args.now
         ) {
@@ -482,7 +557,7 @@ export const list = query({
         continue;
       }
 
-      if (mission.missionSetId === activeSetId) {
+      if (mission.missionSetId === selectedSetId) {
         activeRows.push(mission);
       }
     }
@@ -500,8 +575,13 @@ export const list = query({
           ...mission,
           startsAt: missionSet?.startsAt ?? mission.startsAt,
           endsAt: missionSet?.endsAt ?? mission.endsAt,
-          openState: openState(mission, args.now),
-          submission: mine.get(mission._id) ?? null,
+          openState: openState(missionSet?.endsAt ?? mission.endsAt, args.now),
+          submission: mine.has(mission._id)
+            ? await withResponseImageUrls(
+                ctx,
+                mine.get(mission._id) as Submission,
+              )
+            : null,
         };
       }),
     );
@@ -528,6 +608,19 @@ export const get = query({
       return null;
     }
 
+    if (user.role === "ambassador") {
+      const ambassadorProfile = await ctx.db
+        .query("ambassadorProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .first();
+      if (
+        ambassadorProfile?.track !== undefined &&
+        !(mission.tracks ?? [mission.track]).includes(ambassadorProfile.track)
+      ) {
+        return null;
+      }
+    }
+
     // Ambassadors only ever see published work. Admins can open a draft they
     // are still writing.
     if (mission.status !== "published" && user.role !== "admin") {
@@ -535,8 +628,8 @@ export const get = query({
     }
 
     if (mission.missionSetId !== undefined && user.role !== "admin") {
-      const activeSetId = await visibleMissionSetId(ctx, args.now);
-      if (activeSetId !== mission.missionSetId) {
+      const selectableSetIds = await selectableMissionSetIds(ctx, args.now);
+      if (!selectableSetIds.includes(mission.missionSetId)) {
         return null;
       }
     }
@@ -560,8 +653,10 @@ export const get = query({
       ...mission,
       startsAt: missionSet?.startsAt ?? mission.startsAt,
       endsAt: missionSet?.endsAt ?? mission.endsAt,
-      openState: openState(mission, args.now),
-      submission: mine.get(mission._id) ?? null,
+      openState: openState(missionSet?.endsAt ?? mission.endsAt, args.now),
+      submission: mine.has(mission._id)
+        ? await withResponseImageUrls(ctx, mine.get(mission._id) as Submission)
+        : null,
     };
   },
 });

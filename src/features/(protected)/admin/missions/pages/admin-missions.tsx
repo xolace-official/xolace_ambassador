@@ -326,9 +326,14 @@ function MissionListing({
             >
               <div className="flex items-center justify-between gap-3 px-5 pt-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-border bg-transparent text-foreground/80">
-                    {MISSION_CATEGORY_LABELS[mission.track]}
-                  </Badge>
+                  {(mission.tracks ?? [mission.track]).map((track) => (
+                    <Badge
+                      key={track}
+                      className="border-border bg-transparent text-foreground/80"
+                    >
+                      {MISSION_CATEGORY_LABELS[track]}
+                    </Badge>
+                  ))}
                   <Badge className={statusStyle[mission.status]}>
                     {statusLabel[mission.status]}
                   </Badge>

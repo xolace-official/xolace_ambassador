@@ -38,6 +38,7 @@ const responseTypeLabel = {
   long_text: "Long answer",
   url: "Link",
   number: "Number",
+  image: "Images",
 } as const;
 
 export default function AdminMissionDetail({
@@ -83,9 +84,11 @@ export default function AdminMissionDetail({
           <header className="space-y-4 rounded-2xl border border-border bg-card p-5 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline">
-                  {MISSION_CATEGORY_LABELS[mission.track]}
-                </Badge>
+                {(mission.tracks ?? [mission.track]).map((track) => (
+                  <Badge key={track} variant="outline">
+                    {MISSION_CATEGORY_LABELS[track]}
+                  </Badge>
+                ))}
                 <Badge className={statusStyle[mission.status]}>
                   {mission.status[0].toUpperCase() + mission.status.slice(1)}
                 </Badge>

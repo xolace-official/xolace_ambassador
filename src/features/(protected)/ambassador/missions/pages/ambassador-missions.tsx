@@ -4,8 +4,12 @@ import { useQuery } from "convex/react";
 import { ArrowLeft, ArrowRight, BookOpenCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
-import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
-import { useMemo, useState } from "react";
+import {
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+} from "nuqs/server";
+import { useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageDescription } from "@/components/shared/page-description";
@@ -22,9 +26,9 @@ import type { Mission, MissionCategory } from "@/types/missions.type";
 import {
   MISSION_CATEGORIES,
   MISSION_CATEGORY_LABELS,
-  MISSION_STATUS_LABELS,
 } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { MissionCard } from "../components/mission-card";
 import { MissionStats } from "../components/mission-stats";
 import { toMission } from "../mission-mapper";
@@ -35,32 +39,18 @@ const PAGE_SIZE = 6;
 type MissionFilter = MissionCategory | typeof ALL;
 
 const FILTERS = [ALL, ...MISSION_CATEGORIES] as const;
-const MISSION_STATUS_FILTERS = [
-  "available",
-  "submitted",
-  "approved",
-  "rejected",
-  "declined",
-] as const;
-const STATUS_FILTERS = [ALL, ...MISSION_STATUS_FILTERS] as const;
 
 // Typed parsers, so a hand-edited url cannot produce a value outside the list.
 const parseMissionFilter = parseAsStringLiteral(FILTERS)
   .withDefault(ALL)
   .withOptions({ clearOnDefault: true });
 
-const parseStatusFilter = parseAsStringLiteral(STATUS_FILTERS)
-  .withDefault(ALL)
+const parseMissionSetFilter = parseAsString
+  .withDefault("")
   .withOptions({ clearOnDefault: true });
 
 function isMissionFilter(value: string): value is MissionFilter {
   return (FILTERS as readonly string[]).includes(value);
-}
-
-function isStatusFilter(
-  value: string,
-): value is (typeof STATUS_FILTERS)[number] {
-  return (STATUS_FILTERS as readonly string[]).includes(value);
 }
 
 export default function AmbassadorMissions() {
@@ -70,26 +60,43 @@ export default function AmbassadorMissions() {
   // every render and refetch in a loop.
   const [now] = useState(() => Date.now());
   const pageSize = PAGE_SIZE;
+  const missionSets = useQuery(api.missionSets.listForAmbassador, { now });
 
   const [track, setTrack] = useQueryState("track", parseMissionFilter);
-  const [status, setStatus] = useQueryState("status", parseStatusFilter);
+  const [missionSet, setMissionSet] = useQueryState(
+    "missionSet",
+    parseMissionSetFilter,
+  );
   const [requestedPage, setPage] = useQueryState(
     "missionPage",
     parseAsInteger.withDefault(1).withOptions({ clearOnDefault: true }),
   );
 
   const trackArg = track === ALL ? undefined : track;
+  const selectedMissionSet =
+    missionSets?.find((set) => set._id === missionSet) ?? missionSets?.[0];
 
-  const rows = useQuery(api.missions.list, { track: trackArg, now });
+  useEffect(() => {
+    if (
+      missionSets !== undefined &&
+      missionSets.length > 0 &&
+      missionSet !== "" &&
+      !missionSets.some((set) => set._id === missionSet)
+    ) {
+      void setMissionSet(missionSets[0]._id);
+      void setPage(1);
+    }
+  }, [missionSet, missionSets, setMissionSet, setPage]);
 
-  // The track filter is a query arg, so it hits the database. Status reflects
-  // this ambassador's own submissions and stays client-side until the
-  // contributions table lands.
+  const rows = useQuery(api.missions.list, {
+    track: trackArg,
+    missionSetId: selectedMissionSet?._id as Id<"missionSets"> | undefined,
+    now,
+  });
+
   const all = useMemo(() => (rows ?? []).map((row) => toMission(row)), [rows]);
 
-  const visibleMissions = all.filter(
-    (mission) => status === ALL || mission.status === status,
-  );
+  const visibleMissions = all;
   const pageCount = Math.max(1, Math.ceil(visibleMissions.length / pageSize));
   const currentPage = Math.min(Math.max(requestedPage, 1), pageCount);
   const pageMissions = visibleMissions.slice(
@@ -97,11 +104,11 @@ export default function AmbassadorMissions() {
     currentPage * pageSize,
   );
 
-  const isFiltered = track !== ALL || status !== ALL;
+  const isFiltered = track !== ALL || missionSet !== "";
 
   function clearFilters() {
     void setTrack(ALL);
-    void setStatus(ALL);
+    void setMissionSet(null);
     void setPage(1);
   }
 
@@ -112,7 +119,7 @@ export default function AmbassadorMissions() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <MissionStats missions={all} />
 
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center justify-end gap-2">
           <Select
             value={track}
             onValueChange={(value) => {
@@ -142,28 +149,26 @@ export default function AmbassadorMissions() {
           </Select>
 
           <Select
-            value={status}
+            value={selectedMissionSet?._id ?? ""}
             onValueChange={(value) => {
-              if (isStatusFilter(value)) {
-                void setStatus(value);
+              if (missionSets?.some((set) => set._id === value)) {
+                void setMissionSet(value);
                 void setPage(1);
               }
             }}
           >
             <SelectTrigger
               size="sm"
-              aria-label="Filter missions by status"
-              className="w-36 shrink-0 border-border bg-card text-foreground hover:bg-muted"
+              aria-label="Filter missions by mission set"
+              className="w-44 shrink-0 border-border bg-card text-foreground hover:bg-muted"
             >
-              <SelectValue />
+              <SelectValue placeholder="Mission set" />
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value={ALL}>Any status</SelectItem>
-
-              {MISSION_STATUS_FILTERS.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {MISSION_STATUS_LABELS[value]}
+              {missionSets?.map((set) => (
+                <SelectItem key={set._id} value={set._id}>
+                  {set.isCurrent ? "Current" : "Previous"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -176,13 +181,23 @@ export default function AmbassadorMissions() {
           <MissionGridSkeleton />
         ) : visibleMissions.length === 0 ? (
           <EmptyState
-            className="col-span-full md:mx-auto md:w-4/5"
+            className="col-span-full w-full"
             icon={Target}
-            title="Nothing matches those filters"
+            title={
+              user?.role === "ambassador" && !user.track
+                ? "Your track has not been assigned"
+                : selectedMissionSet
+                  ? `No missions in ${selectedMissionSet.isCurrent ? "the current" : "the previous"} set`
+                  : "No mission set available"
+            }
             description={
-              isFiltered
-                ? "Try widening your search, or clear the filters to see every mission."
-                : "New missions open every week. Check back soon."
+              user?.role === "ambassador" && !user.track
+                ? "Ask a program admin to assign your ambassador track before viewing missions."
+                : selectedMissionSet?.isCurrent
+                  ? "This set has no published missions yet. Choose Previous to view the last mission set."
+                  : selectedMissionSet
+                    ? "There are no published missions in this previous set."
+                    : "No mission set is currently available. Check back soon."
             }
             action={
               isFiltered
