@@ -54,6 +54,10 @@
   --warning: oklch(0.828 0.189 84.429);
   --warning-foreground: oklch(0.1649 0.0352 281.8285);
 
+  /* Letterbox behind embedded video players. Stays near-black in both themes
+     so player chrome and letterboxing read correctly. */
+  --video-surface: oklch(0 0 0);
+
   --brand-linkedin: #0a66c2;
   --brand-github: #1b1f23;
   --brand-snapchat: #000000;
@@ -109,6 +113,8 @@
 
   --warning: oklch(0.828 0.189 84.429);
   --warning-foreground: oklch(0.1649 0.0352 281.8285);
+
+  --video-surface: oklch(0 0 0);
 }
 
 @theme inline {
@@ -163,6 +169,8 @@
 
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+
+  --color-video-surface: var(--video-surface);
 
   /* Namespace must be `--z-index-*`: Tailwind only emits `z-*` utilities from
      that prefix. Declared as `--z-*` these were silently dropped, so every

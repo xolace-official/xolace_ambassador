@@ -177,7 +177,7 @@ export default function AmbassadorResourceDetail({
           {(resource.category === "videos" || resource.kind === "video") &&
           embedVideoUrl ? (
             <Card className="overflow-hidden border-border p-0 shadow-sm">
-              <div className="aspect-video w-full bg-black">
+              <div className="aspect-video w-full bg-video-surface">
                 <iframe
                   src={embedVideoUrl}
                   title={resource.title}

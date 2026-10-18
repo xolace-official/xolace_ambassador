@@ -116,7 +116,7 @@ one-line edit.
 Currently defined: `background`, `foreground`, `card`, `popover`, `primary`,
 `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`,
 `chart-1..5`, `sidebar-*`, `dashboard-background`, `surface-inverse`, `success`,
-`warning`, `brand-*`.
+`warning`, `video-surface`, `brand-*`.
 
 ### Repeatable values
 
