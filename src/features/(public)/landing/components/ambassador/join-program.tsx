@@ -12,8 +12,10 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useQueryState } from "nuqs";
+import { createParser } from "nuqs/server";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type FieldErrors, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -114,6 +116,36 @@ const TRACK_HINTS: Record<(typeof TRACKS)[number], string> = {
 
 const steps = ["About You", "Social Profiles", "Your Interest"] as const;
 
+// Fields validated before leaving each step, and used to send an applicant back
+// to the step that holds an invalid field.
+const STEP_FIELDS: (keyof ApplicationForm)[][] = [
+  [
+    "name",
+    "email",
+    "dateOfBirth",
+    "location",
+    "referralCode",
+    "schoolOrCommunity",
+  ],
+  [],
+  ["track", "meetingSlotId", "whyXolace"],
+];
+
+// The step lives in the url as `?step=2` (1-based) so a refresh or the back
+// button keeps the applicant's place. Answers stay local: they include a photo
+// and contact details, which never belong in a query string.
+const parseStep = createParser<number>({
+  parse: (value) => {
+    const parsed = Number.parseInt(value, 10);
+    const index = Number.isNaN(parsed) ? 0 : parsed - 1;
+    return Math.min(Math.max(index, 0), steps.length - 1);
+  },
+  serialize: (value) => String(value + 1),
+  eq: (a, b) => a === b,
+})
+  .withDefault(0)
+  .withOptions({ clearOnDefault: true, history: "push" });
+
 const reassurances = [
   "We read every application — no bots, no filters.",
   "You'll hear back within 24 hours, either way.",
@@ -127,7 +159,7 @@ export default function JoinProgramForm() {
     now: currentTime,
   });
   const requestUploadUrl = useAction(api.applications.requestUploadUrl);
-  const [currentStep, setCurrentStep] = React.useState(0);
+  const [currentStep, setStep] = useQueryState("step", parseStep);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const [imageError, setImageError] = React.useState<string | null>(null);
@@ -207,12 +239,7 @@ export default function JoinProgramForm() {
   }
 
   async function handleStepNext() {
-    const fieldsToValidate: (keyof ApplicationForm)[][] = [
-      ["name", "email", "dateOfBirth", "location"],
-      [],
-      ["track", "whyXolace"],
-    ];
-    const fields = fieldsToValidate[currentStep];
+    const fields = STEP_FIELDS[currentStep];
     if (fields.length > 0) {
       const valid = await trigger(fields);
       if (!valid) return;
@@ -230,7 +257,7 @@ export default function JoinProgramForm() {
     }
     if (currentStep === 2 && !validateMeetingSlot()) return;
     setError(null);
-    setCurrentStep((s) => Math.min(s + 1, 2));
+    void setStep(Math.min(currentStep + 1, steps.length - 1));
   }
 
   // Only required while slots exist; applicants are never blocked when none are
@@ -248,29 +275,38 @@ export default function JoinProgramForm() {
 
   function handleStepBack() {
     setError(null);
-    setCurrentStep((s) => Math.max(s - 1, 0));
+    void setStep(Math.max(currentStep - 1, 0));
+  }
+
+  // A restored `?step=` can skip earlier steps, so their fields may be empty on
+  // submit. Show the first step that holds an invalid field.
+  function onInvalid(fieldErrors: FieldErrors<ApplicationForm>) {
+    const step = STEP_FIELDS.findIndex((fields) =>
+      fields.some((field) => field in fieldErrors),
+    );
+    if (step !== -1) void setStep(step);
   }
 
   async function onSubmit(values: ApplicationForm) {
     if (!imageFile) {
       setImageError("A profile photo is required.");
-      setCurrentStep(0);
+      void setStep(0);
       return;
     }
     const hasSocial = [...socials.values()].some((v) => v.trim().length > 0);
     if (!hasSocial) {
       setError("Add at least one social profile.");
-      setCurrentStep(1);
+      void setStep(1);
       return;
     }
     if (emailExists) {
       setError("An application with this email is already on file.");
-      setCurrentStep(0);
+      void setStep(0);
       return;
     }
     if (meetingSlots && meetingSlots.length > 0 && !values.meetingSlotId) {
       setError("Choose one of the available meeting times.");
-      setCurrentStep(2);
+      void setStep(2);
       return;
     }
 
@@ -314,6 +350,7 @@ export default function JoinProgramForm() {
       });
       toast.success("Application submitted successfully!");
       setSubmitted(true);
+      void setStep(null);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -444,7 +481,10 @@ export default function JoinProgramForm() {
               ))}
             </nav>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <form
+              onSubmit={handleSubmit(onSubmit, onInvalid)}
+              className="space-y-5"
+            >
               {currentStep === 0 ? (
                 <div className="space-y-5">
                   <div className="flex items-start gap-4">

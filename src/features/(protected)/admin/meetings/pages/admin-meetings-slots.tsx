@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parseAsPage } from "@/lib/url-state";
 import { api } from "../../../../../../convex/_generated/api";
 import { AddSlotDialog } from "../components/add-slot-dialog";
 
@@ -30,10 +31,11 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 export function AdminMeetingsSlots() {
   const slots = useQuery(api.meetings.adminListSlots);
   const toggleSlot = useMutation(api.meetings.adminToggleSlot);
-  const [page, setPage] = useState(1);
+  const [requestedPage, setPage] = useQueryState("page", parseAsPage);
 
   const all = slots ?? [];
   const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
   const visibleRows = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
@@ -117,7 +119,7 @@ export function AdminMeetingsSlots() {
           variant="outline"
           aria-label="Previous page"
           disabled={page === 1}
-          onClick={() => setPage((current) => Math.max(1, current - 1))}
+          onClick={() => void setPage(Math.max(1, page - 1))}
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
           Prev
@@ -128,9 +130,7 @@ export function AdminMeetingsSlots() {
           variant="outline"
           aria-label="Next page"
           disabled={page >= totalPages}
-          onClick={() =>
-            setPage((current) => Math.min(totalPages, current + 1))
-          }
+          onClick={() => void setPage(Math.min(totalPages, page + 1))}
         >
           Next
           <ChevronRight aria-hidden="true" className="size-4" />

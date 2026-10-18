@@ -49,7 +49,11 @@ export default function Home() {
             <FirstMission />
           </Suspense>
           <Safety />
-          <JoinProgramForm />
+          {/* The form keeps its wizard step in the url; the empty anchor keeps
+              `#apply` links working before it hydrates. */}
+          <Suspense fallback={<div id="apply" className="scroll-mt-20" />}>
+            <JoinProgramForm />
+          </Suspense>
         </div>
       </main>
     </>

@@ -3,6 +3,7 @@
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { MoreHorizontal, Plus } from "lucide-react";
 import Link from "next/link";
+import { useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { parseAsPage } from "@/lib/url-state";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import {
@@ -41,7 +43,7 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 
 export default function AdminMissionSets({ uuid }: { uuid: string }) {
   const PAGE_SIZE = 4;
-  const [page, setPage] = useState(0);
+  const [requestedPage, setPage] = useQueryState("page", parseAsPage);
   const [deleteId, setDeleteId] = useState<Id<"missionSets"> | null>(null);
   const [editingSet, setEditingSet] = useState<MissionSetInitialValues | null>(
     null,
@@ -61,22 +63,30 @@ export default function AdminMissionSets({ uuid }: { uuid: string }) {
     void adoptLegacyMissions({});
   }, [adoptLegacyMissions]);
 
+  // A restored or hand-edited page loads in the background; until its rows
+  // arrive the last fully loaded page stays visible.
   useEffect(() => {
     if (
-      page > 0 &&
-      results.length < (page + 1) * PAGE_SIZE &&
-      status === "CanLoadMore"
+      status === "CanLoadMore" &&
+      results.length < requestedPage * PAGE_SIZE
     ) {
-      loadMore(PAGE_SIZE);
+      loadMore(requestedPage * PAGE_SIZE - results.length);
     }
-  }, [loadMore, page, results.length, status]);
+  }, [loadMore, requestedPage, results.length, status]);
 
+  const loadedPages = Math.max(
+    1,
+    status === "Exhausted"
+      ? Math.ceil(results.length / PAGE_SIZE)
+      : Math.floor(results.length / PAGE_SIZE),
+  );
+  const page = Math.min(requestedPage, loadedPages);
   const visibleResults = results.slice(
+    (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE,
   );
   const hasNextPage =
-    (page + 1) * PAGE_SIZE < results.length || status === "CanLoadMore";
+    page * PAGE_SIZE < results.length || status === "CanLoadMore";
 
   return (
     <div className="space-y-6">
@@ -223,20 +233,20 @@ export default function AdminMissionSets({ uuid }: { uuid: string }) {
             type="button"
             variant="outline"
             size="sm"
-            disabled={page === 0}
-            onClick={() => setPage((current) => current - 1)}
+            disabled={page === 1}
+            onClick={() => void setPage(page - 1)}
           >
             Previous
           </Button>
           <span className="min-w-16 text-center text-sm tabular-nums text-muted-foreground">
-            Page {page + 1}
+            Page {page}
           </span>
           <Button
             type="button"
             variant="outline"
             size="sm"
             disabled={!hasNextPage || status === "LoadingMore"}
-            onClick={() => setPage((current) => current + 1)}
+            onClick={() => void setPage(page + 1)}
           >
             Next
           </Button>

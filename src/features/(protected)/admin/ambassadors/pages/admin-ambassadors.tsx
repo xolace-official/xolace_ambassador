@@ -51,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { parseAsPage } from "@/lib/url-state";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
@@ -148,7 +149,12 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
     },
     { initialNumItems: 10 },
   );
-  const pagination = useTablePagination(results, status, loadMore);
+  const pagination = useTablePagination(
+    "applicationPage",
+    results,
+    status,
+    loadMore,
+  );
 
   if (status === "LoadingFirstPage") return <PeopleTableSkeleton />;
   if (
@@ -376,7 +382,12 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
     },
     { initialNumItems: 10 },
   );
-  const pagination = useTablePagination(results, status, loadMore);
+  const pagination = useTablePagination(
+    "ambassadorPage",
+    results,
+    status,
+    loadMore,
+  );
 
   if (status === "LoadingFirstPage") return <PeopleTableSkeleton />;
   if (
@@ -802,53 +813,46 @@ function TableControls({
 }
 
 function useTablePagination<T>(
+  key: string,
   results: T[],
   status: "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted",
   loadMore: (numItems: number) => void,
 ) {
-  const [page, setPage] = useState(1);
-  const [pendingPage, setPendingPage] = useState<number | null>(null);
+  const [requestedPage, setPage] = useQueryState(key, parseAsPage);
 
+  // A restored or hand-edited page loads in the background; until its rows
+  // arrive the last fully loaded page stays visible.
   useEffect(() => {
-    if (
-      pendingPage !== null &&
-      (results.length >= pendingPage * 10 || status === "Exhausted")
-    ) {
-      setPage(pendingPage);
-      setPendingPage(null);
+    if (status === "CanLoadMore" && results.length < requestedPage * 10) {
+      loadMore(requestedPage * 10 - results.length);
     }
-  }, [pendingPage, results.length, status]);
+  }, [loadMore, requestedPage, results.length, status]);
 
+  const loadedPages = Math.max(
+    1,
+    status === "Exhausted"
+      ? Math.ceil(results.length / 10)
+      : Math.floor(results.length / 10),
+  );
+  const page = Math.min(requestedPage, loadedPages);
   const totalPages =
     status === "Exhausted"
       ? Math.max(1, Math.ceil(results.length / 10))
       : `${Math.max(page + 1, 2)}+`;
   const visibleRows = results.slice((page - 1) * 10, page * 10);
 
-  function nextPage() {
-    if (results.length >= page * 10 + 10) {
-      setPage(page + 1);
-      return;
-    }
-    if (status === "CanLoadMore") {
-      setPendingPage(page + 1);
-      loadMore(10);
-    }
-  }
-
   return {
     visibleRows,
     reset: () => {
-      setPage(1);
-      setPendingPage(null);
+      void setPage(null);
     },
     controls: {
       page,
       totalPages,
       canGoNext: status === "CanLoadMore" || page * 10 < results.length,
       loading: status === "LoadingMore",
-      onPrevious: () => setPage((current) => Math.max(1, current - 1)),
-      onNext: nextPage,
+      onPrevious: () => void setPage(Math.max(1, page - 1)),
+      onNext: () => void setPage(page + 1),
     },
   };
 }

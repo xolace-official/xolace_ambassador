@@ -4,7 +4,7 @@ import { usePaginatedQuery } from "convex/react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { PageDescription } from "@/components/shared/page-description";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parseAsPage } from "@/lib/url-state";
 import { api } from "../../../../../../convex/_generated/api";
 
 const STATUSES = ["all", "new", "reviewing", "accepted", "rejected"] as const;
@@ -43,19 +44,26 @@ export function AdminMeetingsAll() {
     { status: status === "all" ? undefined : status },
     { initialNumItems: PAGE_SIZE },
   );
-  const [page, setPage] = useState(1);
-  const [pendingPage, setPendingPage] = useState<number | null>(null);
+  const [requestedPage, setPage] = useQueryState("page", parseAsPage);
 
+  // A restored or hand-edited page loads in the background; until its rows
+  // arrive the last fully loaded page stays visible.
   useEffect(() => {
     if (
-      pendingPage !== null &&
-      (results.length >= pendingPage * PAGE_SIZE || loadStatus === "Exhausted")
+      loadStatus === "CanLoadMore" &&
+      results.length < requestedPage * PAGE_SIZE
     ) {
-      setPage(pendingPage);
-      setPendingPage(null);
+      loadMore(requestedPage * PAGE_SIZE - results.length);
     }
-  }, [pendingPage, results.length, loadStatus]);
+  }, [loadMore, loadStatus, requestedPage, results.length]);
 
+  const loadedPages = Math.max(
+    1,
+    loadStatus === "Exhausted"
+      ? Math.ceil(results.length / PAGE_SIZE)
+      : Math.floor(results.length / PAGE_SIZE),
+  );
+  const page = Math.min(requestedPage, loadedPages);
   const visibleRows = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const canGoNext =
     loadStatus === "CanLoadMore" || page * PAGE_SIZE < results.length;
@@ -67,8 +75,7 @@ export function AdminMeetingsAll() {
         <Select
           value={status}
           onValueChange={(value) => {
-            setPage(1);
-            setPendingPage(null);
+            void setPage(null);
             void setStatus(value as (typeof STATUSES)[number]);
           }}
         >
@@ -155,7 +162,7 @@ export function AdminMeetingsAll() {
           variant="outline"
           aria-label="Previous page"
           disabled={page === 1 || loadStatus === "LoadingMore"}
-          onClick={() => setPage((current) => Math.max(1, current - 1))}
+          onClick={() => void setPage(Math.max(1, page - 1))}
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
           Prev
@@ -166,14 +173,7 @@ export function AdminMeetingsAll() {
           variant="outline"
           aria-label="Next page"
           disabled={!canGoNext || loadStatus === "LoadingMore"}
-          onClick={() => {
-            if (results.length >= page * PAGE_SIZE + PAGE_SIZE) {
-              setPage(page + 1);
-              return;
-            }
-            setPendingPage(page + 1);
-            loadMore(PAGE_SIZE);
-          }}
+          onClick={() => void setPage(page + 1)}
         >
           Next
           <ChevronRight aria-hidden="true" className="size-4" />
