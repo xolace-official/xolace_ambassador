@@ -232,11 +232,13 @@ overlay state, ephemeral animation flags.
 
 ### Rules that are not negotiable
 
-1. **Internal by default.** Anything privileged — role assignment, account
-   creation, anything an admin triggers — is `internalMutation` /
-   `internalAction` / `internalQuery`. Internal functions are not in the public
-   API at all. Verify with `npx convex run <fn>` from a plain client: it must
-   return `Could not find public function`.
+1. **Internal by default.** Provisioning — role assignment, account creation —
+   and anything with no UI caller is `internalMutation` / `internalAction` /
+   `internalQuery`. Internal functions are not in the public API at all. Verify
+   with `npx convex run <fn>` from a plain client: it must return
+   `Could not find public function`. Admin portal operations the UI calls
+   (`admin*`) are public, but must call `requireAdmin(ctx)` before anything
+   else — directly, or in the internal function an action delegates to.
 2. **Ownership on every id.** Reading or mutating a row by an `_id` argument
    requires `requireOwned` (or an inline equivalent). Being logged in is not
    owning the row.
@@ -426,7 +428,7 @@ Before declaring work done:
 - [ ] New page exports `metadata`; public routes added to `sitemap.ts`
 - [ ] No color literal outside `globals.css`
 - [ ] New filter/tab/wizard state is in the URL via `nuqs`
-- [ ] Every new privileged Convex function is `internal*`
+- [ ] Every new provisioning Convex function is `internal*`; every public `admin*` function calls `requireAdmin(ctx)`
 - [ ] Every id-keyed read/write has an ownership check
 - [ ] Anonymous browser access to a protected route redirects to `/login`
 - [ ] Keyboard reachable, labelled, and visible focus on anything interactive

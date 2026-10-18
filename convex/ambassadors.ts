@@ -4,7 +4,12 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { AuthError, requireAdmin, requireRole } from "./model/auth";
+import {
+  AuthError,
+  requireAdmin,
+  requireRole,
+  requireUser,
+} from "./model/auth";
 
 const ambassadorStatusValidator = v.union(
   v.literal("active"),
@@ -520,7 +525,7 @@ export const getProfile = query({
 });
 
 export const getTotals = query({
-  args: { userId: v.id("users") },
+  args: {},
   returns: v.union(
     v.object({
       points: v.number(),
@@ -535,10 +540,11 @@ export const getTotals = query({
     }),
     v.null(),
   ),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const user = await requireUser(ctx);
     const totals = await ctx.db
       .query("ambassadorTotals")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .first();
     return totals;
   },
