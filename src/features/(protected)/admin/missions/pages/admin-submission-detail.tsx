@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SubmissionImageGallery } from "@/components/shared/submission-image-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -248,9 +249,13 @@ export default function AdminSubmissionDetail({
                 <dt className="break-words text-sm font-semibold text-foreground">
                   {response.label}
                 </dt>
-                <dd className="mt-2 min-w-0 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
-                  {response.value || "No response provided."}
-                </dd>
+                {response.imageUrls?.length ? (
+                  <SubmissionImageGallery urls={response.imageUrls} />
+                ) : (
+                  <dd className="mt-2 min-w-0 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
+                    {response.value || "No response provided."}
+                  </dd>
+                )}
               </div>
             ))}
           </dl>

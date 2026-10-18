@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { Send } from "lucide-react";
-import { useMemo } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -23,17 +24,19 @@ import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 const noSubmissionFields: MissionSubmissionField[] = [];
-
 const baseSchema = z.object({
   note: z.string().max(4000, "Keep your note under 4,000 characters."),
   link: z.string(),
   quantity: z.string(),
   responses: z.record(z.string(), z.string()),
 });
-
 type SubmissionValues = z.infer<typeof baseSchema>;
+type ImageFiles = Record<string, File[]>;
 
-function createSubmissionSchema(fields: MissionSubmissionField[]) {
+function createSubmissionSchema(
+  fields: MissionSubmissionField[],
+  imageFiles: ImageFiles,
+) {
   return baseSchema.superRefine((values, context) => {
     if (fields.length === 0 && values.note.trim().length < 20) {
       context.addIssue({
@@ -42,7 +45,6 @@ function createSubmissionSchema(fields: MissionSubmissionField[]) {
         message: "Describe what you did in at least a couple of sentences.",
       });
     }
-
     if (
       fields.length === 0 &&
       values.link !== "" &&
@@ -54,7 +56,6 @@ function createSubmissionSchema(fields: MissionSubmissionField[]) {
         message: "Enter a full link starting with https://",
       });
     }
-
     if (
       fields.length === 0 &&
       values.quantity !== "" &&
@@ -67,8 +68,28 @@ function createSubmissionSchema(fields: MissionSubmissionField[]) {
       });
     }
 
+    let totalImages = 0;
     for (const field of fields) {
       const value = values.responses[field.key]?.trim() ?? "";
+      const files = imageFiles[field.key] ?? [];
+      if (field.type === "image") {
+        totalImages += files.length;
+        if (files.some((file) => file.size > 5 * 1024 * 1024)) {
+          context.addIssue({
+            code: "custom",
+            path: ["responses", field.key],
+            message: "Each image must be smaller than 5 MB.",
+          });
+        }
+        if (field.required && files.length === 0) {
+          context.addIssue({
+            code: "custom",
+            path: ["responses", field.key],
+            message: `Complete “${field.label}” before submitting.`,
+          });
+        }
+        continue;
+      }
 
       if (field.required && value.length === 0) {
         context.addIssue({
@@ -97,7 +118,6 @@ function createSubmissionSchema(fields: MissionSubmissionField[]) {
           message: "Enter a whole number.",
         });
       }
-
       if (value.length > 4000) {
         context.addIssue({
           code: "custom",
@@ -105,6 +125,13 @@ function createSubmissionSchema(fields: MissionSubmissionField[]) {
           message: "Keep this answer under 4,000 characters.",
         });
       }
+    }
+    if (totalImages > 6) {
+      context.addIssue({
+        code: "custom",
+        path: ["responses"],
+        message: "You can upload no more than 6 images per submission.",
+      });
     }
   });
 }
@@ -119,9 +146,28 @@ export function MissionSubmissionForm({
   onSubmitted?: () => void;
 }) {
   const submit = useMutation(api.contributions.submit);
+  const generateUploadUrl = useMutation(api.contributions.generateUploadUrl);
+  const [imageFiles, setImageFiles] = useState<ImageFiles>({});
+  const imagePreviewUrls = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(imageFiles).map(([fieldKey, files]) => [
+          fieldKey,
+          files.map((file) => URL.createObjectURL(file)),
+        ]),
+      ),
+    [imageFiles],
+  );
+  useEffect(() => {
+    return () => {
+      for (const urls of Object.values(imagePreviewUrls)) {
+        for (const url of urls) URL.revokeObjectURL(url);
+      }
+    };
+  }, [imagePreviewUrls]);
   const schema = useMemo(
-    () => createSubmissionSchema(submissionFields),
-    [submissionFields],
+    () => createSubmissionSchema(submissionFields, imageFiles),
+    [imageFiles, submissionFields],
   );
   const {
     register,
@@ -140,8 +186,45 @@ export function MissionSubmissionForm({
     },
   });
 
+  async function uploadImages(field: MissionSubmissionField) {
+    const ids: Id<"_storage">[] = [];
+    for (const file of imageFiles[field.key] ?? []) {
+      const uploadUrl = await generateUploadUrl();
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!response.ok)
+        throw new Error("One of the images could not be uploaded.");
+      const result: unknown = await response.json();
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("storageId" in result) ||
+        typeof result.storageId !== "string"
+      ) {
+        throw new Error("One of the images could not be uploaded.");
+      }
+      ids.push(result.storageId as Id<"_storage">);
+    }
+    return ids;
+  }
+
   async function onSubmit(values: SubmissionValues) {
     try {
+      const imageStorageIds: Record<string, Id<"_storage">[]> = {};
+      let totalImages = 0;
+      for (const field of submissionFields) {
+        if (field.type !== "image") continue;
+        totalImages += imageFiles[field.key]?.length ?? 0;
+        if (totalImages > 6) {
+          throw new Error(
+            "You can upload no more than 6 images per submission.",
+          );
+        }
+        imageStorageIds[field.key] = await uploadImages(field);
+      }
       const hasCustomFields = submissionFields.length > 0;
       await submit({
         missionId,
@@ -156,11 +239,12 @@ export function MissionSubmissionForm({
               fieldKey: field.key,
               label: field.label,
               value: values.responses[field.key]?.trim() ?? "",
+              imageStorageIds: imageStorageIds[field.key],
             }))
           : undefined,
       });
-
       reset();
+      setImageFiles({});
       toast.success("Submitted for review.");
       onSubmitted?.();
     } catch (error) {
@@ -170,6 +254,29 @@ export function MissionSubmissionForm({
           : "Submission failed. Try again in a moment.",
       );
     }
+  }
+
+  function updateImageFiles(fieldKey: string, files: FileList | null) {
+    const selected = Array.from(files ?? []);
+    const currentTotal = Object.values(imageFiles).reduce(
+      (total, fieldFiles) => total + fieldFiles.length,
+      0,
+    );
+    const otherTotal = currentTotal - (imageFiles[fieldKey]?.length ?? 0);
+    const next = selected.slice(0, Math.max(0, 6 - otherTotal));
+    setImageFiles((current) => ({ ...current, [fieldKey]: next }));
+    if (selected.length > next.length) {
+      toast.error("You can upload no more than 6 images per submission.");
+    }
+  }
+
+  function removeImage(fieldKey: string, index: number) {
+    setImageFiles((current) => ({
+      ...current,
+      [fieldKey]: (current[fieldKey] ?? []).filter(
+        (_, itemIndex) => itemIndex !== index,
+      ),
+    }));
   }
 
   return (
@@ -188,7 +295,6 @@ export function MissionSubmissionForm({
               />
               <FieldError errors={[errors.note]} />
             </Field>
-
             <Field data-invalid={!!errors.link}>
               <FieldLabel htmlFor="link">Link to it (optional)</FieldLabel>
               <Input
@@ -203,7 +309,6 @@ export function MissionSubmissionForm({
               />
               <FieldError errors={[errors.link]} />
             </Field>
-
             <Field data-invalid={!!errors.quantity}>
               <FieldLabel htmlFor="quantity">
                 How many people took part? (optional)
@@ -242,6 +347,49 @@ export function MissionSubmissionForm({
                     aria-invalid={!!errors.responses?.[field.key]}
                     {...register(`responses.${field.key}`)}
                   />
+                ) : field.type === "image" ? (
+                  <div className="space-y-3">
+                    <Input
+                      id={`response-${field.key}`}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      aria-invalid={!!errors.responses?.[field.key]}
+                      onChange={(event) =>
+                        updateImageFiles(field.key, event.target.files)
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Add up to 6 images total. Each image must be smaller than
+                      5 MB.
+                    </p>
+                    {(imageFiles[field.key] ?? []).length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                        {(imageFiles[field.key] ?? []).map((file, index) => (
+                          <div
+                            key={`${file.name}-${file.lastModified}`}
+                            className="relative aspect-square"
+                          >
+                            <Image
+                              src={imagePreviewUrls[field.key]?.[index] ?? ""}
+                              alt={`Selected file ${index + 1}`}
+                              fill
+                              unoptimized
+                              className="rounded-md border border-border object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(field.key, index)}
+                              className="absolute right-1 top-1 rounded-full bg-foreground px-2 py-1 text-xs text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              aria-label={`Remove selected image ${index + 1}`}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 ) : (
                   <Input
                     id={`response-${field.key}`}
@@ -291,7 +439,6 @@ export function MissionSubmissionForm({
             </Field>
           </>
         )}
-
         <Button type="submit" disabled={isSubmitting} className="w-full">
           <Send aria-hidden="true" />
           {isSubmitting ? "Submitting…" : "Submit for review"}

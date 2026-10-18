@@ -69,6 +69,7 @@ export const MISSION_SUBMISSION_FIELD_TYPES = [
   "long_text",
   "url",
   "number",
+  "image",
 ] as const;
 
 export type MissionSubmissionFieldType =
@@ -85,6 +86,7 @@ export interface MissionSubmissionResponse {
   fieldKey: string;
   label: string;
   value: string;
+  imageUrls?: string[];
 }
 
 export interface Mission {

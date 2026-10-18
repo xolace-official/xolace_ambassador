@@ -224,11 +224,15 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
                     </time>
                   </span>
                   <span className="mt-1 block line-clamp-1 break-words text-xs leading-4 text-muted-foreground">
-                    {submission.note ??
+                    {submission.note ||
                       submission.responses?.find((response) =>
                         response.value.trim(),
-                      )?.value ??
-                      "No response preview available."}
+                      )?.value ||
+                      (submission.responses?.some(
+                        (response) => response.imageUrls?.length,
+                      )
+                        ? "Images attached"
+                        : "No response preview available.")}
                   </span>
                 </span>
                 <span className="inline-flex min-h-11 shrink-0 items-center justify-end gap-2 text-sm font-medium text-foreground transition-colors group-hover:text-primary">

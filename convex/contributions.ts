@@ -5,8 +5,47 @@ import {
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { type MutationCtx, mutation, query } from "./_generated/server";
+import {
+  type MutationCtx,
+  mutation,
+  type QueryCtx,
+  query,
+} from "./_generated/server";
 import { AuthError, requireAdmin, requireRole } from "./model/auth";
+
+async function responsesWithImageUrls(
+  ctx: QueryCtx,
+  responses:
+    | {
+        fieldKey: string;
+        label: string;
+        value: string;
+        imageStorageIds?: Id<"_storage">[];
+      }[]
+    | undefined,
+) {
+  return responses
+    ? await Promise.all(
+        responses.map(async (response) => {
+          const imageUrls = response.imageStorageIds
+            ? (
+                await Promise.all(
+                  response.imageStorageIds.map((storageId) =>
+                    ctx.storage.getUrl(storageId),
+                  ),
+                )
+              ).filter((url): url is string => url !== null)
+            : undefined;
+          return {
+            fieldKey: response.fieldKey,
+            label: response.label,
+            value: response.value,
+            imageUrls: imageUrls?.length ? imageUrls : undefined,
+          };
+        }),
+      )
+    : undefined;
+}
 
 const adminContributionValidator = v.object({
   _id: v.id("contributions"),
@@ -24,6 +63,7 @@ const adminContributionValidator = v.object({
         fieldKey: v.string(),
         label: v.string(),
         value: v.string(),
+        imageUrls: v.optional(v.array(v.string())),
       }),
     ),
   ),
@@ -98,7 +138,10 @@ export const adminList = query({
             title: contribution.title,
             note: contribution.note,
             link: contribution.link,
-            responses: contribution.responses,
+            responses: await responsesWithImageUrls(
+              ctx,
+              contribution.responses,
+            ),
             quantity: contribution.quantity,
             kind: contribution.kind,
             status: contribution.status,
@@ -157,7 +200,7 @@ export const adminGet = query({
       title: contribution.title,
       note: contribution.note,
       link: contribution.link,
-      responses: contribution.responses,
+      responses: await responsesWithImageUrls(ctx, contribution.responses),
       quantity: contribution.quantity,
       kind: contribution.kind,
       status: contribution.status,
@@ -303,6 +346,15 @@ export const adminReview = mutation({
   },
 });
 
+export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await requireRole(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const listForUser = query({
   args: {
     userId: v.id("users"),
@@ -324,6 +376,7 @@ export const listForUser = query({
             fieldKey: v.string(),
             label: v.string(),
             value: v.string(),
+            imageUrls: v.optional(v.array(v.string())),
           }),
         ),
       ),
@@ -346,7 +399,12 @@ export const listForUser = query({
       .order("desc")
       .take(200);
     const limit = Math.min(args.limit ?? 50, 200);
-    return all.slice(0, limit);
+    return await Promise.all(
+      all.slice(0, limit).map(async (contribution) => ({
+        ...contribution,
+        responses: await responsesWithImageUrls(ctx, contribution.responses),
+      })),
+    );
   },
 });
 
@@ -362,6 +420,7 @@ export const submit = mutation({
           fieldKey: v.string(),
           label: v.string(),
           value: v.string(),
+          imageStorageIds: v.optional(v.array(v.id("_storage"))),
         }),
       ),
     ),
@@ -403,7 +462,7 @@ export const submit = mutation({
 
     if (
       mission.missionSetId === undefined &&
-      (mission.startsAt > now || mission.endsAt < now)
+      (mission.startsAt > now || mission.endsAt <= now)
     ) {
       throw new Error(
         "This mission has closed and is no longer accepting submissions.",
@@ -427,6 +486,7 @@ export const submit = mutation({
       }
 
       const fieldValues = new Map<string, string>();
+      let imageCount = 0;
       for (const response of args.responses) {
         if (fieldValues.has(response.fieldKey)) {
           throw new Error("Each submission field can only have one answer.");
@@ -440,11 +500,42 @@ export const submit = mutation({
         }
 
         const value = response.value.trim();
+        const imageStorageIds = response.imageStorageIds ?? [];
+
+        if (definition.type === "image") {
+          imageCount += imageStorageIds.length;
+          if (imageCount > 6) {
+            throw new Error(
+              "You can upload no more than 6 images per submission.",
+            );
+          }
+          for (const storageId of imageStorageIds) {
+            const metadata = await ctx.storage.getMetadata(storageId);
+            if (
+              metadata === null ||
+              !metadata.contentType?.startsWith("image/") ||
+              metadata.size > 5 * 1024 * 1024
+            ) {
+              throw new Error("Each image must be smaller than 5 MB.");
+            }
+          }
+          if (definition.required && imageStorageIds.length === 0) {
+            throw new Error(
+              `Complete “${definition.label}” before submitting.`,
+            );
+          }
+        } else if (imageStorageIds.length > 0) {
+          throw new Error("Images can only be uploaded to an image field.");
+        }
         if (value.length > 4000) {
           throw new Error("Keep each answer under 4,000 characters.");
         }
 
-        if (definition.required && value.length === 0) {
+        if (
+          definition.required &&
+          definition.type !== "image" &&
+          value.length === 0
+        ) {
           throw new Error(`Complete “${definition.label}” before submitting.`);
         }
         if (
@@ -509,6 +600,7 @@ export const submit = mutation({
           fieldKey: response.fieldKey,
           label: field?.label ?? response.label,
           value: response.value.trim(),
+          imageStorageIds: response.imageStorageIds,
         };
       }),
       status: "pending",

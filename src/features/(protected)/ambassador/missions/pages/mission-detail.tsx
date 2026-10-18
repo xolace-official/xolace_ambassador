@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SubmissionImageGallery } from "@/components/shared/submission-image-gallery";
 import { Card } from "@/components/ui/card";
 import { api } from "../../../../../../convex/_generated/api";
 import { MissionContributionSidebar } from "../components/mission-contribution-sidebar";
@@ -102,7 +103,7 @@ export function MissionDetail({
   const submission = row.submission;
 
   // Rejected missions accept revised submissions, so keep them in the submit path.
-  const isExpired = row.openState === "expired";
+  const isExpired = row.openState === "expired" || now >= mission.endsAt;
   const canSubmit =
     !isExpired &&
     (mission.status === "available" ||
@@ -210,9 +211,13 @@ export function MissionDetail({
                           <dt className="text-sm font-medium text-foreground">
                             {response.label}
                           </dt>
-                          <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
-                            {response.value || "No response provided."}
-                          </dd>
+                          {response.imageUrls?.length ? (
+                            <SubmissionImageGallery urls={response.imageUrls} />
+                          ) : (
+                            <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
+                              {response.value || "No response provided."}
+                            </dd>
+                          )}
                         </div>
                       ))}
                     </dl>

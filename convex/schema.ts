@@ -20,6 +20,7 @@ const missionSubmissionFieldTypeValidator = v.union(
   v.literal("long_text"),
   v.literal("url"),
   v.literal("number"),
+  v.literal("image"),
 );
 
 const missionSubmissionFieldValidator = v.object({
@@ -33,6 +34,7 @@ const contributionResponseValidator = v.object({
   fieldKey: v.string(),
   label: v.string(),
   value: v.string(),
+  imageStorageIds: v.optional(v.array(v.id("_storage"))),
 });
 
 export default defineSchema({
@@ -154,6 +156,7 @@ export default defineSchema({
     // existing account is never blocked from signing in, but the portal gates
     // contribution on it being set.
     safetyAcknowledgedAt: v.optional(v.number()),
+    profileCompletionRewardedAt: v.optional(v.number()),
     onboardedAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
@@ -262,6 +265,7 @@ export default defineSchema({
     summary: v.string(),
     description: v.string(),
     track: track,
+    tracks: v.optional(v.array(track)),
     // Source of the points value at creation time. The `points` below is a
     // deliberate snapshot, not a live join: raising an action's value later
     // must not retroactively change what an ambassador already earned.
