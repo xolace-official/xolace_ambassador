@@ -49,6 +49,8 @@ export function PortalProfile({
           details?.location,
           details?.school,
           details?.bio,
+          details?.track,
+          details?.safetyAcknowledgedAt,
         ]
       : [profile.name, profile.image];
   const completion = Math.round(

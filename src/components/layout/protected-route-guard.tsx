@@ -1,8 +1,9 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
+import { AmbassadorOnboardingGate } from "@/components/layout/ambassador-onboarding-gate";
 import { PortalAccessOverlay } from "@/components/layout/portal-access-overlay";
 import type { PortalRole } from "@/types/portal.type";
 import { api } from "../../../convex/_generated/api";
@@ -18,6 +19,7 @@ export function ProtectedRouteGuard({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { uuid } = useParams<{ uuid: string }>();
 
   // `undefined` means loading, `null` means signed out.
@@ -88,7 +90,7 @@ export function ProtectedRouteGuard({
       ? user.programStatus
       : null;
 
-  return blockedStatus ? (
+  const portalContent = blockedStatus ? (
     <PortalAccessOverlay
       status={blockedStatus}
       reason={user?.programStatusReason ?? null}
@@ -97,6 +99,26 @@ export function ProtectedRouteGuard({
     </PortalAccessOverlay>
   ) : (
     children
+  );
+
+  return portalRole === "ambassador" && !pathname.endsWith("/profile/edit") ? (
+    <AmbassadorOnboardingGate
+      complete={user.profileComplete ?? false}
+      requirements={
+        user.profileRequirements ?? {
+          image: false,
+          location: false,
+          school: false,
+          bio: false,
+          track: null,
+          safety: false,
+        }
+      }
+    >
+      {portalContent}
+    </AmbassadorOnboardingGate>
+  ) : (
+    portalContent
   );
 }
 

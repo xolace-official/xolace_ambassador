@@ -6,12 +6,16 @@ export function SettingsCard({
   title,
   description,
   children,
+  bare = false,
 }: {
   icon: typeof UserRound;
   title: string;
   description: string;
   children: React.ReactNode;
+  bare?: boolean;
 }) {
+  if (bare) return children;
+
   return (
     <Card>
       <CardContent className="p-4 sm:p-6">

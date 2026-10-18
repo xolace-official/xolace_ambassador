@@ -79,9 +79,8 @@ export function ProgramSettings({
               </div>
             </div>
             <p className="border-t border-border pt-5 text-sm leading-6 text-muted-foreground">
-              Your track, pod, and program status are managed by the Xolace team
-              so your program records stay accurate. Contact an admin if
-              something needs updating.
+              Your track is selected during onboarding. Contact an admin if your
+              program assignment needs to be changed later.
             </p>
           </>
         ) : (

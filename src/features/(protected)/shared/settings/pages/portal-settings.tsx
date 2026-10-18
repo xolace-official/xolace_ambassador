@@ -54,9 +54,13 @@ import {
 export function PortalSettings({
   profileEdit = false,
   profileHref,
+  onboarding = false,
+  onboardingStep,
 }: {
   profileEdit?: boolean;
   profileHref?: string;
+  onboarding?: boolean;
+  onboardingStep?: "profile" | "safety";
 }) {
   const router = useRouter();
   const { signOut } = useAuthActions();
@@ -103,7 +107,7 @@ export function PortalSettings({
     try {
       await updateSettings(values);
       toast.success("Profile saved");
-      if (profileEdit && profileHref) {
+      if (profileEdit && profileHref && !onboarding) {
         router.push(profileHref);
         return;
       }
@@ -228,28 +232,52 @@ export function PortalSettings({
       ) : null}
       <main className="min-w-0">
         {profileEdit ? (
-          <SettingsCard
-            icon={UserRound}
-            title="Profile"
-            description="The information members and the Xolace team use to know you."
-          >
-            <ProfileSettings
-              settings={typedSettings}
-              editing={editing}
-              setEditing={(value) => {
-                if (profileEdit && !value && profileHref) {
-                  router.push(profileHref);
-                  return;
-                }
-                setEditing(value);
-              }}
-              form={form}
-              onSubmit={onSubmit}
-              image={settings.image}
-              uploadingAvatar={uploadingAvatar}
-              onAvatarChange={handleAvatarChange}
-            />
-          </SettingsCard>
+          <div className="space-y-6">
+            {!onboarding || onboardingStep === "profile" ? (
+              <SettingsCard
+                icon={UserRound}
+                title="Profile"
+                description="The information members and the Xolace team use to know you."
+                bare={onboarding}
+              >
+                <ProfileSettings
+                  settings={typedSettings}
+                  editing={editing}
+                  setEditing={(value) => {
+                    if (profileEdit && !value && profileHref && !onboarding) {
+                      router.push(profileHref);
+                      return;
+                    }
+                    setEditing(value);
+                  }}
+                  form={form}
+                  onSubmit={onSubmit}
+                  image={settings.image}
+                  uploadingAvatar={uploadingAvatar}
+                  onAvatarChange={handleAvatarChange}
+                />
+              </SettingsCard>
+            ) : null}
+            {onboarding &&
+            onboardingStep === "safety" &&
+            typedSettings.role === "ambassador" ? (
+              <SettingsCard
+                icon={BriefcaseBusiness}
+                title="Program & safety"
+                description="Complete the safety commitment before entering the ambassador portal."
+                bare
+              >
+                <ProgramSettings
+                  settings={typedSettings}
+                  onAcknowledge={async () => {
+                    await handleSafetyAcknowledgement();
+                    if (profileHref) router.push(profileHref);
+                  }}
+                  acknowledging={acknowledgingSafety}
+                />
+              </SettingsCard>
+            ) : null}
+          </div>
         ) : selectedTab === "program" ? (
           <SettingsCard
             icon={BriefcaseBusiness}

@@ -9,11 +9,18 @@ export const metadata: Metadata = portalMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ uuid: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
 }) {
   const { uuid } = await params;
+  const { onboarding } = await searchParams;
   return (
-    <PortalSettings profileEdit profileHref={`/ambassador/${uuid}/profile`} />
+    <PortalSettings
+      profileEdit
+      onboarding={onboarding === "1"}
+      profileHref={`/ambassador/${uuid}/profile`}
+    />
   );
 }

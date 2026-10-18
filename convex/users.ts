@@ -42,6 +42,16 @@ export const current = query({
             .withIndex("by_userId", (q) => q.eq("userId", user._id))
             .first()
         : null;
+    const profileComplete =
+      user.role !== "ambassador" ||
+      Boolean(
+        (user.avatarStorageId ?? user.image) &&
+          profile?.location?.trim() &&
+          profile?.school?.trim() &&
+          profile?.bio?.trim() &&
+          profile.track &&
+          profile.safetyAcknowledgedAt,
+      );
 
     return {
       _id: user._id,
@@ -51,6 +61,19 @@ export const current = query({
       image,
       email: user.email ?? null,
       referralCode: profile?.referralCode ?? null,
+      track: profile?.track ?? null,
+      profileComplete,
+      profileRequirements:
+        user.role === "ambassador"
+          ? {
+              image: Boolean(user.avatarStorageId ?? user.image),
+              location: Boolean(profile?.location?.trim()),
+              school: Boolean(profile?.school?.trim()),
+              bio: Boolean(profile?.bio?.trim()),
+              track: profile?.track ?? null,
+              safety: Boolean(profile?.safetyAcknowledgedAt),
+            }
+          : null,
       passwordSetupRequired: user.passwordSetupRequired ?? false,
       programStatus: profile?.status ?? null,
       programStatusReason: profile?.statusReason ?? null,

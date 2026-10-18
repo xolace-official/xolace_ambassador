@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./model/auth";
+import { trackValidator } from "./schema";
 
 const settingsProfileValidator = v.union(
   v.object({
@@ -167,6 +168,103 @@ export const acknowledgeSafety = mutation({
       await ctx.db.patch(profile._id, { safetyAcknowledgedAt: Date.now() });
     }
 
+    return null;
+  },
+});
+
+export const claimProfileCompletionReward = mutation({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    const user = await requireRole(ctx);
+    if (user.role !== "ambassador") return false;
+
+    const profile = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+    if (profile === null || profile.profileCompletionRewardedAt !== undefined) {
+      return false;
+    }
+
+    const complete = Boolean(
+      user.name?.trim() &&
+        (user.avatarStorageId ?? user.image) &&
+        profile.location?.trim() &&
+        profile.school?.trim() &&
+        profile.bio?.trim() &&
+        profile.track &&
+        profile.safetyAcknowledgedAt,
+    );
+    if (!complete) return false;
+
+    const existingTotals = await ctx.db
+      .query("ambassadorTotals")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+    const points = (existingTotals?.points ?? 0) + 25;
+    const levels = await ctx.db
+      .query("levels")
+      .withIndex("by_minPoints")
+      .order("asc")
+      .take(100);
+    const levelRank = levels.reduce(
+      (rank, level) => (points >= level.minPoints ? level.rank : rank),
+      existingTotals?.levelRank ?? 0,
+    );
+    const totals = {
+      userId: user._id,
+      points,
+      levelRank,
+      contributionsApproved: existingTotals?.contributionsApproved ?? 0,
+      missionsCompleted: existingTotals?.missionsCompleted ?? 0,
+      peopleReached: existingTotals?.peopleReached ?? 0,
+      installs: existingTotals?.installs ?? 0,
+      referrals: existingTotals?.referrals ?? 0,
+      contentCount: existingTotals?.contentCount ?? 0,
+      eventCount: existingTotals?.eventCount ?? 0,
+    };
+
+    if (existingTotals === null) {
+      await ctx.db.insert("ambassadorTotals", totals);
+    } else {
+      await ctx.db.patch(existingTotals._id, totals);
+    }
+    await ctx.db.insert("pointLedger", {
+      ambassadorId: user._id,
+      delta: 25,
+      reason: "Profile completion",
+      actionKey: "profile_completion",
+      awardedBy: user._id,
+    });
+    await ctx.db.patch(profile._id, {
+      profileCompletionRewardedAt: Date.now(),
+    });
+    return true;
+  },
+});
+
+export const chooseTrack = mutation({
+  args: { track: trackValidator },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireRole(ctx);
+    if (user.role !== "ambassador") {
+      throw new Error("Only ambassadors can choose a program track.");
+    }
+
+    const profile = await ctx.db
+      .query("ambassadorProfiles")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .first();
+    if (profile === null) {
+      throw new Error("Your ambassador profile is not ready yet.");
+    }
+    if (profile.track !== undefined) {
+      throw new Error("Your ambassador track has already been selected.");
+    }
+
+    await ctx.db.patch(profile._id, { track: args.track });
     return null;
   },
 });
