@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { CalendarIcon } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import { api } from "../../../../../../convex/_generated/api";
 import { AmbassadorDashboardSkeleton } from "../components/ambassador-dashboard-skeleton";
 import { AmbassadorDashboardStats } from "../components/ambassador-dashboard-stats";
@@ -14,8 +15,9 @@ import {
 
 export default function AmbassadorDashboard() {
   const { uuid } = useParams<{ uuid: string }>();
+  const [now] = useState(() => Date.now());
   const profile = useQuery(api.ambassadors.getProfile);
-  const missions = useQuery(api.missions.list, { now: Date.now() });
+  const missions = useQuery(api.missions.list, { now });
   const impact = useQuery(api.impact.getForAmbassador);
   const contributionHistory = useQuery(api.impact.getContributionHistory, {
     history: "all",
