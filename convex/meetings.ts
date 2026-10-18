@@ -7,6 +7,7 @@ import type { Doc } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { DEFAULT_MEETING_SLOTS, formatMeetingSlot } from "./meetingSlots";
 import { requireAdmin } from "./model/auth";
+import { isMeetingSlotBooked } from "./model/meetingSlots";
 
 const applicationStatusValidator = v.union(
   v.literal("new"),
@@ -162,23 +163,14 @@ export const adminListSlots = query({
       .order("asc")
       .take(200);
     return await Promise.all(
-      slots.map(async (slot) => {
-        const booking = await ctx.db
-          .query("applications")
-          .withIndex("by_meetingSlotId", (q) =>
-            q.eq("meetingSlotId", slot.slotKey),
-          )
-          .first();
-        return {
-          _id: slot._id,
-          slotKey: slot.slotKey,
-          startsAt: slot.startsAt,
-          label: formatMeetingSlot(slot.startsAt),
-          active: slot.active,
-          booked:
-            booking?.status !== undefined && booking.status !== "rejected",
-        };
-      }),
+      slots.map(async (slot) => ({
+        _id: slot._id,
+        slotKey: slot.slotKey,
+        startsAt: slot.startsAt,
+        label: formatMeetingSlot(slot.startsAt),
+        active: slot.active,
+        booked: await isMeetingSlotBooked(ctx, slot.slotKey),
+      })),
     );
   },
 });
@@ -213,16 +205,8 @@ export const adminToggleSlot = mutation({
     await requireAdmin(ctx);
     const slot = await ctx.db.get(args.slotId);
     if (slot === null) throw new Error("Meeting slot not found.");
-    if (!args.active) {
-      const booking = await ctx.db
-        .query("applications")
-        .withIndex("by_meetingSlotId", (q) =>
-          q.eq("meetingSlotId", slot.slotKey),
-        )
-        .first();
-      if (booking?.status !== undefined && booking.status !== "rejected") {
-        throw new Error("A booked meeting slot cannot be disabled.");
-      }
+    if (!args.active && (await isMeetingSlotBooked(ctx, slot.slotKey))) {
+      throw new Error("A booked meeting slot cannot be disabled.");
     }
     await ctx.db.patch(args.slotId, { active: args.active });
     return null;

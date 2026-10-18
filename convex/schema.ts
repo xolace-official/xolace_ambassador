@@ -494,6 +494,7 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_email", ["email"])
     .index("by_meetingSlotId", ["meetingSlotId"])
+    .index("by_meetingSlotId_and_status", ["meetingSlotId", "status"])
     .index("by_meetingScheduledAt", ["meetingScheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",

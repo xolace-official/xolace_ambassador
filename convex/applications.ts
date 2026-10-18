@@ -22,6 +22,7 @@ import {
 } from "./emailTemplates";
 import { DEFAULT_MEETING_SLOTS, formatMeetingSlot } from "./meetingSlots";
 import { AuthError, requireAdmin } from "./model/auth";
+import { isMeetingSlotBooked } from "./model/meetingSlots";
 import { trackValidator } from "./schema";
 
 const applicationStatusValidator = v.union(
@@ -122,15 +123,9 @@ async function availableMeetingSlots(
         }))
       : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > now);
   const available = await Promise.all(
-    slots.map(async (slot) => {
-      const booking = await ctx.db
-        .query("applications")
-        .withIndex("by_meetingSlotId", (q) => q.eq("meetingSlotId", slot.id))
-        .first();
-      return booking?.status === undefined || booking.status === "rejected"
-        ? slot
-        : null;
-    }),
+    slots.map(async (slot) =>
+      (await isMeetingSlotBooked(ctx, slot.id)) ? null : slot,
+    ),
   );
   return available.filter(
     (slot): slot is { id: string; startsAt: number } => slot !== null,
@@ -209,16 +204,7 @@ export const submit = mutation({
       ) {
         throw new Error("Choose one of the available meeting times.");
       }
-      const existingSlotApplication = await ctx.db
-        .query("applications")
-        .withIndex("by_meetingSlotId", (q) =>
-          q.eq("meetingSlotId", requestedSlotId),
-        )
-        .first();
-      if (
-        existingSlotApplication?.status !== undefined &&
-        existingSlotApplication.status !== "rejected"
-      ) {
+      if (await isMeetingSlotBooked(ctx, requestedSlotId)) {
         throw new Error(
           "That meeting time has already been taken. Choose another time.",
         );
