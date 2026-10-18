@@ -1,9 +1,9 @@
 "use client";
 
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import { useState } from "react";
 
 interface ImagePreviewProps {
