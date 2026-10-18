@@ -151,7 +151,7 @@ export default function AdminMissionSets({ uuid }: { uuid: string }) {
                         {missionSet.name}
                       </h2>
                     </Link>
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button
                           type="button"
