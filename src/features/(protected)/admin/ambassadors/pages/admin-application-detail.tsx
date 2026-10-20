@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -356,27 +357,12 @@ export default function AdminApplicationDetail({
           </Detail>
           <Detail label="Social profiles">
             {application.socials && application.socials.length > 0 ? (
-              <ul className="mt-1 space-y-1">
-                {application.socials.map((s) => (
-                  <li key={s.platform} className="flex items-start gap-2">
-                    <span className="shrink-0 font-medium text-foreground">
-                      {s.platform}:
-                    </span>
-                    <a
-                      href={
-                        s.handle.startsWith("http")
-                          ? s.handle
-                          : `https://${s.handle}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="break-all text-primary underline-offset-4 hover:underline"
-                    >
-                      {s.handle}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <SocialLinkButtons
+                links={application.socials.map((social) => ({
+                  label: social.platform,
+                  value: social.handle,
+                }))}
+              />
             ) : (
               "Not provided"
             )}
