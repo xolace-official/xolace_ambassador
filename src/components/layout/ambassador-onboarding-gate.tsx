@@ -2,7 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { CheckCircle2, Circle, PartyPopper } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,7 +39,6 @@ export function AmbassadorOnboardingGate({
   complete: boolean;
   children: React.ReactNode;
 }) {
-  const wasIncomplete = useRef(!complete);
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const claimProfileCompletionReward = useMutation(
@@ -52,11 +51,12 @@ export function AmbassadorOnboardingGate({
   const [savingTrack, setSavingTrack] = useState(false);
 
   useEffect(() => {
-    if (!complete || !wasIncomplete.current) return;
-    wasIncomplete.current = false;
+    if (!complete) return;
     void claimProfileCompletionReward()
-      .catch(() => null)
-      .finally(() => setShowSuccess(true));
+      .then((claimed) => {
+        if (claimed) setShowSuccess(true);
+      })
+      .catch(() => null);
   }, [claimProfileCompletionReward, complete]);
 
   const profileComplete =

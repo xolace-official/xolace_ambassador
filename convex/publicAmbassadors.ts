@@ -156,8 +156,13 @@ export const summary = query({
     const locations = new Set<string>();
     let peopleReached = 0;
     let eventsHosted = 0;
+    let activeAmbassadors = 0;
 
     for (const profile of profiles) {
+      const user = await ctx.db.get(profile.userId);
+      if (user === null || !user.name?.trim()) continue;
+
+      activeAmbassadors++;
       const location = profile.location?.trim();
       if (location) locations.add(location.toLowerCase());
 
@@ -170,7 +175,7 @@ export const summary = query({
     }
 
     return {
-      activeAmbassadors: profiles.length,
+      activeAmbassadors,
       countries: locations.size,
       peopleReached,
       eventsHosted,

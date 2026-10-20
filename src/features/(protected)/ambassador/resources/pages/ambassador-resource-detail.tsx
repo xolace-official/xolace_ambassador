@@ -17,6 +17,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "../../../../../../convex/_generated/api";
@@ -277,9 +278,11 @@ export default function AmbassadorResourceDetail({
                   <h3 className="text-base font-semibold text-foreground">
                     External Resource Link
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
-                    {resource.url}
-                  </p>
+                  <div className="mt-2">
+                    <SocialLinkButtons
+                      links={[{ label: "Resource", value: resource.url }]}
+                    />
+                  </div>
                 </div>
               </div>
 

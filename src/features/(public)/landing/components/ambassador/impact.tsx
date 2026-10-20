@@ -1,7 +1,10 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { Award, Globe, Heart, Users } from "lucide-react";
 import { motion } from "motion/react";
-import { STATS } from "@/constants";
+import { formatCompactPlus } from "@/lib/format-compact-plus";
+import { api } from "../../../../../../convex/_generated/api";
 
 const positions = [
   { leftPct: 1.6, topPct: 9.4, widthPct: 16.1, rotate: -6 },
@@ -29,6 +32,30 @@ const itemVariants = {
 };
 
 export default function Impact() {
+  const summary = useQuery(api.publicAmbassadors.summary);
+  const stats = [
+    {
+      icon: Users,
+      label: "Active Ambassadors",
+      value: formatCompactPlus(summary?.activeAmbassadors ?? 0),
+    },
+    {
+      icon: Globe,
+      label: "Countries",
+      value: formatCompactPlus(summary?.countries ?? 0),
+    },
+    {
+      icon: Heart,
+      label: "Lives Impacted",
+      value: formatCompactPlus(summary?.peopleReached ?? 0),
+    },
+    {
+      icon: Award,
+      label: "Events Hosted",
+      value: formatCompactPlus(summary?.eventsHosted ?? 0),
+    },
+  ];
+
   return (
     <section
       id="impact"
@@ -61,7 +88,7 @@ export default function Impact() {
           viewport={{ once: true, margin: "-50px" }}
           className="hidden lg:block relative aspect-[1240/320]"
         >
-          {STATS.map((stat, index) => {
+          {stats.map((stat, index) => {
             const pos = positions[index];
             return (
               <motion.div
@@ -99,7 +126,7 @@ export default function Impact() {
           viewport={{ once: true, margin: "-50px" }}
           className="grid grid-cols-2 gap-4 lg:hidden"
         >
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <motion.div
               key={stat.label}
               variants={itemVariants}

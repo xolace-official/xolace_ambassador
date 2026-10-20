@@ -1,6 +1,8 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./model/auth";
+import { insertLedgerEntry } from "./model/pointLedger";
 import { trackValidator } from "./schema";
 
 const settingsProfileValidator = v.union(
@@ -230,7 +232,7 @@ export const claimProfileCompletionReward = mutation({
     } else {
       await ctx.db.patch(existingTotals._id, totals);
     }
-    await ctx.db.insert("pointLedger", {
+    await insertLedgerEntry(ctx, {
       ambassadorId: user._id,
       delta: 25,
       reason: "Profile completion",
@@ -239,6 +241,14 @@ export const claimProfileCompletionReward = mutation({
     });
     await ctx.db.patch(profile._id, {
       profileCompletionRewardedAt: Date.now(),
+    });
+    await ctx.runMutation(internal.notifications.createForUser, {
+      recipientId: user._id,
+      kind: "reward",
+      title: "You earned 25 reward points",
+      description:
+        "Your completed ambassador profile earned its one-time reward.",
+      href: `/ambassador/${user._id}/rewards`,
     });
     return true;
   },
@@ -271,6 +281,7 @@ export const chooseTrack = mutation({
 
 export const updateSettings = mutation({
   args: {
+    name: v.optional(v.string()),
     location: v.optional(v.string()),
     school: v.optional(v.string()),
     dateOfBirth: v.optional(v.string()),
@@ -286,10 +297,12 @@ export const updateSettings = mutation({
   handler: async (ctx, args) => {
     const user = await requireRole(ctx);
 
-    // `name` is deliberately not writable here: an ambassador's display name is
-    // the name on their application and must not drift from it.
-
     if (user.role !== "ambassador") {
+      const name = args.name?.trim() ?? "";
+      if (!name || name.length > 120) {
+        throw new Error("Enter your full name under 120 characters.");
+      }
+      await ctx.db.patch(user._id, { name });
       return null;
     }
 

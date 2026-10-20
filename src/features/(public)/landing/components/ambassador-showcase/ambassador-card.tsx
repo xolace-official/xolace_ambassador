@@ -86,9 +86,9 @@ const AmbassadorCard = ({
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
       style={{ rotate }}
-      className="relative rounded-2xl border border-border bg-card p-2.5 pb-4 shadow-lg transition-shadow duration-300 hover:shadow-2xl"
+      className="relative flex h-[34rem] md:h-[27rem] flex-col rounded-2xl border border-border bg-card p-2.5 pb-4 shadow-lg transition-shadow duration-300 hover:shadow-2xl"
     >
-      <div className="relative h-48 overflow-hidden rounded-xl bg-muted">
+      <div className="relative h-80 md:h-54 overflow-hidden rounded-xl bg-muted">
         {ambassador.image ? (
           <ImagePreview
             src={ambassador.image}
@@ -111,7 +111,7 @@ const AmbassadorCard = ({
         )}
       </div>
 
-      <div className="px-1.5 pt-3">
+      <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-3">
         <h3 className="text-base leading-tight font-bold text-foreground">
           {ambassador.name}
         </h3>
@@ -134,7 +134,7 @@ const AmbassadorCard = ({
         ) : null}
 
         {hasSocials && socials ? (
-          <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3">
+          <div className="mt-auto flex items-center gap-1.5 border-t border-border pt-3">
             {socials.linkedin ? (
               <a
                 {...linkProps}

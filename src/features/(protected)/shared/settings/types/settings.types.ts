@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const settingsSchema = z.object({
+  name: z.string(),
   location: z.string(),
   school: z.string(),
   dateOfBirth: z.string(),
@@ -46,6 +47,7 @@ export type Settings = {
 };
 
 export const emptyValues: SettingsFormValues = {
+  name: "",
   location: "",
   school: "",
   dateOfBirth: "",

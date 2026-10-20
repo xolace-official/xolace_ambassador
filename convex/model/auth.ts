@@ -79,6 +79,13 @@ export async function requireAdmin(ctx: Ctx): Promise<Doc<"users">> {
     throw new AuthError(403, "Forbidden: this area is restricted to admins.");
   }
 
+  if (!user.name?.trim() || !(user.avatarStorageId ?? user.image)) {
+    throw new AuthError(
+      403,
+      "Forbidden: complete your admin profile before continuing.",
+    );
+  }
+
   return user;
 }
 

@@ -138,7 +138,7 @@ export const getForAmbassador = query({
       (sum, entry) => sum + entry.delta,
       0,
     );
-    const totalPoints = Math.max(totals?.points ?? 0, eventPoints);
+    const totalPoints = totals?.points ?? eventPoints;
     const byDay = new Map<number, number>();
     for (const entry of allPointEvents) {
       const day = new Date(entry.date);
@@ -235,7 +235,7 @@ async function visibleMissionSetId(
 }
 
 // Upper bound on `ambassadorTotals` rows, which hold one row per ambassador.
-const MAX_AMBASSADORS = 1000;
+const MAX_AMBASSADORS = 5000;
 // The pending queue is a working set admins drain, not a history table.
 const MAX_PENDING = 500;
 // Admin charts cover a recent window instead of the full contribution history.

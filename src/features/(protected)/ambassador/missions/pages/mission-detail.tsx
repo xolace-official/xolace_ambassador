@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { SubmissionImageGallery } from "@/components/shared/submission-image-gallery";
 import { Card } from "@/components/ui/card";
 import { api } from "../../../../../../convex/_generated/api";
@@ -213,6 +214,17 @@ export function MissionDetail({
                           </dt>
                           {response.imageUrls?.length ? (
                             <SubmissionImageGallery urls={response.imageUrls} />
+                          ) : isExternalUrl(response.value) ? (
+                            <div className="mt-2">
+                              <SocialLinkButtons
+                                links={[
+                                  {
+                                    label: response.label,
+                                    value: response.value,
+                                  },
+                                ]}
+                              />
+                            </div>
                           ) : (
                             <dd className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
                               {response.value || "No response provided."}
@@ -224,14 +236,11 @@ export function MissionDetail({
                   ) : null}
 
                   {submission.link ? (
-                    <a
-                      href={submission.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block max-w-full break-words text-sm font-medium text-primary underline underline-offset-4"
-                    >
-                      {submission.link}
-                    </a>
+                    <div className="mt-3">
+                      <SocialLinkButtons
+                        links={[{ label: "Evidence", value: submission.link }]}
+                      />
+                    </div>
                   ) : null}
 
                   {submission.quantity !== undefined ? (
@@ -265,4 +274,8 @@ export function MissionDetail({
       </div>
     </div>
   );
+}
+
+function isExternalUrl(value: string) {
+  return /^https?:\/\/\S+$/i.test(value.trim());
 }
