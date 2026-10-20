@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { SubmissionImageGallery } from "@/components/shared/submission-image-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -251,6 +252,12 @@ export default function AdminSubmissionDetail({
                 </dt>
                 {response.imageUrls?.length ? (
                   <SubmissionImageGallery urls={response.imageUrls} />
+                ) : isExternalUrl(response.value) ? (
+                  <div className="mt-2">
+                    <SocialLinkButtons
+                      links={[{ label: response.label, value: response.value }]}
+                    />
+                  </div>
                 ) : (
                   <dd className="mt-2 min-w-0 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
                     {response.value || "No response provided."}
@@ -273,15 +280,11 @@ export default function AdminSubmissionDetail({
         {submission.link ? (
           <div className="mt-4 border-t border-border pt-4">
             <p className="text-sm font-medium text-foreground">Evidence</p>
-            <a
-              href={submission.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 inline-flex min-h-11 max-w-full items-center gap-1 break-all text-sm text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {submission.link}
-              <ArrowUpRight aria-hidden="true" className="size-4 shrink-0" />
-            </a>
+            <div className="mt-2">
+              <SocialLinkButtons
+                links={[{ label: "Evidence", value: submission.link }]}
+              />
+            </div>
           </div>
         ) : null}
         {!submission.note &&
@@ -433,4 +436,8 @@ export default function AdminSubmissionDetail({
       )}
     </div>
   );
+}
+
+function isExternalUrl(value: string) {
+  return /^https?:\/\/\S+$/i.test(value.trim());
 }
