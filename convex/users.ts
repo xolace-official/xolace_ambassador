@@ -43,15 +43,16 @@ export const current = query({
             .first()
         : null;
     const profileComplete =
-      user.role !== "ambassador" ||
-      Boolean(
-        (user.avatarStorageId ?? user.image) &&
-          profile?.location?.trim() &&
-          profile?.school?.trim() &&
-          profile?.bio?.trim() &&
-          profile.track &&
-          profile.safetyAcknowledgedAt,
-      );
+      user.role === "admin"
+        ? Boolean(user.name?.trim() && (user.avatarStorageId ?? user.image))
+        : Boolean(
+            (user.avatarStorageId ?? user.image) &&
+              profile?.location?.trim() &&
+              profile?.school?.trim() &&
+              profile?.bio?.trim() &&
+              profile.track &&
+              profile.safetyAcknowledgedAt,
+          );
 
     return {
       _id: user._id,
