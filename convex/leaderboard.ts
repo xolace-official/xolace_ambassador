@@ -276,9 +276,6 @@ async function entriesForSet(
     .withIndex("by_missionSetId", (q) => q.eq("missionSetId", missionSetId))
     .take(500);
   const missionIds = new Set(missions.map((mission) => mission._id));
-  const missionById = new Map(
-    missions.map((mission) => [mission._id, mission]),
-  );
   const contributions = await ctx.db
     .query("contributions")
     .withIndex("by_status", (q) => q.eq("status", "approved"))
@@ -289,7 +286,6 @@ async function entriesForSet(
         contribution.missionId !== undefined &&
         missionIds.has(contribution.missionId),
     ),
-    missionById,
     ctx,
   );
 }
@@ -323,7 +319,6 @@ async function entriesForAllTime(ctx: Parameters<typeof requireRole>[0]) {
 
 async function buildEntries(
   contributions: Doc<"contributions">[],
-  missionById: Map<Id<"missions">, Doc<"missions">>,
   ctx: Parameters<typeof requireRole>[0],
 ) {
   const byUser = new Map<
@@ -344,11 +339,7 @@ async function buildEntries(
       peopleReached: 0,
       joinedAt: 0,
     };
-    const mission =
-      contribution.missionId === undefined
-        ? null
-        : missionById.get(contribution.missionId);
-    current.points += contribution.awardedPoints ?? mission?.points ?? 0;
+    current.points += contribution.awardedPoints ?? 0;
     current.contributionsApproved += 1;
     if (contribution.kind === "mission_submission")
       current.missionsCompleted += 1;
