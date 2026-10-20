@@ -59,6 +59,17 @@ const profileValidator = v.union(
     bio: v.union(v.string(), v.null()),
     onboardedAt: v.union(v.number(), v.null()),
     safetyAcknowledgedAt: v.union(v.number(), v.null()),
+    socials: v.union(
+      v.object({
+        tiktok: v.union(v.string(), v.null()),
+        instagram: v.union(v.string(), v.null()),
+        x: v.union(v.string(), v.null()),
+        youtube: v.union(v.string(), v.null()),
+        linkedin: v.union(v.string(), v.null()),
+        snapchat: v.union(v.string(), v.null()),
+      }),
+      v.null(),
+    ),
   }),
   v.null(),
 );
@@ -167,6 +178,14 @@ const selfRecognitionValidator = v.object({
     v.literal("fellowship"),
   ),
   note: v.string(),
+});
+
+const pointLedgerValidator = v.object({
+  _id: v.id("pointLedger"),
+  _creationTime: v.number(),
+  delta: v.number(),
+  reason: v.string(),
+  actionKey: v.union(v.string(), v.null()),
 });
 
 const levelValidator = v.union(
@@ -280,6 +299,7 @@ export const adminGet = query({
       totals: v.union(totalsValidator, v.null()),
       contributions: v.array(contributionValidator),
       recognitions: v.array(recognitionValidator),
+      pointLedger: v.array(pointLedgerValidator),
     }),
     v.null(),
   ),
@@ -291,26 +311,42 @@ export const adminGet = query({
     const user = await ctx.db.get(id);
     if (user === null || user.role !== "ambassador") return null;
 
-    const [profile, totals, contributions, recognitions] = await Promise.all([
-      ctx.db
-        .query("ambassadorProfiles")
-        .withIndex("by_userId", (q) => q.eq("userId", id))
-        .first(),
-      ctx.db
-        .query("ambassadorTotals")
-        .withIndex("by_userId", (q) => q.eq("userId", id))
-        .first(),
-      ctx.db
-        .query("contributions")
-        .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", id))
-        .order("desc")
-        .take(20),
-      ctx.db
-        .query("recognitions")
-        .withIndex("by_userId", (q) => q.eq("userId", id))
-        .order("desc")
-        .take(20),
-    ]);
+    const [profile, totals, contributions, recognitions, ledger] =
+      await Promise.all([
+        ctx.db
+          .query("ambassadorProfiles")
+          .withIndex("by_userId", (q) => q.eq("userId", id))
+          .first(),
+        ctx.db
+          .query("ambassadorTotals")
+          .withIndex("by_userId", (q) => q.eq("userId", id))
+          .first(),
+        ctx.db
+          .query("contributions")
+          .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", id))
+          .order("desc")
+          .take(20),
+        ctx.db
+          .query("recognitions")
+          .withIndex("by_userId", (q) => q.eq("userId", id))
+          .order("desc")
+          .take(20),
+        ctx.db
+          .query("pointLedger")
+          .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", id))
+          .order("desc")
+          .take(500),
+      ]);
+
+    const pointsByContribution = new Map<string, number>();
+    for (const entry of ledger) {
+      if (entry.contributionId !== undefined) {
+        pointsByContribution.set(
+          entry.contributionId,
+          (pointsByContribution.get(entry.contributionId) ?? 0) + entry.delta,
+        );
+      }
+    }
 
     const mappedProfile = profile
       ? {
@@ -324,6 +360,16 @@ export const adminGet = query({
           bio: profile.bio ?? null,
           onboardedAt: profile.onboardedAt ?? null,
           safetyAcknowledgedAt: profile.safetyAcknowledgedAt ?? null,
+          socials: profile.socials
+            ? {
+                tiktok: profile.socials.tiktok ?? null,
+                instagram: profile.socials.instagram ?? null,
+                x: profile.socials.x ?? null,
+                youtube: profile.socials.youtube ?? null,
+                linkedin: profile.socials.linkedin ?? null,
+                snapchat: profile.socials.snapchat ?? null,
+              }
+            : null,
         }
       : null;
 
@@ -341,7 +387,12 @@ export const adminGet = query({
             kind: contribution.kind,
             status: contribution.status,
             quantity: contribution.quantity ?? null,
-            awardedPoints: contribution.awardedPoints ?? null,
+            awardedPoints:
+              contribution.status === "approved"
+                ? (contribution.awardedPoints ??
+                  pointsByContribution.get(contribution._id) ??
+                  0)
+                : (contribution.awardedPoints ?? null),
           };
         }),
       ),
@@ -380,6 +431,13 @@ export const adminGet = query({
         : null,
       contributions: mappedContributions,
       recognitions: mappedRecognitions,
+      pointLedger: ledger.map((entry) => ({
+        _id: entry._id,
+        _creationTime: entry._creationTime,
+        delta: entry.delta,
+        reason: entry.reason,
+        actionKey: entry.actionKey ?? null,
+      })),
     };
   },
 });
