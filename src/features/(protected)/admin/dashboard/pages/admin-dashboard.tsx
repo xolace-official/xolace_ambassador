@@ -30,7 +30,7 @@ export default function AdminDashboard() {
     <div className="space-y-5 sm:space-y-6">
       <section
         aria-label="Program overview"
-        className="grid overflow-hidden gap-0 rounded-2xl  sm:grid-cols-3"
+        className="grid overflow-hidden gap-0 rounded-2xl sm:grid-cols-2 lg:grid-cols-4"
       >
         <DashboardStatCard
           label="Total active ambassadors"
@@ -43,6 +43,12 @@ export default function AdminDashboard() {
           value={summary.totalContributions.toLocaleString("en-GB")}
           periodLabel="Current"
           trend={contributionTrend}
+        />
+        <DashboardStatCard
+          label="Total points"
+          value={summary.totalPoints.toLocaleString("en-GB")}
+          periodLabel="Net awarded"
+          trend={[summary.totalPoints]}
         />
         <DashboardStatCard
           label="Pending reviews"
