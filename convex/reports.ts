@@ -190,6 +190,7 @@ export const getReports = query({
       ambassadors,
       missions,
       contributions,
+      pointLedger,
       resources,
       events,
       recognitions,
@@ -201,11 +202,22 @@ export const getReports = query({
         .take(500),
       ctx.db.query("missions").take(1000),
       ctx.db.query("contributions").take(5000),
+      ctx.db.query("pointLedger").take(5000),
       ctx.db.query("resources").take(500),
       ctx.db.query("events").take(500),
       ctx.db.query("recognitions").take(500),
       ctx.db.query("applications").take(500),
     ]);
+
+    const pointsByContribution = new Map<string, number>();
+    for (const entry of pointLedger) {
+      if (entry.contributionId !== undefined) {
+        pointsByContribution.set(
+          entry.contributionId,
+          (pointsByContribution.get(entry.contributionId) ?? 0) + entry.delta,
+        );
+      }
+    }
 
     const ambassadorRows = await Promise.all(
       ambassadors.map(async (a) => {
@@ -250,7 +262,8 @@ export const getReports = query({
         rejected: missionContributions.filter((c) => c.status === "rejected")
           .length,
         pointsAwarded: approved.reduce(
-          (sum, c) => sum + (c.awardedPoints ?? 0),
+          (sum, c) =>
+            sum + (c.awardedPoints ?? pointsByContribution.get(c._id) ?? 0),
           0,
         ),
       };
@@ -267,7 +280,10 @@ export const getReports = query({
           kind: c.kind,
           status: c.status,
           quantity: c.quantity ?? null,
-          awardedPoints: c.awardedPoints ?? null,
+          awardedPoints:
+            c.status === "approved"
+              ? (c.awardedPoints ?? pointsByContribution.get(c._id) ?? 0)
+              : (c.awardedPoints ?? null),
           createdAt: c._creationTime,
         };
       }),
@@ -352,6 +368,12 @@ export const getReports = query({
     const approvedContributions = contributions.filter(
       (c) => c.status === "approved",
     );
+    const reportPointLedger = pointLedger.filter((entry) =>
+      inPeriod(entry._creationTime),
+    );
+    const reportApprovedContributions = approvedContributions.filter((c) =>
+      inPeriod(c._creationTime),
+    );
 
     return {
       summary: {
@@ -359,12 +381,12 @@ export const getReports = query({
         activeMissions: missions.filter((m) => m.status === "published").length,
         pendingReviews: contributions.filter((c) => c.status === "pending")
           .length,
-        totalPoints: approvedContributions.reduce(
-          (sum, c) => sum + (c.awardedPoints ?? 0),
+        totalPoints: reportPointLedger.reduce(
+          (sum, entry) => sum + entry.delta,
           0,
         ),
-        totalContributions: approvedContributions.length,
-        totalPeopleReached: approvedContributions
+        totalContributions: reportApprovedContributions.length,
+        totalPeopleReached: reportApprovedContributions
           .filter((c) => c.kind === "people_reached")
           .reduce((sum, c) => sum + (c.quantity ?? 0), 0),
       },
