@@ -42,16 +42,30 @@ export function ProfileSettings({
             />
             <div className="grid gap-2">
               <Label htmlFor="settings-name">Full name</Label>
-              <Input
-                id="settings-name"
-                value={settings.name ?? ""}
-                disabled
-                readOnly
-              />
-              <p className="text-xs text-muted-foreground">
-                This is the name on your application. Contact an admin if it
-                needs to change.
-              </p>
+              {settings.role === "admin" ? (
+                <>
+                  <Input
+                    id="settings-name"
+                    autoComplete="name"
+                    placeholder="Your full name…"
+                    {...form.register("name")}
+                  />
+                  <FormError message={form.formState.errors.name?.message} />
+                </>
+              ) : (
+                <>
+                  <Input
+                    id="settings-name"
+                    value={settings.name ?? ""}
+                    disabled
+                    readOnly
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This is the name on your application. Contact an admin if it
+                    needs to change.
+                  </p>
+                </>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="settings-email">Email address</Label>
