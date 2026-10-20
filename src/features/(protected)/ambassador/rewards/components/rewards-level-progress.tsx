@@ -68,9 +68,17 @@ export function RewardsLevelProgress({
         </div>
         <Progress
           value={
-            availablePoints > 0
-              ? Math.min((points / availablePoints) * 100, 100)
-              : 0
+            nextLevel
+              ? Math.min(
+                  Math.max(
+                    ((points - currentLevel.minPoints) /
+                      (nextLevel.minPoints - currentLevel.minPoints)) *
+                      100,
+                    0,
+                  ),
+                  100,
+                )
+              : 100
           }
           className="h-2"
         />
