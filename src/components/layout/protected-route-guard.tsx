@@ -30,6 +30,7 @@ export function ProtectedRouteGuard({
   const isSignedIn = user !== null;
   const accountRole = user?.role ?? null;
   const isOwnDashboard = portalRole === accountRole && uuid === user?._id;
+  const isProfileEditRoute = pathname.endsWith("/profile/edit");
 
   useEffect(() => {
     // Without this, a refresh reads as signed out while the token is still
@@ -55,6 +56,15 @@ export function ProtectedRouteGuard({
 
     if (portalRole !== accountRole || uuid !== user?._id) {
       router.replace(`/${accountRole}/${user?._id}/dashboard`);
+      return;
+    }
+
+    if (
+      accountRole === "admin" &&
+      user?.profileComplete === false &&
+      !isProfileEditRoute
+    ) {
+      router.replace(`/admin/${uuid}/profile/edit`);
     }
   }, [
     isLoading,
@@ -64,6 +74,8 @@ export function ProtectedRouteGuard({
     uuid,
     user?._id,
     user?.passwordSetupRequired,
+    user?.profileComplete,
+    isProfileEditRoute,
     router,
   ]);
 
@@ -79,7 +91,15 @@ export function ProtectedRouteGuard({
     }
   }, [isSignedIn, user?.uuid, user?.role, user?.referralCode, ensureProfile]);
 
-  if (isLoading || !isSignedIn || !accountRole || !isOwnDashboard) {
+  if (
+    isLoading ||
+    !isSignedIn ||
+    !accountRole ||
+    !isOwnDashboard ||
+    (accountRole === "admin" &&
+      user.profileComplete === false &&
+      !isProfileEditRoute)
+  ) {
     return <GuardLoading />;
   }
 
@@ -101,7 +121,7 @@ export function ProtectedRouteGuard({
     children
   );
 
-  return portalRole === "ambassador" && !pathname.endsWith("/profile/edit") ? (
+  return portalRole === "ambassador" && !isProfileEditRoute ? (
     <AmbassadorOnboardingGate
       complete={user.profileComplete ?? false}
       requirements={
