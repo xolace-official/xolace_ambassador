@@ -63,7 +63,7 @@ export const getRewards = query({
   handler: async (ctx, args) => {
     const user = await requireRole(ctx);
 
-    const [totals, levels, ledgerEntries, missions, recognitions] =
+    const [totals, levels, ledgerEntries, requestedRedemptions, recognitions] =
       await Promise.all([
         ctx.db
           .query("ambassadorTotals")
@@ -75,7 +75,10 @@ export const getRewards = query({
           .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", user._id))
           .order("desc")
           .take(args.history === "all" ? 100 : 3),
-        ctx.db.query("missions").withIndex("by_status").take(500),
+        ctx.db
+          .query("rewardRedemptions")
+          .withIndex("by_status", (q) => q.eq("status", "requested"))
+          .take(1000),
         ctx.db
           .query("recognitions")
           .withIndex("by_userId", (q) => q.eq("userId", user._id))
@@ -83,11 +86,11 @@ export const getRewards = query({
           .take(50),
       ]);
 
-    const availablePoints = missions
-      .filter((mission) => mission.status !== "draft")
-      .reduce((sum, mission) => sum + mission.points, 0);
-
     const points = totals?.points ?? 0;
+    const reservedPoints = requestedRedemptions
+      .filter((redemption) => redemption.ambassadorId === user._id)
+      .reduce((sum, redemption) => sum + redemption.points, 0);
+    const availablePoints = Math.max(points - reservedPoints, 0);
     const sortedLevels = levels
       .map((l) => ({
         rank: l.rank,
@@ -249,6 +252,18 @@ export const redeem = mutation({
       .first();
     if ((totals?.points ?? 0) < reward.costPoints) {
       throw new Error("You do not have enough points for this reward.");
+    }
+    const requestedRedemptions = await ctx.db
+      .query("rewardRedemptions")
+      .withIndex("by_status", (q) => q.eq("status", "requested"))
+      .take(1000);
+    const reservedPoints = requestedRedemptions
+      .filter((redemption) => redemption.ambassadorId === user._id)
+      .reduce((sum, redemption) => sum + redemption.points, 0);
+    if ((totals?.points ?? 0) - reservedPoints < reward.costPoints) {
+      throw new Error(
+        "Some of your points are already reserved for another reward request.",
+      );
     }
     const redemptionId = await ctx.db.insert("rewardRedemptions", {
       rewardId: reward._id,
