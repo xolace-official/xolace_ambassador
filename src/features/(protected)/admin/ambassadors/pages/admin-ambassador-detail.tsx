@@ -7,6 +7,7 @@ import { useQueryState } from "nuqs";
 import { parseAsStringLiteral } from "nuqs/server";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -213,6 +214,25 @@ function Overview({ ambassador }: { ambassador: AmbassadorData }) {
               : "Not recorded"}
           </Detail>
         </dl>
+        {ambassador.profile?.socials ? (
+          <div className="mt-4 border-t border-border pt-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              Social profiles
+            </h3>
+            <div className="mt-2">
+              <SocialLinkButtons
+                links={Object.entries(ambassador.profile.socials)
+                  .filter(
+                    (entry): entry is [string, string] => entry[1] !== null,
+                  )
+                  .map(([label, value]) => ({
+                    label: label === "x" ? "X" : label,
+                    value,
+                  }))}
+              />
+            </div>
+          </div>
+        ) : null}
         {ambassador.profile?.bio ? (
           <p className="mt-4 whitespace-pre-wrap break-words border-t border-border pt-4 text-sm leading-6 text-muted-foreground">
             {ambassador.profile.bio}
@@ -286,6 +306,7 @@ function Rewards({ ambassador }: { ambassador: AmbassadorData }) {
           </p>
         )}
       </Card>
+      <PointLedgerTable entries={ambassador.pointLedger ?? []} />
       <ContributionTable
         title="Approved contribution rewards"
         rows={ambassador.contributions.filter(
@@ -294,6 +315,56 @@ function Rewards({ ambassador }: { ambassador: AmbassadorData }) {
         emptyMessage="No approved contribution rewards yet."
       />
     </div>
+  );
+}
+
+function PointLedgerTable({
+  entries,
+}: {
+  entries: AmbassadorData["pointLedger"];
+}) {
+  return (
+    <Card className="min-w-0 gap-0 border-border p-5 sm:p-6">
+      <h2 className="text-lg font-semibold text-foreground">Point activity</h2>
+      {entries.length ? (
+        <Table aria-label="Point activity">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Reason</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
+              <TableHead className="text-right">Points</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map((entry) => (
+              <TableRow key={entry._id}>
+                <TableCell>
+                  <span className="font-medium text-foreground">
+                    {entry.reason}
+                  </span>
+                  {entry.actionKey ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {entry.actionKey.replaceAll("_", " ")}
+                    </span>
+                  ) : null}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {dateFormat.format(new Date(entry._creationTime))}
+                </TableCell>
+                <TableCell className="text-right font-medium tabular-nums">
+                  {entry.delta > 0 ? "+" : ""}
+                  {numberFormat.format(entry.delta)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          No point activity has been recorded.
+        </p>
+      )}
+    </Card>
   );
 }
 
