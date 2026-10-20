@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireAdmin } from "./model/auth";
+import { contributionTotals } from "./model/contributions";
+
+// Breakdowns cover the newest approvals; the summary counts are exact.
+const APPROVED_WINDOW = 5000;
+const RECENT_ACTIVITY_LIMIT = 5;
 
 export const getAnalytics = query({
   args: {},
@@ -59,26 +64,38 @@ export const getAnalytics = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const [contributions, ambassadors, missions, profiles, totals, ledger] =
-      await Promise.all([
-        ctx.db.query("contributions").take(5000),
-        ctx.db
-          .query("users")
-          .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-          .take(500),
-        ctx.db.query("missions").take(1000),
-        ctx.db.query("ambassadorProfiles").take(500),
-        ctx.db.query("ambassadorTotals").take(5000),
-        ctx.db.query("pointLedger").take(5000),
-      ]);
-
-    const approved = contributions.filter((c) => c.status === "approved");
-    const pending = contributions.filter((c) => c.status === "pending");
+    const [
+      approved,
+      recentContributions,
+      ambassadors,
+      missions,
+      profiles,
+      totals,
+      ledger,
+      totalContributions,
+      totalPeopleReached,
+      pendingReviews,
+    ] = await Promise.all([
+      ctx.db
+        .query("contributions")
+        .withIndex("by_status", (q) => q.eq("status", "approved"))
+        .order("desc")
+        .take(APPROVED_WINDOW),
+      ctx.db.query("contributions").order("desc").take(RECENT_ACTIVITY_LIMIT),
+      ctx.db
+        .query("users")
+        .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+        .take(500),
+      ctx.db.query("missions").take(1000),
+      ctx.db.query("ambassadorProfiles").take(500),
+      ctx.db.query("ambassadorTotals").take(5000),
+      ctx.db.query("pointLedger").order("desc").take(5000),
+      contributionTotals.count(ctx, { namespace: "approved" }),
+      contributionTotals.sum(ctx, { namespace: "approved" }),
+      contributionTotals.count(ctx, { namespace: "pending" }),
+    ]);
 
     const totalPoints = totals.reduce((sum, row) => sum + row.points, 0);
-    const totalPeopleReached = approved
-      .filter((c) => c.kind === "people_reached")
-      .reduce((sum, c) => sum + (c.quantity ?? 0), 0);
 
     const byDay = new Map<
       string,
@@ -164,27 +181,23 @@ export const getAnalytics = query({
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const recentActivity = contributions
-      .slice()
-      .sort((a, b) => b._creationTime - a._creationTime)
-      .slice(0, 5)
-      .map((c) => {
-        const ambassador = ambassadors.find((a) => a._id === c.ambassadorId);
-        return {
-          id: c._id,
-          type: c.kind,
-          title: c.title,
-          subtitle: ambassador?.name?.trim() || "Ambassador",
-          time: c._creationTime,
-        };
-      });
+    const recentActivity = recentContributions.map((c) => {
+      const ambassador = ambassadors.find((a) => a._id === c.ambassadorId);
+      return {
+        id: c._id,
+        type: c.kind,
+        title: c.title,
+        subtitle: ambassador?.name?.trim() || "Ambassador",
+        time: c._creationTime,
+      };
+    });
 
     return {
       summary: {
         totalPoints,
-        totalContributions: approved.length,
+        totalContributions,
         totalPeopleReached,
-        pendingReviews: pending.length,
+        pendingReviews,
         totalAmbassadors: ambassadors.filter((ambassador) => {
           const profile = profiles.find(
             (item) => item.userId === ambassador._id,

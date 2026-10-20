@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Copy, MapPin } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { parseAsStringLiteral } from "nuqs/server";
+import { parseAsInteger, parseAsStringLiteral } from "nuqs/server";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RewardsPagination } from "@/features/(protected)/ambassador/rewards/components/rewards-pagination";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
 
@@ -31,6 +32,11 @@ const DETAIL_TABS = [
 ] as const;
 const parseDetailTab = parseAsStringLiteral(DETAIL_TABS)
   .withDefault("overview")
+  .withOptions({ clearOnDefault: true });
+
+const LEDGER_PAGE_SIZE = 20;
+const parseLedgerPage = parseAsInteger
+  .withDefault(1)
   .withOptions({ clearOnDefault: true });
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -323,6 +329,14 @@ function PointLedgerTable({
 }: {
   entries: AmbassadorData["pointLedger"];
 }) {
+  const [page, setPage] = useQueryState("pointsPage", parseLedgerPage);
+  const totalPages = Math.max(1, Math.ceil(entries.length / LEDGER_PAGE_SIZE));
+  const currentPage = Math.min(Math.max(page, 1), totalPages);
+  const visibleEntries = entries.slice(
+    (currentPage - 1) * LEDGER_PAGE_SIZE,
+    currentPage * LEDGER_PAGE_SIZE,
+  );
+
   return (
     <Card className="min-w-0 gap-0 border-border p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-foreground">Point activity</h2>
@@ -336,7 +350,7 @@ function PointLedgerTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.map((entry) => (
+            {visibleEntries.map((entry) => (
               <TableRow key={entry._id}>
                 <TableCell>
                   <span className="font-medium text-foreground">
@@ -364,6 +378,15 @@ function PointLedgerTable({
           No point activity has been recorded.
         </p>
       )}
+      {totalPages > 1 ? (
+        <div className="mt-4">
+          <RewardsPagination
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      ) : null}
     </Card>
   );
 }

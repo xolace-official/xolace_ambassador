@@ -13,6 +13,7 @@ import type * as ambassadors from "../ambassadors.js";
 import type * as analytics from "../analytics.js";
 import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
+import type * as contributionTotals from "../contributionTotals.js";
 import type * as contributions from "../contributions.js";
 import type * as crons from "../crons.js";
 import type * as emailTemplates from "../emailTemplates.js";
@@ -24,8 +25,11 @@ import type * as meetings from "../meetings.js";
 import type * as missionSets from "../missionSets.js";
 import type * as missions from "../missions.js";
 import type * as model_auth from "../model/auth.js";
+import type * as model_contributions from "../model/contributions.js";
 import type * as model_meetingSlots from "../model/meetingSlots.js";
+import type * as model_pointLedger from "../model/pointLedger.js";
 import type * as notifications from "../notifications.js";
+import type * as pointLedger from "../pointLedger.js";
 import type * as programConfig from "../programConfig.js";
 import type * as provisioning from "../provisioning.js";
 import type * as publicAmbassadors from "../publicAmbassadors.js";
@@ -49,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   applications: typeof applications;
   auth: typeof auth;
+  contributionTotals: typeof contributionTotals;
   contributions: typeof contributions;
   crons: typeof crons;
   emailTemplates: typeof emailTemplates;
@@ -60,8 +65,11 @@ declare const fullApi: ApiFromModules<{
   missionSets: typeof missionSets;
   missions: typeof missions;
   "model/auth": typeof model_auth;
+  "model/contributions": typeof model_contributions;
   "model/meetingSlots": typeof model_meetingSlots;
+  "model/pointLedger": typeof model_pointLedger;
   notifications: typeof notifications;
+  pointLedger: typeof pointLedger;
   programConfig: typeof programConfig;
   provisioning: typeof provisioning;
   publicAmbassadors: typeof publicAmbassadors;
@@ -100,4 +108,7 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  pointLedgerTotals: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"pointLedgerTotals">;
+  contributionTotals: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"contributionTotals">;
+};

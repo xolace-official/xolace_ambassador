@@ -35,7 +35,7 @@ export function SocialLinkButtons({ links }: { links: SocialLink[] }) {
             rel="noopener noreferrer"
             aria-label={`Open ${link.label} profile`}
             title={`Open ${link.label} profile`}
-            className="inline-flex size-9 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex size-11 items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Icon aria-hidden="true" className={iconClass} />
           </a>
@@ -104,6 +104,7 @@ function toSocialUrl(label: string, value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (isHostAndPath(trimmed)) return `https://${trimmed}`;
 
   const prefixes: Record<string, string> = {
     instagram: "https://instagram.com/",
@@ -113,7 +114,33 @@ function toSocialUrl(label: string, value: string): string | null {
     youtube: "https://youtube.com/@",
     x: "https://x.com/",
     twitter: "https://x.com/",
+    github: "https://github.com/",
+    reddit: "https://reddit.com/user/",
   };
   const prefix = prefixes[label.toLowerCase()];
-  return prefix ? `${prefix}${trimmed.replace(/^@/, "")}` : null;
+  const username = trimmed.replace(/^@/, "").replace(/^u\//i, "");
+  return prefix ? `${prefix}${username}` : null;
+}
+
+const knownHosts = new Set([
+  "instagram.com",
+  "linkedin.com",
+  "tiktok.com",
+  "snapchat.com",
+  "youtube.com",
+  "youtu.be",
+  "x.com",
+  "twitter.com",
+  "github.com",
+  "reddit.com",
+]);
+
+// Scheme-less links such as `linkedin.com/in/alex`. A bare dotted value is only
+// treated as a host when it is a known platform, since usernames like
+// `alex.smith` are valid on Instagram and Snapchat.
+function isHostAndPath(value: string) {
+  const match = /^([a-z0-9-]+(?:\.[a-z0-9-]+)+)(\/.*)?$/i.exec(value);
+  if (!match) return false;
+  if (match[2]) return true;
+  return knownHosts.has(match[1].toLowerCase().replace(/^(www|m)\./, ""));
 }

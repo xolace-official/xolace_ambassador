@@ -17,11 +17,11 @@ type Reward = {
 
 export function RewardsCatalogue({
   rewards,
-  points,
+  availablePoints,
   onRedeem,
 }: {
   rewards: Reward[];
-  points: number;
+  availablePoints: number;
   onRedeem: (rewardId: string) => Promise<void>;
 }) {
   if (rewards.length === 0) {
@@ -40,7 +40,7 @@ export function RewardsCatalogue({
     <div className="grid gap-3 sm:grid-cols-2">
       {rewards.map((reward) => {
         const outOfStock = reward.stock !== null && reward.stock <= 0;
-        const canRedeem = points >= reward.costPoints && !outOfStock;
+        const canRedeem = availablePoints >= reward.costPoints && !outOfStock;
         return (
           <Card
             key={reward._id}
@@ -80,7 +80,7 @@ export function RewardsCatalogue({
               >
                 {outOfStock
                   ? "Unavailable"
-                  : points < reward.costPoints
+                  : availablePoints < reward.costPoints
                     ? "Need more points"
                     : "Request reward"}
               </Button>

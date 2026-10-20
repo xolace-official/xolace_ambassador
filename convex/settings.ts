@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./model/auth";
+import { insertLedgerEntry } from "./model/pointLedger";
 import { trackValidator } from "./schema";
 
 const settingsProfileValidator = v.union(
@@ -231,7 +232,7 @@ export const claimProfileCompletionReward = mutation({
     } else {
       await ctx.db.patch(existingTotals._id, totals);
     }
-    await ctx.db.insert("pointLedger", {
+    await insertLedgerEntry(ctx, {
       ambassadorId: user._id,
       delta: 25,
       reason: "Profile completion",

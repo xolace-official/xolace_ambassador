@@ -223,6 +223,7 @@ export default defineSchema({
     reviewNote: v.optional(v.string()),
   })
     .index("by_ambassadorId", ["ambassadorId"])
+    .index("by_ambassadorId_and_status", ["ambassadorId", "status"])
     .index("by_rewardId", ["rewardId"])
     .index("by_status", ["status"]),
 

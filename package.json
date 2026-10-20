@@ -19,6 +19,7 @@
     "seed": "convex run admin:createUser"
   },
   "dependencies": {
+    "@convex-dev/aggregate": "^0.3.3",
     "@convex-dev/auth": "^0.0.95",
     "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-slot": "^1.2.4",

@@ -59,7 +59,7 @@ export default function AmbassadorRewards({ uuid }: { uuid: string }) {
         </h2>
         <RewardsCatalogue
           rewards={catalogue}
-          points={totals.points}
+          availablePoints={availablePoints}
           onRedeem={async (rewardId) => {
             await redeem({
               rewardId: rewardId as (typeof catalogue)[number]["_id"],

@@ -12,6 +12,8 @@ import {
   query,
 } from "./_generated/server";
 import { AuthError, requireAdmin, requireRole } from "./model/auth";
+import { insertContribution, patchContribution } from "./model/contributions";
+import { insertLedgerEntry } from "./model/pointLedger";
 
 async function responsesWithImageUrls(
   ctx: QueryCtx,
@@ -250,7 +252,7 @@ export const adminReview = mutation({
         ? (mission?.points ?? 0)
         : 0;
 
-    await ctx.db.patch(args.contributionId, {
+    await patchContribution(ctx, args.contributionId, {
       status: args.status,
       awardedPoints: args.status === "approved" ? awardedPoints : undefined,
       reviewNote: reviewNote || undefined,
@@ -307,7 +309,7 @@ export const adminReview = mutation({
       }
 
       if (awardedPoints !== 0) {
-        await ctx.db.insert("pointLedger", {
+        await insertLedgerEntry(ctx, {
           ambassadorId: contribution.ambassadorId,
           delta: awardedPoints,
           reason: mission?.title ?? contribution.title,
@@ -582,7 +584,7 @@ export const submit = mutation({
       throw new Error("You already have a submission in for this mission.");
     }
 
-    return await ctx.db.insert("contributions", {
+    return await insertContribution(ctx, {
       ambassadorId: user._id,
       missionId: args.missionId,
       kind: "mission_submission",

@@ -1,7 +1,21 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { mutation, type QueryCtx, query } from "./_generated/server";
 import { requireAdmin, requireRole } from "./model/auth";
+import { insertLedgerEntry } from "./model/pointLedger";
+
+async function getReservedPoints(ctx: QueryCtx, ambassadorId: Id<"users">) {
+  let reservedPoints = 0;
+  for await (const redemption of ctx.db
+    .query("rewardRedemptions")
+    .withIndex("by_ambassadorId_and_status", (q) =>
+      q.eq("ambassadorId", ambassadorId).eq("status", "requested"),
+    )) {
+    reservedPoints += redemption.points;
+  }
+  return reservedPoints;
+}
 
 export const getRewards = query({
   args: {
@@ -63,7 +77,7 @@ export const getRewards = query({
   handler: async (ctx, args) => {
     const user = await requireRole(ctx);
 
-    const [totals, levels, ledgerEntries, requestedRedemptions, recognitions] =
+    const [totals, levels, ledgerEntries, reservedPoints, recognitions] =
       await Promise.all([
         ctx.db
           .query("ambassadorTotals")
@@ -75,10 +89,7 @@ export const getRewards = query({
           .withIndex("by_ambassadorId", (q) => q.eq("ambassadorId", user._id))
           .order("desc")
           .take(args.history === "all" ? 100 : 3),
-        ctx.db
-          .query("rewardRedemptions")
-          .withIndex("by_status", (q) => q.eq("status", "requested"))
-          .take(1000),
+        getReservedPoints(ctx, user._id),
         ctx.db
           .query("recognitions")
           .withIndex("by_userId", (q) => q.eq("userId", user._id))
@@ -87,9 +98,6 @@ export const getRewards = query({
       ]);
 
     const points = totals?.points ?? 0;
-    const reservedPoints = requestedRedemptions
-      .filter((redemption) => redemption.ambassadorId === user._id)
-      .reduce((sum, redemption) => sum + redemption.points, 0);
     const availablePoints = Math.max(points - reservedPoints, 0);
     const sortedLevels = levels
       .map((l) => ({
@@ -253,13 +261,7 @@ export const redeem = mutation({
     if ((totals?.points ?? 0) < reward.costPoints) {
       throw new Error("You do not have enough points for this reward.");
     }
-    const requestedRedemptions = await ctx.db
-      .query("rewardRedemptions")
-      .withIndex("by_status", (q) => q.eq("status", "requested"))
-      .take(1000);
-    const reservedPoints = requestedRedemptions
-      .filter((redemption) => redemption.ambassadorId === user._id)
-      .reduce((sum, redemption) => sum + redemption.points, 0);
+    const reservedPoints = await getReservedPoints(ctx, user._id);
     if ((totals?.points ?? 0) - reservedPoints < reward.costPoints) {
       throw new Error(
         "Some of your points are already reserved for another reward request.",
@@ -461,7 +463,7 @@ export const adminReviewRedemption = mutation({
       await ctx.db.patch(totals._id, {
         points: totals.points - redemption.points,
       });
-      await ctx.db.insert("pointLedger", {
+      await insertLedgerEntry(ctx, {
         ambassadorId: redemption.ambassadorId,
         delta: -redemption.points,
         reason: reward.name,

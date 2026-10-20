@@ -1,6 +1,9 @@
 import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { requireAdmin } from "./model/auth";
+import { contributionTotals } from "./model/contributions";
+import { pointLedgerTotals } from "./model/pointLedger";
 
 const reportTypeValidator = v.union(
   v.literal("ambassadors"),
@@ -28,6 +31,21 @@ const statusValidator = v.union(
   v.literal("reviewing"),
   v.literal("accepted"),
 );
+// Row lists are capped; the summary numbers come from aggregates and are exact.
+const CONTRIBUTION_ROW_LIMIT = 1000;
+const MISSION_CONTRIBUTION_LIMIT = 500;
+
+function isContributionStatus(
+  status: string,
+): status is Doc<"contributions">["status"] {
+  return (
+    status === "pending" ||
+    status === "approved" ||
+    status === "rejected" ||
+    status === "declined"
+  );
+}
+
 const periodValidator = v.union(
   v.literal("all"),
   v.literal("daily"),
@@ -189,8 +207,6 @@ export const getReports = query({
     const [
       ambassadors,
       missions,
-      contributions,
-      pointLedger,
       resources,
       events,
       recognitions,
@@ -201,23 +217,75 @@ export const getReports = query({
         .withIndex("by_role", (q) => q.eq("role", "ambassador"))
         .take(500),
       ctx.db.query("missions").take(1000),
-      ctx.db.query("contributions").take(5000),
-      ctx.db.query("pointLedger").take(5000),
       ctx.db.query("resources").take(500),
       ctx.db.query("events").take(500),
       ctx.db.query("recognitions").take(500),
       ctx.db.query("applications").take(500),
     ]);
 
-    const pointsByContribution = new Map<string, number>();
-    for (const entry of pointLedger) {
-      if (entry.contributionId !== undefined) {
-        pointsByContribution.set(
-          entry.contributionId,
-          (pointsByContribution.get(entry.contributionId) ?? 0) + entry.delta,
-        );
-      }
+    // Contribution rows are only read for the report that shows them, newest
+    // first, starting from the period so older rows never crowd out new ones.
+    const contributionStatus = isContributionStatus(status) ? status : null;
+    const contributions =
+      reportType !== "contributions"
+        ? []
+        : contributionStatus !== null
+          ? await ctx.db
+              .query("contributions")
+              .withIndex("by_status", (q) =>
+                q
+                  .eq("status", contributionStatus)
+                  .gte("_creationTime", periodStart ?? 0),
+              )
+              .order("desc")
+              .take(CONTRIBUTION_ROW_LIMIT)
+          : await ctx.db
+              .query("contributions")
+              .withIndex("by_creation_time", (q) =>
+                q.gte("_creationTime", periodStart ?? 0),
+              )
+              .order("desc")
+              .take(CONTRIBUTION_ROW_LIMIT);
+
+    // Mission stats read each mission's own submissions by index.
+    const contributionsByMission = new Map<
+      Id<"missions">,
+      Doc<"contributions">[]
+    >();
+    if (reportType === "missions") {
+      await Promise.all(
+        missions.map(async (m) => {
+          contributionsByMission.set(
+            m._id,
+            await ctx.db
+              .query("contributions")
+              .withIndex("by_missionId", (q) => q.eq("missionId", m._id))
+              .order("desc")
+              .take(MISSION_CONTRIBUTION_LIMIT),
+          );
+        }),
+      );
     }
+
+    // Older approvals predate `awardedPoints`; read their ledger rows by index
+    // rather than scanning the whole ledger.
+    const pointsByContribution = new Map<string, number>();
+    await Promise.all(
+      [contributions, ...contributionsByMission.values()]
+        .flat()
+        .filter((c) => c.status === "approved" && c.awardedPoints === undefined)
+        .map(async (c) => {
+          let points = 0;
+          for await (const entry of ctx.db
+            .query("pointLedger")
+            .withIndex("by_contributionId", (q) =>
+              q.eq("contributionId", c._id),
+            )) {
+            points += entry.delta;
+          }
+          pointsByContribution.set(c._id, points);
+        }),
+    );
 
     const ambassadorRows = await Promise.all(
       ambassadors.map(async (a) => {
@@ -246,9 +314,7 @@ export const getReports = query({
     );
 
     const missionRows = missions.map((m) => {
-      const missionContributions = contributions.filter(
-        (c) => c.missionId === m._id,
-      );
+      const missionContributions = contributionsByMission.get(m._id) ?? [];
       const approved = missionContributions.filter(
         (c) => c.status === "approved",
       );
@@ -365,30 +431,36 @@ export const getReports = query({
         matches(row.name, row.email, row.trackInterest),
     );
 
-    const approvedContributions = contributions.filter(
-      (c) => c.status === "approved",
-    );
-    const reportPointLedger = pointLedger.filter((entry) =>
-      inPeriod(entry._creationTime),
-    );
-    const reportApprovedContributions = approvedContributions.filter((c) =>
-      inPeriod(c._creationTime),
-    );
+    const periodBounds =
+      periodStart === null
+        ? undefined
+        : { lower: { key: periodStart, inclusive: true } };
+    const [
+      totalPoints,
+      pendingReviews,
+      totalContributions,
+      totalPeopleReached,
+    ] = await Promise.all([
+      pointLedgerTotals.sum(ctx, { bounds: periodBounds }),
+      contributionTotals.count(ctx, { namespace: "pending" }),
+      contributionTotals.count(ctx, {
+        namespace: "approved",
+        bounds: periodBounds,
+      }),
+      contributionTotals.sum(ctx, {
+        namespace: "approved",
+        bounds: periodBounds,
+      }),
+    ]);
 
     return {
       summary: {
         totalAmbassadors: ambassadors.length,
         activeMissions: missions.filter((m) => m.status === "published").length,
-        pendingReviews: contributions.filter((c) => c.status === "pending")
-          .length,
-        totalPoints: reportPointLedger.reduce(
-          (sum, entry) => sum + entry.delta,
-          0,
-        ),
-        totalContributions: reportApprovedContributions.length,
-        totalPeopleReached: reportApprovedContributions
-          .filter((c) => c.kind === "people_reached")
-          .reduce((sum, c) => sum + (c.quantity ?? 0), 0),
+        pendingReviews,
+        totalPoints,
+        totalContributions,
+        totalPeopleReached,
       },
       ambassadors:
         reportType === "ambassadors"
