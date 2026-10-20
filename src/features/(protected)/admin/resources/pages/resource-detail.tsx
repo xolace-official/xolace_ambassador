@@ -18,6 +18,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -190,9 +191,16 @@ export default function AdminResourceDetail({
                   <Video className="size-4 text-primary" />
                   Video Embed Preview
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  Streaming URL: {resource.embedUrl || resource.url}
-                </p>
+                {resource.embedUrl || resource.url ? (
+                  <SocialLinkButtons
+                    links={[
+                      {
+                        label: "Video",
+                        value: resource.embedUrl || resource.url || "",
+                      },
+                    ]}
+                  />
+                ) : null}
               </div>
             </Card>
           ) : null}
@@ -275,9 +283,11 @@ export default function AdminResourceDetail({
                   <h3 className="text-base font-semibold text-foreground">
                     External URL
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
-                    {resource.url}
-                  </p>
+                  <div className="mt-2">
+                    <SocialLinkButtons
+                      links={[{ label: "Resource", value: resource.url }]}
+                    />
+                  </div>
                 </div>
               </div>
 
