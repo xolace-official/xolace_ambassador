@@ -59,7 +59,7 @@ export const getAnalytics = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const [contributions, ambassadors, missions, profiles, totals] =
+    const [contributions, ambassadors, missions, profiles, totals, ledger] =
       await Promise.all([
         ctx.db.query("contributions").take(5000),
         ctx.db
@@ -68,16 +68,14 @@ export const getAnalytics = query({
           .take(500),
         ctx.db.query("missions").take(1000),
         ctx.db.query("ambassadorProfiles").take(500),
-        ctx.db.query("ambassadorTotals").take(500),
+        ctx.db.query("ambassadorTotals").take(5000),
+        ctx.db.query("pointLedger").take(5000),
       ]);
 
     const approved = contributions.filter((c) => c.status === "approved");
     const pending = contributions.filter((c) => c.status === "pending");
 
-    const totalPoints = approved.reduce(
-      (sum, c) => sum + (c.awardedPoints ?? 0),
-      0,
-    );
+    const totalPoints = totals.reduce((sum, row) => sum + row.points, 0);
     const totalPeopleReached = approved
       .filter((c) => c.kind === "people_reached")
       .reduce((sum, c) => sum + (c.quantity ?? 0), 0);
@@ -88,17 +86,28 @@ export const getAnalytics = query({
     >();
     for (const c of approved) {
       const day = new Date(c._creationTime).toISOString().slice(0, 10);
-      const entry = byDay.get(day) ?? {
+      const dayEntry = byDay.get(day) ?? {
         points: 0,
         contributions: 0,
         peopleReached: 0,
       };
-      entry.points += c.awardedPoints ?? 0;
-      entry.contributions += 1;
+      dayEntry.contributions += 1;
       if (c.kind === "people_reached") {
-        entry.peopleReached += c.quantity ?? 0;
+        dayEntry.peopleReached += c.quantity ?? 0;
       }
-      byDay.set(day, entry);
+      byDay.set(day, dayEntry);
+    }
+    for (const ledgerEntry of ledger) {
+      const day = new Date(ledgerEntry._creationTime)
+        .toISOString()
+        .slice(0, 10);
+      const dayEntry = byDay.get(day) ?? {
+        points: 0,
+        contributions: 0,
+        peopleReached: 0,
+      };
+      dayEntry.points += ledgerEntry.delta;
+      byDay.set(day, dayEntry);
     }
 
     const timeline = [...byDay.entries()]
