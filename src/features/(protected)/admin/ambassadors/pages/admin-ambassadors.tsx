@@ -96,11 +96,10 @@ export default function AdminAmbassadors({ uuid }: { uuid: string }) {
                 : undefined
             }
             onClick={() => void setTab(value)}
-            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              tab === value
+            className={`min-h-11 border-b-2 px-1 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tab === value
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <span>
               {value === "applications" ? "Applications" : "Ambassadors"}
@@ -138,7 +137,7 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
   const [statusFilter, setStatusFilter] = useQueryState(
     "applicationStatus",
     parseAsStringLiteral(APPLICATION_STATUSES)
-      .withDefault("new")
+      .withDefault("all")
       .withOptions({ clearOnDefault: false }),
   );
   const { search, searchInput, setSearchInput } = usePeopleSearch();
@@ -221,9 +220,8 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
       <Table
         aria-label="Ambassador applications"
         aria-busy={isStale}
-        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${
-          isStale ? "opacity-60" : ""
-        }`}
+        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${isStale ? "opacity-60" : ""
+          }`}
       >
         <TableHeader className="bg-muted">
           <TableRow>
@@ -459,9 +457,8 @@ function AmbassadorsTable({ uuid }: { uuid: string }) {
       <Table
         aria-label="Active ambassadors"
         aria-busy={isStale}
-        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${
-          isStale ? "opacity-60" : ""
-        }`}
+        className={`[&_td]:px-3 [&_td]:py-2 [&_th]:px-3 transition-opacity ${isStale ? "opacity-60" : ""
+          }`}
       >
         <TableHeader className="bg-muted">
           <TableRow>
