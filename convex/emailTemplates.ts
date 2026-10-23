@@ -159,6 +159,31 @@ export function meetingScheduledEmail(args: {
   };
 }
 
+export function meetingSlotSelectionEmail(args: {
+  name: string;
+  selectionUrl: string;
+  logoUrl: string;
+}) {
+  return {
+    subject: "Choose your meeting time with Xolace",
+    html: layout({
+      eyebrow: "Choose a meeting time",
+      title: "Select a time that works for you",
+      logoUrl: args.logoUrl,
+      content:
+        paragraph(
+          `Hi ${escapeHtml(args.name)}, we need you to choose a new meeting time for your Xolace Ambassadors application.`,
+        ) +
+        paragraph(
+          "Use the secure button below to see the latest available times and submit the one that works best for you.",
+        ) +
+        `<div style="margin:28px 0">${button("Select meeting time", args.selectionUrl)}</div>` +
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">This link is private and can be used once. If no times are available, please check back later using this email link.</p>`,
+    }),
+    text: `Hi ${args.name},\n\nPlease choose a new meeting time for your Xolace Ambassadors application.\n\nSelect a time here: ${args.selectionUrl}\n\nThis private link can be used once. If no times are available, please check back later using this email link.`,
+  };
+}
+
 export function declinedApplicationEmail(args: {
   name: string;
   note: string;
