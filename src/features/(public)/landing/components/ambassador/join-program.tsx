@@ -916,13 +916,7 @@ export default function JoinProgramForm() {
                 ) : (
                   <button
                     type="submit"
-                    disabled={
-                      isSubmitting ||
-                      uploadingImage ||
-                      emailExists ||
-                      !meetingSlots ||
-                      meetingSlots.length === 0
-                    }
+                    disabled={isSubmitting || uploadingImage}
                     className="h-9 w-full rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {uploadingImage
