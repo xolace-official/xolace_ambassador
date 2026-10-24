@@ -470,10 +470,11 @@ export const getMeetingSlotSelection = query({
       )
       .first();
 
+    // Once the meeting is scheduled the invitation states the time, so the
+    // link must not be able to change it.
     if (
       application === null ||
-      application.status === "accepted" ||
-      application.status === "rejected" ||
+      application.status !== "new" ||
       application.meetingSlotSelectionExpiresAt === undefined ||
       application.meetingSlotSelectionExpiresAt <= args.now
     ) {
@@ -515,8 +516,7 @@ export const submitMeetingSlotSelection = mutation({
       throw new Error("This meeting time link is no longer valid.");
     }
     if (
-      application.status === "accepted" ||
-      application.status === "rejected" ||
+      application.status !== "new" ||
       application.meetingSlotSelectionCompletedAt !== undefined ||
       application.meetingSlotSelectionExpiresAt === undefined ||
       application.meetingSlotSelectionExpiresAt <= Date.now()
@@ -559,10 +559,7 @@ export const createMeetingSlotSelectionRequest = internalMutation({
     if (application === null) {
       throw new AuthError(404, "Application not found.");
     }
-    if (
-      application.status === "accepted" ||
-      application.status === "rejected"
-    ) {
+    if (application.status !== "new") {
       throw new Error("This application can no longer choose a meeting time.");
     }
 
@@ -616,7 +613,7 @@ export const adminSendMeetingSlotSelection = action({
       args,
     );
     if (details === null) throw new AuthError(404, "Application not found.");
-    if (details.status === "accepted" || details.status === "rejected") {
+    if (details.status !== "new") {
       throw new Error("This application can no longer choose a meeting time.");
     }
 
@@ -728,6 +725,9 @@ export const markMeetingScheduled = internalMutation({
     await ctx.db.patch(args.applicationId, {
       status: "reviewing",
       meetingScheduledAt: Date.now(),
+      // Revoke any open selection link; the invitation fixes the time.
+      meetingSlotSelectionTokenHash: undefined,
+      meetingSlotSelectionExpiresAt: undefined,
       reviewedBy: admin._id,
       reviewedAt: Date.now(),
     });
