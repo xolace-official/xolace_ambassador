@@ -620,6 +620,16 @@ export const adminSendMeetingSlotSelection = action({
     const token = crypto.randomUUID();
     const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
     const tokenHash = await hashMeetingSlotSelectionToken(token);
+
+    // Send before storing the new token: storing it revokes any link the
+    // applicant already has, so a failed send must leave that link working.
+    const email = meetingSlotSelectionEmail({
+      name: details.name,
+      selectionUrl: `${baseUrl()}/meeting-time#${token}`,
+      logoUrl: EMAIL_LOGO_URL,
+    });
+    if (!(await trySendEmail(details.email, email))) return false;
+
     await ctx.runMutation(
       internal.applications.createMeetingSlotSelectionRequest,
       {
@@ -628,13 +638,7 @@ export const adminSendMeetingSlotSelection = action({
         expiresAt,
       },
     );
-
-    const email = meetingSlotSelectionEmail({
-      name: details.name,
-      selectionUrl: `${baseUrl()}/meeting-time#${token}`,
-      logoUrl: EMAIL_LOGO_URL,
-    });
-    return await trySendEmail(details.email, email);
+    return true;
   },
 });
 

@@ -122,7 +122,7 @@ export default function AdminApplicationDetail({
         toast.success("Time selection link sent to the applicant.");
       } else {
         toast.warning(
-          "The request was created, but the email could not be sent. Try again shortly.",
+          "The email could not be sent, so no new link was created. Try again shortly.",
         );
       }
     } catch (error) {
