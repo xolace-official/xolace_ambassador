@@ -73,7 +73,7 @@ const applicationSchema = z.object({
     ["creator", "community", "growth", "creative", "production", "advocacy"],
     { error: "Choose a track." },
   ),
-  meetingSlotId: z.string(),
+  meetingSlotId: z.string().min(1, "Choose an available meeting time."),
   referralCode: z.string().trim().max(20, "Keep the referral code short."),
   whyXolace: z
     .string()
@@ -154,10 +154,21 @@ const reassurances = [
 
 export default function JoinProgramForm() {
   const submitApplication = useMutation(api.applications.submit);
-  const [currentTime] = React.useState(() => Date.now());
-  const meetingSlots = useQuery(api.applications.listMeetingSlots, {
+  const [currentTime, setCurrentTime] = React.useState(() => Date.now());
+  const latestMeetingSlots = useQuery(api.applications.listMeetingSlots, {
     now: currentTime,
   });
+  // Each `currentTime` tick changes the query args, so `useQuery` briefly
+  // returns undefined. Keep the last loaded list until fresh results arrive.
+  const [loadedMeetingSlots, setLoadedMeetingSlots] =
+    React.useState(latestMeetingSlots);
+  if (
+    latestMeetingSlots !== undefined &&
+    latestMeetingSlots !== loadedMeetingSlots
+  ) {
+    setLoadedMeetingSlots(latestMeetingSlots);
+  }
+  const meetingSlots = latestMeetingSlots ?? loadedMeetingSlots;
   const requestUploadUrl = useAction(api.applications.requestUploadUrl);
   const [currentStep, setStep] = useQueryState("step", parseStep);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
@@ -182,6 +193,14 @@ export default function JoinProgramForm() {
     resolver: zodResolver(applicationSchema),
     defaultValues: initialFormData,
   });
+
+  React.useEffect(() => {
+    const interval = window.setInterval(
+      () => setCurrentTime(Date.now()),
+      60_000,
+    );
+    return () => window.clearInterval(interval);
+  }, []);
 
   React.useEffect(() => {
     const referralCode = new URLSearchParams(window.location.search)
@@ -260,10 +279,15 @@ export default function JoinProgramForm() {
     void setStep(Math.min(currentStep + 1, steps.length - 1));
   }
 
-  // Only required while slots exist; applicants are never blocked when none are
-  // available.
   function validateMeetingSlot() {
-    if (meetingSlots && meetingSlots.length > 0 && !watch("meetingSlotId")) {
+    if (!meetingSlots || meetingSlots.length === 0) {
+      setFieldError("meetingSlotId", {
+        message:
+          "No meeting times are available right now. Please check back later.",
+      });
+      return false;
+    }
+    if (!watch("meetingSlotId")) {
       setFieldError("meetingSlotId", {
         message: "Choose one of the available meeting times.",
       });
@@ -304,7 +328,14 @@ export default function JoinProgramForm() {
       void setStep(0);
       return;
     }
-    if (meetingSlots && meetingSlots.length > 0 && !values.meetingSlotId) {
+    if (!meetingSlots || meetingSlots.length === 0) {
+      setError(
+        "No meeting times are available right now. Please check back later.",
+      );
+      void setStep(2);
+      return;
+    }
+    if (!values.meetingSlotId) {
       setError("Choose one of the available meeting times.");
       void setStep(2);
       return;
@@ -343,7 +374,7 @@ export default function JoinProgramForm() {
         school: values.schoolOrCommunity || undefined,
         socials: socialsArray,
         trackInterest: values.track,
-        meetingSlotId: values.meetingSlotId || undefined,
+        meetingSlotId: values.meetingSlotId,
         whyXolace: values.whyXolace,
         referralCode: values.referralCode || undefined,
         image: imageStorageId as never,
@@ -793,7 +824,10 @@ export default function JoinProgramForm() {
                       htmlFor="meeting-slot"
                       className="text-sm font-medium"
                     >
-                      Preferred meeting time
+                      Preferred meeting time{" "}
+                      <span aria-hidden="true" className="text-destructive">
+                        *
+                      </span>
                     </label>
                     {meetingSlots && meetingSlots.length === 0 ? (
                       <output className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
@@ -803,7 +837,7 @@ export default function JoinProgramForm() {
                         />
                         <span>
                           No meeting times are available right now. Please check
-                          back later to book a slot.
+                          back later to see when a slot becomes available.
                         </span>
                       </output>
                     ) : (
@@ -893,7 +927,7 @@ export default function JoinProgramForm() {
                 ) : (
                   <button
                     type="submit"
-                    disabled={isSubmitting || uploadingImage || emailExists}
+                    disabled={isSubmitting || uploadingImage}
                     className="h-9 w-full rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {uploadingImage

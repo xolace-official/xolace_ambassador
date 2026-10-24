@@ -5,6 +5,8 @@ export const DEFAULT_MEETING_SLOTS = [
   { id: "2026-10-29-1030", startsAt: Date.UTC(2026, 9, 29, 10, 30) },
 ] as const;
 
+export const MIN_MEETING_LEAD_TIME_MS = 5 * 60 * 60 * 1000;
+
 export function formatMeetingSlot(startsAt: number) {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",

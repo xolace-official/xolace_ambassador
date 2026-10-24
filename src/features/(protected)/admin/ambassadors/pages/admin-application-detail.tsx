@@ -1,9 +1,9 @@
 "use client";
 
 import { useAction, useQuery } from "convex/react";
-import { ExternalLink, UserRound } from "lucide-react";
+import { CalendarClock, ExternalLink, UserRound } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SocialLinkButtons } from "@/components/shared/social-link-buttons";
@@ -39,6 +39,7 @@ export default function AdminApplicationDetail({
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [declineNote, setDeclineNote] = useState("");
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const application = useQuery(api.applications.adminGet, { applicationId });
   const imageUrl = useQuery(
     api.applications.adminGetImageUrl,
@@ -47,7 +48,26 @@ export default function AdminApplicationDetail({
   const accept = useAction(api.applications.adminAccept);
   const resendInvitation = useAction(api.applications.adminResendInvitation);
   const scheduleMeeting = useAction(api.applications.adminScheduleMeeting);
+  const sendMeetingSlotSelection = useAction(
+    api.applications.adminSendMeetingSlotSelection,
+  );
   const decline = useAction(api.applications.adminDecline);
+
+  useEffect(() => {
+    const interval = window.setInterval(
+      () => setCurrentTime(Date.now()),
+      60_000,
+    );
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const applicationMeetingHasPassed =
+    application !== undefined &&
+    application !== null &&
+    application.meetingSlotStartsAt !== null &&
+    application.meetingSlotStartsAt <= currentTime;
+  const meetingSchedulingBlocked =
+    applicationMeetingHasPassed || application?.meetingSlotStartsAt == null;
 
   async function scheduleApplicationMeeting() {
     setBusy(true);
@@ -88,6 +108,30 @@ export default function AdminApplicationDetail({
         error instanceof Error
           ? error.message
           : "Could not decline this application.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendMeetingSlotSelectionEmail() {
+    setBusy(true);
+    try {
+      const emailed = await sendMeetingSlotSelection({
+        applicationId: applicationId as Id<"applications">,
+      });
+      if (emailed) {
+        toast.success("Time selection link sent to the applicant.");
+      } else {
+        toast.warning(
+          "The email could not be sent, so no new link was created. Try again shortly.",
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not send the time selection link.",
       );
     } finally {
       setBusy(false);
@@ -213,7 +257,7 @@ export default function AdminApplicationDetail({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={busy}
+                disabled={busy || meetingSchedulingBlocked}
                 onClick={() => void scheduleApplicationMeeting()}
               >
                 Schedule meeting
@@ -338,7 +382,35 @@ export default function AdminApplicationDetail({
             {MISSION_CATEGORY_LABELS[application.trackInterest]}
           </Detail>
           <Detail label="Preferred meeting time">
-            {application.meetingSlotLabel ?? "Not selected"}
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {application.meetingSlotLabel ?? "Not selected"}
+                {applicationMeetingHasPassed ? (
+                  <span className="ml-2 text-xs text-destructive">
+                    Past slot
+                  </span>
+                ) : null}
+              </span>
+              {application.status === "new" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void sendMeetingSlotSelectionEmail()}
+                >
+                  <CalendarClock aria-hidden="true" />
+                  Send time selection link
+                </Button>
+              ) : null}
+            </div>
+            {application.meetingSlotSelectionSentAt !== null ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {application.meetingSlotSelectionCompletedAt !== null
+                  ? "Applicant submitted a meeting time through the private link."
+                  : "A private time-selection link has been sent to the applicant."}
+              </p>
+            ) : null}
           </Detail>
           <Detail label="Date of birth">
             {application.dateOfBirth

@@ -103,15 +103,26 @@ export default function TopBar({ onMenuClick, onCloseSidebar }: TopBarProps) {
     if (!parent) return pathname;
 
     const pathParts = pathname.split("/");
-    const isAdminMissionDetail =
+    const adminMissionDetailMatch =
       role === "admin" &&
+      pathParts.length === 6 &&
       pathParts[3] === "missions" &&
       pathParts[4] !== "submissions" &&
-      pathParts.length === 6;
+      pathParts[4] !== "" &&
+      pathParts[5] !== "";
 
     // A mission detail belongs to its set, not to the top-level mission list.
-    if (isAdminMissionDetail) {
+    if (adminMissionDetailMatch) {
       return `/${role}/${uuid}/missions/${pathParts[4]}`;
+    }
+
+    if (
+      role === "admin" &&
+      pathname.startsWith(`/${role}/${uuid}/ambassadors/applications/`)
+    ) {
+      const currentParams = new URLSearchParams(window.location.search);
+      const view = currentParams.get("view");
+      return `${parent.href}?view=${view === "ambassadors" ? "ambassadors" : "applications"}`;
     }
 
     if (role !== "admin" || !pathname.includes("/missions/submissions/")) {

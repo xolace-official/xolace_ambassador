@@ -475,9 +475,15 @@ export default defineSchema({
     whyXolace: v.string(),
     trackInterest: track,
     referralCode: v.optional(v.string()),
+    // Legacy applications may predate mandatory meeting-time selection.
+    // New submissions always write all three fields.
     meetingSlotId: v.optional(v.string()),
     meetingSlotLabel: v.optional(v.string()),
     meetingSlotStartsAt: v.optional(v.number()),
+    meetingSlotSelectionTokenHash: v.optional(v.string()),
+    meetingSlotSelectionExpiresAt: v.optional(v.number()),
+    meetingSlotSelectionSentAt: v.optional(v.number()),
+    meetingSlotSelectionCompletedAt: v.optional(v.number()),
     image: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("new"),
@@ -496,6 +502,9 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_meetingSlotId", ["meetingSlotId"])
     .index("by_meetingSlotId_and_status", ["meetingSlotId", "status"])
+    .index("by_meetingSlotSelectionTokenHash", [
+      "meetingSlotSelectionTokenHash",
+    ])
     .index("by_meetingScheduledAt", ["meetingScheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",

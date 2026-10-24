@@ -21,11 +21,17 @@ import {
 import {
   acceptedApplicationEmail,
   applicationReceivedEmail,
+  baseUrl,
   declinedApplicationEmail,
   loginUrl,
   meetingScheduledEmail,
+  meetingSlotSelectionEmail,
 } from "./emailTemplates";
-import { DEFAULT_MEETING_SLOTS, formatMeetingSlot } from "./meetingSlots";
+import {
+  DEFAULT_MEETING_SLOTS,
+  formatMeetingSlot,
+  MIN_MEETING_LEAD_TIME_MS,
+} from "./meetingSlots";
 import { AuthError, requireAdmin } from "./model/auth";
 import { isMeetingSlotBooked } from "./model/meetingSlots";
 import { trackValidator } from "./schema";
@@ -61,6 +67,9 @@ const applicationValidator = v.object({
   referralCode: v.union(v.string(), v.null()),
   meetingSlotId: v.union(v.string(), v.null()),
   meetingSlotLabel: v.union(v.string(), v.null()),
+  meetingSlotStartsAt: v.union(v.number(), v.null()),
+  meetingSlotSelectionSentAt: v.union(v.number(), v.null()),
+  meetingSlotSelectionCompletedAt: v.union(v.number(), v.null()),
   image: v.optional(v.id("_storage")),
   status: applicationStatusValidator,
   reviewNote: v.optional(v.string()),
@@ -85,6 +94,10 @@ function toApplication(application: Doc<"applications">) {
     referralCode: application.referralCode ?? null,
     meetingSlotId: application.meetingSlotId ?? null,
     meetingSlotLabel: application.meetingSlotLabel ?? null,
+    meetingSlotStartsAt: application.meetingSlotStartsAt ?? null,
+    meetingSlotSelectionSentAt: application.meetingSlotSelectionSentAt ?? null,
+    meetingSlotSelectionCompletedAt:
+      application.meetingSlotSelectionCompletedAt ?? null,
     image: application.image,
     status: application.status,
     reviewNote: application.reviewNote,
@@ -110,6 +123,7 @@ export const generateUploadUrl = internalMutation({
 async function availableMeetingSlots(
   ctx: Parameters<typeof requireAdmin>[0],
   now: number,
+  excludedApplicationId?: Id<"applications">,
 ) {
   const isConfigured = (await ctx.db.query("meetingSlots").first()) !== null;
   const slots = isConfigured
@@ -117,15 +131,21 @@ async function availableMeetingSlots(
         await ctx.db
           .query("meetingSlots")
           .withIndex("by_active_and_startsAt", (q) =>
-            q.eq("active", true).gt("startsAt", now),
+            q
+              .eq("active", true)
+              .gte("startsAt", now + MIN_MEETING_LEAD_TIME_MS),
           )
           .order("asc")
           .take(100)
       ).map((slot) => ({ id: slot.slotKey, startsAt: slot.startsAt }))
-    : DEFAULT_MEETING_SLOTS.filter((slot) => slot.startsAt > now);
+    : DEFAULT_MEETING_SLOTS.filter(
+        (slot) => slot.startsAt >= now + MIN_MEETING_LEAD_TIME_MS,
+      );
   const available = await Promise.all(
     slots.map(async (slot) =>
-      (await isMeetingSlotBooked(ctx, slot.id)) ? null : slot,
+      (await isMeetingSlotBooked(ctx, slot.id, excludedApplicationId))
+        ? null
+        : slot,
     ),
   );
   return available.filter(
@@ -169,7 +189,7 @@ export const submit = mutation({
     whyXolace: v.string(),
     trackInterest: trackValidator,
     referralCode: v.optional(v.string()),
-    meetingSlotId: v.optional(meetingSlotIdValidator),
+    meetingSlotId: meetingSlotIdValidator,
     image: v.id("_storage"),
   },
   returns: v.id("applications"),
@@ -187,22 +207,18 @@ export const submit = mutation({
     const referralCode = args.referralCode?.trim().toUpperCase() || undefined;
     const now = Date.now();
 
-    // The meeting time is required while slots exist, but an applicant must not
-    // be blocked from applying when none are available.
-    let meetingSlot: { id: string; startsAt: number } | undefined;
-    const requestedSlotId = args.meetingSlotId;
     const available = await availableMeetingSlots(ctx, now);
-    if (requestedSlotId !== undefined) {
-      meetingSlot = available.find((slot) => slot.id === requestedSlotId);
-      if (meetingSlot === undefined) {
-        throw new Error(
-          (await isMeetingSlotBooked(ctx, requestedSlotId))
-            ? "That meeting time has already been taken. Choose another time."
+    const selectedSlot = available.find(
+      (slot) => slot.id === args.meetingSlotId,
+    );
+    if (selectedSlot === undefined) {
+      throw new Error(
+        (await isMeetingSlotBooked(ctx, args.meetingSlotId))
+          ? "That meeting time has already been taken. Choose another time."
+          : available.length === 0
+            ? "No meeting times are available right now. Please check back later."
             : "Choose one of the available meeting times.",
-        );
-      }
-    } else if (available.length > 0) {
-      throw new Error("Choose one of the available meeting times.");
+      );
     }
 
     if (name.length < 2 || name.length > 120) {
@@ -267,13 +283,9 @@ export const submit = mutation({
       whyXolace,
       trackInterest: args.trackInterest,
       referralCode,
-      ...(meetingSlot
-        ? {
-            meetingSlotId: meetingSlot.id,
-            meetingSlotLabel: formatMeetingSlot(meetingSlot.startsAt),
-            meetingSlotStartsAt: meetingSlot.startsAt,
-          }
-        : {}),
+      meetingSlotId: selectedSlot.id,
+      meetingSlotLabel: formatMeetingSlot(selectedSlot.startsAt),
+      meetingSlotStartsAt: selectedSlot.startsAt,
       image: args.image,
       status: "new",
     });
@@ -420,6 +432,216 @@ export const adminReview = mutation({
   },
 });
 
+const meetingSlotSelectionValidator = v.union(
+  v.object({
+    status: v.literal("available"),
+    name: v.string(),
+    slots: v.array(
+      v.object({
+        id: v.string(),
+        startsAt: v.number(),
+        label: v.string(),
+      }),
+    ),
+  }),
+  v.object({ status: v.literal("expired") }),
+  v.object({ status: v.literal("completed") }),
+);
+
+async function hashMeetingSlotSelectionToken(token: string) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(token),
+  );
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+export const getMeetingSlotSelection = query({
+  args: { token: v.string(), now: v.number() },
+  returns: meetingSlotSelectionValidator,
+  handler: async (ctx, args) => {
+    const tokenHash = await hashMeetingSlotSelectionToken(args.token);
+    const application = await ctx.db
+      .query("applications")
+      .withIndex("by_meetingSlotSelectionTokenHash", (q) =>
+        q.eq("meetingSlotSelectionTokenHash", tokenHash),
+      )
+      .first();
+
+    // Once the meeting is scheduled the invitation states the time, so the
+    // link must not be able to change it.
+    if (
+      application === null ||
+      application.status !== "new" ||
+      application.meetingSlotSelectionExpiresAt === undefined ||
+      application.meetingSlotSelectionExpiresAt <= args.now
+    ) {
+      return { status: "expired" as const };
+    }
+    if (application.meetingSlotSelectionCompletedAt !== undefined) {
+      return { status: "completed" as const };
+    }
+
+    return {
+      status: "available" as const,
+      name: application.name,
+      slots: (await availableMeetingSlots(ctx, args.now, application._id)).map(
+        (slot) => ({
+          ...slot,
+          label: formatMeetingSlot(slot.startsAt),
+        }),
+      ),
+    };
+  },
+});
+
+export const submitMeetingSlotSelection = mutation({
+  args: {
+    token: v.string(),
+    meetingSlotId: meetingSlotIdValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const tokenHash = await hashMeetingSlotSelectionToken(args.token);
+    const application = await ctx.db
+      .query("applications")
+      .withIndex("by_meetingSlotSelectionTokenHash", (q) =>
+        q.eq("meetingSlotSelectionTokenHash", tokenHash),
+      )
+      .first();
+
+    if (application === null) {
+      throw new Error("This meeting time link is no longer valid.");
+    }
+    if (
+      application.status !== "new" ||
+      application.meetingSlotSelectionCompletedAt !== undefined ||
+      application.meetingSlotSelectionExpiresAt === undefined ||
+      application.meetingSlotSelectionExpiresAt <= Date.now()
+    ) {
+      throw new Error("This meeting time link is no longer valid.");
+    }
+
+    const available = await availableMeetingSlots(
+      ctx,
+      Date.now(),
+      application._id,
+    );
+    const selectedSlot = available.find(
+      (slot) => slot.id === args.meetingSlotId,
+    );
+    if (selectedSlot === undefined) {
+      throw new Error("Choose one of the available meeting times.");
+    }
+
+    await ctx.db.patch(application._id, {
+      meetingSlotId: selectedSlot.id,
+      meetingSlotLabel: formatMeetingSlot(selectedSlot.startsAt),
+      meetingSlotStartsAt: selectedSlot.startsAt,
+      meetingSlotSelectionCompletedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const createMeetingSlotSelectionRequest = internalMutation({
+  args: {
+    applicationId: v.id("applications"),
+    tokenHash: v.string(),
+    expiresAt: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const application = await ctx.db.get(args.applicationId);
+    if (application === null) {
+      throw new AuthError(404, "Application not found.");
+    }
+    if (application.status !== "new") {
+      throw new Error("This application can no longer choose a meeting time.");
+    }
+
+    await ctx.db.patch(args.applicationId, {
+      meetingSlotSelectionTokenHash: args.tokenHash,
+      meetingSlotSelectionExpiresAt: args.expiresAt,
+      meetingSlotSelectionSentAt: Date.now(),
+      meetingSlotSelectionCompletedAt: undefined,
+    });
+    // The public query cannot read the clock, so expiry is enforced by
+    // clearing the token server-side rather than trusting the caller's `now`.
+    await ctx.scheduler.runAt(
+      args.expiresAt,
+      internal.applications.expireMeetingSlotSelection,
+      { applicationId: args.applicationId, tokenHash: args.tokenHash },
+    );
+    return null;
+  },
+});
+
+export const expireMeetingSlotSelection = internalMutation({
+  args: {
+    applicationId: v.id("applications"),
+    tokenHash: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const application = await ctx.db.get(args.applicationId);
+    // A newer link may have replaced this one; only revoke the one we scheduled.
+    // A completed selection keeps its token so the link still reads "completed".
+    if (
+      application === null ||
+      application.meetingSlotSelectionTokenHash !== args.tokenHash ||
+      application.meetingSlotSelectionCompletedAt !== undefined
+    ) {
+      return null;
+    }
+    await ctx.db.patch(args.applicationId, {
+      meetingSlotSelectionTokenHash: undefined,
+    });
+    return null;
+  },
+});
+
+export const adminSendMeetingSlotSelection = action({
+  args: { applicationId: v.id("applications") },
+  returns: v.boolean(),
+  handler: async (ctx, args): Promise<boolean> => {
+    const details = await ctx.runQuery(
+      internal.applications.acceptanceDetails,
+      args,
+    );
+    if (details === null) throw new AuthError(404, "Application not found.");
+    if (details.status !== "new") {
+      throw new Error("This application can no longer choose a meeting time.");
+    }
+
+    const token = crypto.randomUUID();
+    const expiresAt = Date.now() + 72 * 60 * 60 * 1000;
+    const tokenHash = await hashMeetingSlotSelectionToken(token);
+
+    // Send before storing the new token: storing it revokes any link the
+    // applicant already has, so a failed send must leave that link working.
+    const email = meetingSlotSelectionEmail({
+      name: details.name,
+      selectionUrl: `${baseUrl()}/meeting-time#${token}`,
+      logoUrl: EMAIL_LOGO_URL,
+    });
+    if (!(await trySendEmail(details.email, email))) return false;
+
+    await ctx.runMutation(
+      internal.applications.createMeetingSlotSelectionRequest,
+      {
+        applicationId: args.applicationId,
+        tokenHash,
+        expiresAt,
+      },
+    );
+    return true;
+  },
+});
+
 export const adminDeleteApplication = mutation({
   args: { applicationId: v.id("applications") },
   returns: v.null(),
@@ -451,6 +673,7 @@ const emailDetailsValidator = v.object({
   email: v.string(),
   status: applicationStatusValidator,
   meetingSlotLabel: v.union(v.string(), v.null()),
+  meetingSlotStartsAt: v.union(v.number(), v.null()),
 });
 
 function emailDetails(application: Doc<"applications">) {
@@ -459,6 +682,7 @@ function emailDetails(application: Doc<"applications">) {
     email: application.email,
     status: application.status,
     meetingSlotLabel: application.meetingSlotLabel ?? null,
+    meetingSlotStartsAt: application.meetingSlotStartsAt ?? null,
   };
 }
 
@@ -505,6 +729,9 @@ export const markMeetingScheduled = internalMutation({
     await ctx.db.patch(args.applicationId, {
       status: "reviewing",
       meetingScheduledAt: Date.now(),
+      // Revoke any open selection link; the invitation fixes the time.
+      meetingSlotSelectionTokenHash: undefined,
+      meetingSlotSelectionExpiresAt: undefined,
       reviewedBy: admin._id,
       reviewedAt: Date.now(),
     });
@@ -523,6 +750,16 @@ export const adminScheduleMeeting = action({
     if (details === null) throw new AuthError(404, "Application not found.");
     if (details.status !== "new") {
       throw new Error("This application has already moved past submitted.");
+    }
+    if (details.meetingSlotStartsAt === null) {
+      throw new Error(
+        "No meeting time has been selected. Select a meeting time first.",
+      );
+    }
+    if (details.meetingSlotStartsAt <= Date.now()) {
+      throw new Error(
+        "The selected meeting time has passed. Select a new meeting time first.",
+      );
     }
     const scheduleUrl = process.env.MEETING_SCHEDULING_URL;
     if (!scheduleUrl) {
