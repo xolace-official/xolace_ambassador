@@ -183,7 +183,8 @@ const [category, setCategory] = useQueryState(
 - A component using `useQueryState` inside a **statically rendered** page must
   sit behind a `<Suspense>` boundary, or the build fails with
   `useSearchParams() should be wrapped in a suspense boundary`.
-- Never put secrets, tokens or PII in a query string.
+- Never put secrets, tokens or PII in a query string. (Emailed capability
+  links use the fragment instead — see §8 rule 6.)
 
 Keep in `useState`: transient drafts (an unsubmitted answer), open/closed
 overlay state, ephemeral animation flags.
@@ -250,6 +251,13 @@ overlay state, ephemeral animation flags.
 5. **Fields added to the `users` table must be `v.optional`.** Convex Auth
    inserts that row itself; a required custom field breaks every sign-up.
 6. **Never put PII, tokens or form data in a URL.** Query strings are logged.
+   One narrow exception: an emailed **capability link** may carry its token in
+   the URL **fragment** (`/path#<token>`), never the path or query string.
+   Fragments are not sent to the server or in `Referer`. The token must be
+   random, stored only as a hash, expire server-side, grant a single scoped
+   action, and be revoked when reissued. The page must strip the fragment with
+   `history.replaceState` as soon as it reads it. Session/auth tokens and PII
+   never qualify.
 7. **No `middleware.ts`.** See §9 for why `proxy` cannot authenticate here.
 8. **No secrets in the client bundle.** `NEXT_PUBLIC_*` is public. If a secret
    ever needs a `NEXT_PUBLIC_` prefix to work, the design is wrong.

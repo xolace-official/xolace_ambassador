@@ -47,7 +47,16 @@ export default function MeetingTimeSelectionPage() {
   });
 
   useEffect(() => {
-    setToken(window.location.hash.slice(1));
+    const hashToken = window.location.hash.slice(1);
+    // Strict Mode re-runs this effect after the hash is stripped; keep the
+    // token from the first run.
+    setToken((current) => (hashToken === "" ? (current ?? "") : hashToken));
+    // Keep the token out of history, bookmarks and copied links (AGENTS.md §8).
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
     const interval = window.setInterval(
       () => setCurrentTime(Date.now()),
       60_000,
