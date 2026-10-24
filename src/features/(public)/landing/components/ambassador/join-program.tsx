@@ -155,9 +155,20 @@ const reassurances = [
 export default function JoinProgramForm() {
   const submitApplication = useMutation(api.applications.submit);
   const [currentTime, setCurrentTime] = React.useState(() => Date.now());
-  const meetingSlots = useQuery(api.applications.listMeetingSlots, {
+  const latestMeetingSlots = useQuery(api.applications.listMeetingSlots, {
     now: currentTime,
   });
+  // Each `currentTime` tick changes the query args, so `useQuery` briefly
+  // returns undefined. Keep the last loaded list until fresh results arrive.
+  const [loadedMeetingSlots, setLoadedMeetingSlots] =
+    React.useState(latestMeetingSlots);
+  if (
+    latestMeetingSlots !== undefined &&
+    latestMeetingSlots !== loadedMeetingSlots
+  ) {
+    setLoadedMeetingSlots(latestMeetingSlots);
+  }
+  const meetingSlots = latestMeetingSlots ?? loadedMeetingSlots;
   const requestUploadUrl = useAction(api.applications.requestUploadUrl);
   const [currentStep, setStep] = useQueryState("step", parseStep);
   const [imageFile, setImageFile] = React.useState<File | null>(null);

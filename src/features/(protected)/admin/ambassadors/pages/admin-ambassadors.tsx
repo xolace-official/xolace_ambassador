@@ -161,7 +161,7 @@ function ApplicationsTable({ uuid }: { uuid: string }) {
     results.length === 0 &&
     status === "Exhausted" &&
     !search &&
-    statusFilter === "new"
+    (statusFilter === "all" || statusFilter === "new")
   ) {
     return (
       <EmptyState

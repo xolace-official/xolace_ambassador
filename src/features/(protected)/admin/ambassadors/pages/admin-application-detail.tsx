@@ -66,6 +66,8 @@ export default function AdminApplicationDetail({
     application !== null &&
     application.meetingSlotStartsAt !== null &&
     application.meetingSlotStartsAt <= currentTime;
+  const meetingSchedulingBlocked =
+    applicationMeetingHasPassed || application?.meetingSlotStartsAt == null;
 
   async function scheduleApplicationMeeting() {
     setBusy(true);
@@ -255,7 +257,7 @@ export default function AdminApplicationDetail({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={busy || applicationMeetingHasPassed}
+                disabled={busy || meetingSchedulingBlocked}
                 onClick={() => void scheduleApplicationMeeting()}
               >
                 Schedule meeting

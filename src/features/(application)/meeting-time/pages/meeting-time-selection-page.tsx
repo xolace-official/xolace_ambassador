@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { CalendarClock, CheckCircle2, Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,10 +29,17 @@ export default function MeetingTimeSelectionPage() {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [token, setToken] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const selection = useQuery(
+  const submittingRef = useRef(false);
+  const selectionResult = useQuery(
     api.applications.getMeetingSlotSelection,
     token === null ? "skip" : { token, now: currentTime },
   );
+  // The query reloads (and briefly returns undefined) each time `now` ticks;
+  // keep showing the last loaded selection instead of the loading state.
+  const [selection, setSelection] = useState(selectionResult);
+  useEffect(() => {
+    if (selectionResult !== undefined) setSelection(selectionResult);
+  }, [selectionResult]);
   const submitSelection = useMutation(
     api.applications.submitMeetingSlotSelection,
   );
@@ -65,7 +72,10 @@ export default function MeetingTimeSelectionPage() {
   }, []);
 
   async function onSubmit(values: MeetingTimeValues) {
-    if (token === null) return;
+    // `isSubmitting` only disables the button after a re-render; the ref
+    // blocks a double-click from firing a second mutation before then.
+    if (token === null || submittingRef.current) return;
+    submittingRef.current = true;
     try {
       await submitSelection({ token, meetingSlotId: values.meetingSlotId });
       setSubmitted(true);
@@ -75,6 +85,8 @@ export default function MeetingTimeSelectionPage() {
           ? error.message
           : "Could not save your meeting time.",
       );
+    } finally {
+      submittingRef.current = false;
     }
   }
 

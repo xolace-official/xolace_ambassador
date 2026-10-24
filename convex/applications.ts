@@ -751,10 +751,12 @@ export const adminScheduleMeeting = action({
     if (details.status !== "new") {
       throw new Error("This application has already moved past submitted.");
     }
-    if (
-      details.meetingSlotStartsAt === null ||
-      details.meetingSlotStartsAt <= Date.now()
-    ) {
+    if (details.meetingSlotStartsAt === null) {
+      throw new Error(
+        "No meeting time has been selected. Select a meeting time first.",
+      );
+    }
+    if (details.meetingSlotStartsAt <= Date.now()) {
       throw new Error(
         "The selected meeting time has passed. Select a new meeting time first.",
       );
