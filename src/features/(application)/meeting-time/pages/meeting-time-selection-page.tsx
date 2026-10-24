@@ -1,11 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { CalendarClock, CheckCircle2, Info } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -15,10 +19,15 @@ import {
 } from "@/components/ui/select";
 import { api } from "../../../../../convex/_generated/api";
 
+const meetingTimeSchema = z.object({
+  meetingSlotId: z.string().min(1, "Choose a meeting time to continue"),
+});
+
+type MeetingTimeValues = z.infer<typeof meetingTimeSchema>;
+
 export default function MeetingTimeSelectionPage() {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [token, setToken] = useState<string | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const selection = useQuery(
     api.applications.getMeetingSlotSelection,
@@ -27,6 +36,15 @@ export default function MeetingTimeSelectionPage() {
   const submitSelection = useMutation(
     api.applications.submitMeetingSlotSelection,
   );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<MeetingTimeValues>({
+    resolver: zodResolver(meetingTimeSchema),
+    defaultValues: { meetingSlotId: "" },
+  });
 
   useEffect(() => {
     setToken(window.location.hash.slice(1));
@@ -37,10 +55,10 @@ export default function MeetingTimeSelectionPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  async function submit() {
-    if (!selectedSlotId || token === null) return;
+  async function onSubmit(values: MeetingTimeValues) {
+    if (token === null) return;
     try {
-      await submitSelection({ token, meetingSlotId: selectedSlotId });
+      await submitSelection({ token, meetingSlotId: values.meetingSlotId });
       setSubmitted(true);
     } catch (error) {
       toast.error(
@@ -120,37 +138,55 @@ export default function MeetingTimeSelectionPage() {
                 </span>
               </div>
             ) : (
-              <div className="space-y-3">
-                <label
-                  htmlFor="meeting-slot"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Available meeting time
-                </label>
-                <Select
-                  value={selectedSlotId}
-                  onValueChange={setSelectedSlotId}
-                >
-                  <SelectTrigger id="meeting-slot" className="w-full">
-                    <SelectValue placeholder="Choose a meeting time…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selection.slots.map((slot) => (
-                      <SelectItem key={slot.id} value={slot.id}>
-                        {slot.label} UTC
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <form
+                className="space-y-3"
+                onSubmit={handleSubmit(onSubmit)}
+                noValidate
+              >
+                <Field data-invalid={!!errors.meetingSlotId}>
+                  <FieldLabel htmlFor="meeting-slot">
+                    Available meeting time
+                  </FieldLabel>
+                  <Controller
+                    control={control}
+                    name="meetingSlotId"
+                    render={({ field }) => (
+                      <Select
+                        name={field.name}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                          id="meeting-slot"
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          aria-invalid={!!errors.meetingSlotId}
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Choose a meeting time…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selection.slots.map((slot) => (
+                            <SelectItem key={slot.id} value={slot.id}>
+                              {slot.label} UTC
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <div aria-live="polite">
+                    <FieldError errors={[errors.meetingSlotId]} />
+                  </div>
+                </Field>
                 <Button
-                  type="button"
+                  type="submit"
                   className="w-full"
-                  disabled={!selectedSlotId}
-                  onClick={() => void submit()}
+                  disabled={isSubmitting}
                 >
-                  Submit meeting time
+                  {isSubmitting ? "Saving…" : "Submit meeting time"}
                 </Button>
-              </div>
+              </form>
             )}
           </div>
         )}
