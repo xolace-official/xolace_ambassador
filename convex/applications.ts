@@ -572,6 +572,37 @@ export const createMeetingSlotSelectionRequest = internalMutation({
       meetingSlotSelectionSentAt: Date.now(),
       meetingSlotSelectionCompletedAt: undefined,
     });
+    // The public query cannot read the clock, so expiry is enforced by
+    // clearing the token server-side rather than trusting the caller's `now`.
+    await ctx.scheduler.runAt(
+      args.expiresAt,
+      internal.applications.expireMeetingSlotSelection,
+      { applicationId: args.applicationId, tokenHash: args.tokenHash },
+    );
+    return null;
+  },
+});
+
+export const expireMeetingSlotSelection = internalMutation({
+  args: {
+    applicationId: v.id("applications"),
+    tokenHash: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const application = await ctx.db.get(args.applicationId);
+    // A newer link may have replaced this one; only revoke the one we scheduled.
+    // A completed selection keeps its token so the link still reads "completed".
+    if (
+      application === null ||
+      application.meetingSlotSelectionTokenHash !== args.tokenHash ||
+      application.meetingSlotSelectionCompletedAt !== undefined
+    ) {
+      return null;
+    }
+    await ctx.db.patch(args.applicationId, {
+      meetingSlotSelectionTokenHash: undefined,
+    });
     return null;
   },
 });
