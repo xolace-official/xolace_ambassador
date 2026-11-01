@@ -243,6 +243,9 @@ export default defineSchema({
     startsAt: v.number(),
     endsAt: v.number(),
     createdBy: v.id("users"),
+    // Set once ambassadors have been notified, so a set announces exactly
+    // once whether it goes live on save or later via the cron.
+    announcedAt: v.optional(v.number()),
   })
     .index("by_status", ["status"])
     .index("by_startsAt", ["startsAt"])
