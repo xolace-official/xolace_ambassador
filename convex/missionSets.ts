@@ -4,13 +4,22 @@ import {
 } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import {
+  internalAction,
   internalMutation,
+  internalQuery,
   type MutationCtx,
   mutation,
   query,
 } from "./_generated/server";
+import { missionSetActiveEmail } from "./emailTemplates";
 import { requireAdmin, requireRole } from "./model/auth";
+import { EMAIL_LOGO_URL, trySendEmailBatch } from "./model/email";
+import { trackValidator } from "./schema";
+
+// Keeps the email scannable; the portal has the full list.
+const MAX_EMAILED_MISSIONS = 6;
 
 const setStatus = v.union(
   v.literal("draft"),
@@ -28,6 +37,7 @@ const missionSetValidator = v.object({
   startsAt: v.number(),
   endsAt: v.number(),
   createdBy: v.id("users"),
+  announcedAt: v.optional(v.number()),
   createdByName: v.string(),
   missionCount: v.number(),
 });
@@ -143,18 +153,7 @@ export const adminCreate = mutation({
       endsAt: args.endsAt,
       createdBy: admin._id,
     });
-    if (
-      args.status === "published" &&
-      args.startsAt <= Date.now() &&
-      args.endsAt >= Date.now()
-    ) {
-      await ctx.runMutation(internal.notifications.createForAmbassadors, {
-        kind: "mission",
-        title: "A new mission set is available",
-        description: `${name} is now open for contributions.`,
-        href: "/missions",
-      });
-    }
+    await announceIfActive(ctx, missionSetId);
     return missionSetId;
   },
 });
@@ -222,21 +221,7 @@ export const adminUpdate = mutation({
       startsAt: args.startsAt,
       endsAt: args.endsAt,
     });
-    if (
-      args.status === "published" &&
-      args.startsAt <= Date.now() &&
-      args.endsAt >= Date.now() &&
-      (missionSet.status !== "published" ||
-        missionSet.startsAt !== args.startsAt ||
-        missionSet.endsAt !== args.endsAt)
-    ) {
-      await ctx.runMutation(internal.notifications.createForAmbassadors, {
-        kind: "mission",
-        title: "A new mission set is available",
-        description: `${name} is now open for contributions.`,
-        href: "/missions",
-      });
-    }
+    await announceIfActive(ctx, args.missionSetId);
     return null;
   },
 });
@@ -296,16 +281,19 @@ export const promoteNextSet = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     const now = Date.now();
-    const activeSet = await ctx.db
+    const publishedSets = await ctx.db
       .query("missionSets")
       .withIndex("by_status", (q) => q.eq("status", "published"))
       .take(100);
+    const activeSets = publishedSets.filter(
+      (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
+    );
 
-    if (
-      activeSet.some(
-        (missionSet) => missionSet.startsAt <= now && missionSet.endsAt >= now,
-      )
-    ) {
+    // A set saved as published with a future start goes live here, not on save.
+    if (activeSets.length > 0) {
+      for (const missionSet of activeSets) {
+        await announceIfActive(ctx, missionSet._id);
+      }
       return null;
     }
 
@@ -321,12 +309,7 @@ export const promoteNextSet = internalMutation({
 
     if (nextSet !== undefined) {
       await ctx.db.patch(nextSet._id, { status: "published" });
-      await ctx.runMutation(internal.notifications.createForAmbassadors, {
-        kind: "mission",
-        title: "A new mission set is available",
-        description: `${nextSet.name} is now open for contributions.`,
-        href: "/missions",
-      });
+      await announceIfActive(ctx, nextSet._id);
     }
 
     return null;
@@ -371,5 +354,144 @@ export const adminAdoptLegacyMissions = mutation({
     }
 
     return setId;
+  },
+});
+
+async function announceIfActive(
+  ctx: MutationCtx,
+  missionSetId: Id<"missionSets">,
+) {
+  const missionSet = await ctx.db.get(missionSetId);
+  const now = Date.now();
+  if (
+    missionSet === null ||
+    missionSet.status !== "published" ||
+    missionSet.announcedAt !== undefined ||
+    missionSet.startsAt > now ||
+    missionSet.endsAt < now
+  ) {
+    return;
+  }
+
+  await ctx.db.patch(missionSetId, { announcedAt: now });
+  await ctx.runMutation(internal.notifications.createForAmbassadors, {
+    kind: "mission",
+    title: "A new mission set is available",
+    description: `${missionSet.name} is now open for contributions.`,
+    href: "/missions",
+  });
+  // Sending needs `fetch`, which a mutation cannot do, so the email goes out
+  // from an action after this write commits.
+  await ctx.scheduler.runAfter(0, internal.missionSets.sendActiveSetEmails, {
+    missionSetId,
+  });
+}
+
+export const activeSetEmailDetails = internalQuery({
+  args: { missionSetId: v.id("missionSets") },
+  returns: v.union(
+    v.object({
+      name: v.string(),
+      startsAt: v.number(),
+      endsAt: v.number(),
+      missions: v.array(
+        v.object({
+          title: v.string(),
+          tracks: v.array(trackValidator),
+        }),
+      ),
+      recipients: v.array(
+        v.object({
+          name: v.string(),
+          email: v.string(),
+          track: v.union(trackValidator, v.null()),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const missionSet = await ctx.db.get(args.missionSetId);
+    if (missionSet === null || missionSet.status !== "published") return null;
+
+    const missions = await ctx.db
+      .query("missions")
+      .withIndex("by_missionSetId", (q) =>
+        q.eq("missionSetId", args.missionSetId),
+      )
+      .take(100);
+
+    const ambassadors = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+      .take(500);
+
+    const recipients = [];
+    for (const ambassador of ambassadors) {
+      if (!ambassador.email) continue;
+      if (ambassador.notificationPreferences?.mission === false) continue;
+      const profile = await ctx.db
+        .query("ambassadorProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", ambassador._id))
+        .first();
+      // Only active ambassadors; an account with no profile is not active yet.
+      if (profile?.status !== "active") continue;
+      recipients.push({
+        name: ambassador.name?.trim() || "there",
+        email: ambassador.email,
+        track: profile.track ?? null,
+      });
+    }
+
+    return {
+      name: missionSet.name,
+      startsAt: missionSet.startsAt,
+      endsAt: missionSet.endsAt,
+      missions: missions
+        .filter((mission) => mission.status === "published")
+        .map((mission) => ({
+          title: mission.title,
+          tracks: mission.tracks ?? [mission.track],
+        })),
+      recipients,
+    };
+  },
+});
+
+export const sendActiveSetEmails = internalAction({
+  args: { missionSetId: v.id("missionSets") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const details = await ctx.runQuery(
+      internal.missionSets.activeSetEmailDetails,
+      args,
+    );
+    if (details === null || details.recipients.length === 0) return null;
+
+    const messages = details.recipients.map((recipient) => ({
+      recipient: recipient.email,
+      email: missionSetActiveEmail({
+        name: recipient.name,
+        setName: details.name,
+        startsAt: details.startsAt,
+        endsAt: details.endsAt,
+        // Ambassadors only see missions for their own track in the portal.
+        missionTitles: details.missions
+          .filter(
+            (mission) =>
+              recipient.track !== null &&
+              mission.tracks.includes(recipient.track),
+          )
+          .slice(0, MAX_EMAILED_MISSIONS)
+          .map((mission) => mission.title),
+        logoUrl: EMAIL_LOGO_URL,
+      }),
+    }));
+
+    const sent = await trySendEmailBatch(messages);
+    console.log(
+      `Mission set "${details.name}" email sent to ${sent} of ${messages.length} ambassadors.`,
+    );
+    return null;
   },
 });
