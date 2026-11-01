@@ -208,6 +208,76 @@ export function declinedApplicationEmail(args: {
   };
 }
 
+// The program runs on GMT, matching how meeting slots are shown.
+function formatSetDate(timestamp: number) {
+  return `${new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(timestamp))} GMT`;
+}
+
+function missionItem(title: string, index: number) {
+  const divider = index === 0 ? "0" : `1px solid ${BRAND.border}`;
+  return `<tr><td style="padding:12px 18px;border-top:${divider};font-size:15px;font-weight:600;color:${BRAND.ink}">${escapeHtml(title)}</td></tr>`;
+}
+
+export function missionSetActiveEmail(args: {
+  name: string;
+  setName: string;
+  startsAt: number;
+  endsAt: number;
+  missionTitles: string[];
+  logoUrl: string;
+}) {
+  const startsAt = formatSetDate(args.startsAt);
+  const endsAt = formatSetDate(args.endsAt);
+
+  const steps = [
+    "Sign in to your ambassador portal.",
+    "Open <strong>Missions</strong> and choose the ones you want to take on.",
+    `Submit your contribution before <strong>${escapeHtml(endsAt)}</strong>.`,
+  ];
+
+  return {
+    subject: `New missions are open for you — ${args.setName}`,
+    html: layout({
+      eyebrow: "Missions are live",
+      title: "New missions are waiting for you",
+      logoUrl: args.logoUrl,
+      content:
+        paragraph(
+          `Hi ${escapeHtml(args.name)}, a new mission set, <strong style="color:${BRAND.ink}">${escapeHtml(args.setName)}</strong>, is now active in your ambassador portal. It is only open for a limited time, so here is everything you need to get started.`,
+        ) +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+${detail("Opened", escapeHtml(startsAt))}
+${detail("Closes", escapeHtml(endsAt))}
+</table>` +
+        (args.missionTitles.length > 0
+          ? `<p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.muted}">Your missions</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border:1px solid ${BRAND.border};border-radius:14px;border-collapse:separate;background:${BRAND.page}">
+${args.missionTitles.map(missionItem).join("")}
+</table>`
+          : paragraph(
+              "Missions for your track are being added now. Sign in to see them as they go live.",
+            )) +
+        `<p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.muted}">How to take part</p>
+<ol style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8;color:${BRAND.body}">
+${steps.map((step) => `<li>${step}</li>`).join("\n")}
+</ol>` +
+        `<div style="margin:28px 0">${button("Sign in to view missions", loginUrl())}</div>` +
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">Points are only awarded for contributions submitted before the set closes. Having trouble signing in? Reply to this email and the team will help.</p>`,
+    }),
+    text: `Hi ${args.name},\n\nA new mission set, ${args.setName}, is now active in your ambassador portal. It is only open for a limited time.\n\nOpened: ${startsAt}\nCloses: ${endsAt}\n\n${
+      args.missionTitles.length > 0
+        ? `Your missions:\n${args.missionTitles
+            .map((title) => `- ${title}`)
+            .join("\n")}\n\n`
+        : "Missions for your track are being added now. Sign in to see them as they go live.\n\n"
+    }How to take part:\n1. Sign in to your ambassador portal.\n2. Open Missions and choose the ones you want to take on.\n3. Submit your contribution before ${endsAt}.\n\nSign in to view missions: ${loginUrl()}\n\nPoints are only awarded for contributions submitted before the set closes. Having trouble signing in? Reply to this email and the team will help.`,
+  };
+}
+
 export function acceptedApplicationEmail(args: {
   name: string;
   email: string;
