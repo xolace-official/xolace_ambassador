@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Award,
   FileCheck2,
+  ImageIcon,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -74,6 +75,61 @@ const kindLabel = {
   event: "Event",
   other: "Other contribution",
 } as const;
+
+// The list is for triage; the full answers live on the detail page.
+const PREVIEW_RESPONSES = 2;
+
+function SubmissionPreview({
+  note,
+  responses = [],
+}: {
+  note?: string;
+  responses?: { label: string; value: string; imageUrls?: string[] }[];
+}) {
+  const answered = responses.filter((response) => response.value.trim());
+  const shown = answered.slice(0, PREVIEW_RESPONSES);
+  const hiddenCount = answered.length - shown.length;
+  const imageCount = responses.reduce(
+    (total, response) => total + (response.imageUrls?.length ?? 0),
+    0,
+  );
+  const hasText = Boolean(note?.trim()) || shown.length > 0;
+
+  return (
+    <span className="mt-2 block space-y-1.5 rounded-md bg-muted/40 px-3 py-2 text-xs leading-5 text-muted-foreground">
+      {note?.trim() ? (
+        <span className="line-clamp-2 [overflow-wrap:anywhere]">{note}</span>
+      ) : null}
+      {shown.map((response) => (
+        <span
+          key={response.label}
+          className="line-clamp-2 [overflow-wrap:anywhere]"
+        >
+          <span className="font-medium text-foreground">{response.label}:</span>{" "}
+          {response.value}
+        </span>
+      ))}
+      {!hasText && imageCount === 0 ? (
+        <span className="block">No response preview available.</span>
+      ) : null}
+      {hiddenCount > 0 || imageCount > 0 ? (
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-medium text-foreground/70">
+          {hiddenCount > 0 ? (
+            <span>
+              +{hiddenCount} more {hiddenCount === 1 ? "answer" : "answers"}
+            </span>
+          ) : null}
+          {imageCount > 0 ? (
+            <span className="inline-flex items-center gap-1">
+              <ImageIcon aria-hidden="true" className="size-3.5" />
+              {imageCount} {imageCount === 1 ? "image" : "images"}
+            </span>
+          ) : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 export default function AdminSubmissions({ uuid }: { uuid: string }) {
   const [status, setStatus] = useQueryState("submissionStatus", parseStatus);
@@ -231,17 +287,10 @@ export default function AdminSubmissions({ uuid }: { uuid: string }) {
                       {dateFormat.format(new Date(submission._creationTime))}
                     </time>
                   </span>
-                  <span className="mt-1 block line-clamp-1 break-words text-xs leading-4 text-muted-foreground">
-                    {submission.note ||
-                      submission.responses?.find((response) =>
-                        response.value.trim(),
-                      )?.value ||
-                      (submission.responses?.some(
-                        (response) => response.imageUrls?.length,
-                      )
-                        ? "Images attached"
-                        : "No response preview available.")}
-                  </span>
+                  <SubmissionPreview
+                    note={submission.note}
+                    responses={submission.responses}
+                  />
                 </span>
                 <span className="inline-flex min-h-11 shrink-0 items-center justify-end gap-2 text-sm font-medium text-foreground transition-colors group-hover:text-primary">
                   <span className="inline-flex items-center gap-2">
