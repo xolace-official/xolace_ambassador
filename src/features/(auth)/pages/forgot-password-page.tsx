@@ -2,6 +2,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ConvexError } from "convex/values";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +12,18 @@ import { z } from "zod";
 import { AuthLayout } from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RESET_RATE_LIMITED } from "../../../../convex/model/emailAddress";
+
+// Unknown emails are throttled too, so this message is safe to show: it says
+// nothing about whether the account exists.
+function rateLimitMessage(error: unknown): string | null {
+  if (!(error instanceof ConvexError)) return null;
+  const data = error.data as { code?: unknown; retryAfterMs?: unknown };
+  if (data?.code !== RESET_RATE_LIMITED) return null;
+  const ms = typeof data.retryAfterMs === "number" ? data.retryAfterMs : 0;
+  const minutes = Math.max(1, Math.ceil(ms / 60_000));
+  return `Too many requests. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`;
+}
 
 const requestSchema = z.object({
   email: z.email("Enter a valid email address."),
@@ -64,8 +77,11 @@ function RequestCodeForm({ onSent }: { onSent: (email: string) => void }) {
     try {
       await signIn("password", { email: values.email, flow: "reset" });
       onSent(values.email);
-    } catch {
-      toast.error("Could not send a reset code. Try again in a moment.");
+    } catch (error) {
+      toast.error(
+        rateLimitMessage(error) ??
+          "Could not send a reset code. Try again in a moment.",
+      );
       setSubmitting(false);
     }
   }
@@ -159,8 +175,11 @@ function ResetPasswordForm({
     try {
       await signIn("password", { email, flow: "reset" });
       toast.success("If that account exists, a new code is on its way.");
-    } catch {
-      toast.error("Could not send a new code. Try again in a moment.");
+    } catch (error) {
+      toast.error(
+        rateLimitMessage(error) ??
+          "Could not send a new code. Try again in a moment.",
+      );
     } finally {
       setResending(false);
     }

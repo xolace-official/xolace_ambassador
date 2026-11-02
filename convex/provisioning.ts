@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { normalizeEmail } from "./model/emailAddress";
 
 // Internal: a public version of this let anyone POST their own email with
 // role: "admin" and promote themselves.
@@ -8,10 +9,12 @@ export const assignRole = internalMutation({
     email: v.string(),
     role: v.union(v.literal("admin"), v.literal("ambassador")),
   },
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
+      // Sign-up stores the email normalized (see auth.ts `profile`).
+      .withIndex("email", (q) => q.eq("email", normalizeEmail(args.email)))
       .first();
 
     if (user === null) {

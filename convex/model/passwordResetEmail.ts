@@ -21,9 +21,13 @@ export const PasswordResetEmail = Email({
     ).join("");
   },
   // Convex Auth passes the action ctx as an untyped second argument. Sending
-  // from a scheduled action rather than inline keeps the response time the
-  // same for unknown emails (which send nothing), so the timing cannot be used
-  // to discover which addresses have accounts.
+  // from a scheduled action rather than inline keeps the Resend round-trip
+  // (hundreds of ms) out of the response, which would otherwise plainly mark
+  // which addresses have accounts. A small difference remains: a known email
+  // also writes the verification code and schedules this job, an unknown one
+  // does neither. That is a few ms of server work against normal network
+  // jitter, and the per-email rate limit caps how often it can be sampled, so
+  // it is accepted rather than padded out.
   async sendVerificationRequest({ identifier, token }, ctx?: ActionCtx) {
     if (ctx === undefined) {
       throw new Error("Password reset email needs the Convex action context.");

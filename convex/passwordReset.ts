@@ -18,6 +18,7 @@ import {
 } from "./emailTemplates";
 import { AuthError, requireAdmin } from "./model/auth";
 import { EMAIL_LOGO_URL, sendEmail, trySendEmail } from "./model/email";
+import { normalizeEmail } from "./model/emailAddress";
 import { CODE_TTL_MINUTES } from "./model/passwordResetEmail";
 import { generateTemporaryPassword } from "./model/passwords";
 
@@ -34,15 +35,18 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
 });
 
 // Consumed for unknown addresses too, so a throttled request looks the same
-// whether or not the account exists.
+// whether or not the account exists. Returns null when allowed, otherwise how
+// long until the next request would be.
 export const consumeResetRequest = internalMutation({
   args: { email: v.string() },
-  returns: v.boolean(),
+  returns: v.union(v.number(), v.null()),
   handler: async (ctx, args) => {
-    const { ok } = await rateLimiter.limit(ctx, "passwordResetRequest", {
-      key: args.email.trim().toLowerCase(),
-    });
-    return ok;
+    const { ok, retryAfter } = await rateLimiter.limit(
+      ctx,
+      "passwordResetRequest",
+      { key: normalizeEmail(args.email) },
+    );
+    return ok ? null : retryAfter;
   },
 });
 
@@ -105,13 +109,22 @@ export const markPasswordSetupRequired = internalMutation({
 });
 
 // Recovery for an ambassador who cannot use the self-service reset (e.g. they
-// lost access to their inbox and an admin has verified them another way).
-// Issues a temporary password and routes their next sign-in through
-// /setup-password, exactly like a fresh invitation.
+// lost access to their inbox, or the code email never arrives) and whom an
+// admin has verified another way. Issues a temporary password and routes their
+// next sign-in through /setup-password, exactly like a fresh invitation.
+//
+// The temporary password is returned to the admin, who passes it on through a
+// channel that doesn't depend on the inbox; the email is only a convenience
+// for the case where the inbox still works. The admin learning it is
+// acceptable: it is single-use in practice, because signing in with it forces
+// a new password before the portal opens.
 export const adminResetPassword = action({
   args: { ambassadorId: v.id("users") },
-  returns: v.boolean(),
-  handler: async (ctx, args): Promise<boolean> => {
+  returns: v.object({ temporaryPassword: v.string(), emailed: v.boolean() }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ temporaryPassword: string; emailed: boolean }> => {
     const target = await ctx.runQuery(internal.passwordReset.adminResetTarget, {
       ambassadorId: args.ambassadorId,
     });
@@ -126,7 +139,7 @@ export const adminResetPassword = action({
       userId: target.userId,
     });
 
-    return await trySendEmail(
+    const emailed = await trySendEmail(
       target.accountEmail,
       adminPasswordResetEmail({
         name: target.name,
@@ -136,5 +149,6 @@ export const adminResetPassword = action({
         logoUrl: EMAIL_LOGO_URL,
       }),
     );
+    return { temporaryPassword, emailed };
   },
 });

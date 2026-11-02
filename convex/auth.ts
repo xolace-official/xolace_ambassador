@@ -4,15 +4,27 @@ import {
 } from "@convex-dev/auth/providers/ConvexCredentials";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth } from "@convex-dev/auth/server";
+import { ConvexError } from "convex/values";
 import { internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import { normalizeEmail, RESET_RATE_LIMITED } from "./model/emailAddress";
 import { PasswordResetEmail } from "./model/passwordResetEmail";
 
 // Password() returns a shell whose real config — `authorize` included — sits
 // in `options` and is merged over the shell when Convex Auth loads providers.
 // Wrapping that `authorize` is the only hook that runs before a reset code is
 // created, which is where the throttle and the enumeration guard have to live.
-const password = Password<DataModel>({ reset: PasswordResetEmail });
+const password = Password<DataModel>({
+  reset: PasswordResetEmail,
+  // `profile` runs first on every flow (sign-up, sign-in, reset, reset
+  // verification), so this is the one place that decides the account id.
+  profile: (params) => {
+    if (typeof params.email !== "string") {
+      throw new Error("Missing email.");
+    }
+    return { email: normalizeEmail(params.email) };
+  },
+});
 const passwordConfig = (
   password as unknown as { options?: ConvexCredentialsUserConfig<DataModel> }
 ).options;
@@ -33,11 +45,13 @@ const PasswordWithGuardedReset = ConvexCredentials<DataModel>({
   authorize: async (params, ctx) => {
     if (params.flow === "reset") {
       if (typeof params.email !== "string") return null;
-      const allowed = await ctx.runMutation(
+      const retryAfterMs = await ctx.runMutation(
         internal.passwordReset.consumeResetRequest,
         { email: params.email },
       );
-      if (!allowed) return null;
+      if (retryAfterMs !== null) {
+        throw new ConvexError({ code: RESET_RATE_LIMITED, retryAfterMs });
+      }
       try {
         // Returns null once the code is issued — the same answer as every
         // early return above.
