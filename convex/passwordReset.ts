@@ -32,6 +32,16 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
     period: HOUR,
     capacity: 3,
   },
+  // Across all addresses. Bounds the reset emails sent in total, and the
+  // per-email records anonymous callers can create with made-up addresses.
+  // Someone could exhaust it and block self-service resets for up to an hour;
+  // admin reset still works then.
+  passwordResetGlobal: {
+    kind: "token bucket",
+    rate: 50,
+    period: HOUR,
+    capacity: 50,
+  },
 });
 
 // Consumed for unknown addresses too, so a throttled request looks the same
@@ -41,12 +51,19 @@ export const consumeResetRequest = internalMutation({
   args: { email: v.string() },
   returns: v.union(v.number(), v.null()),
   handler: async (ctx, args) => {
-    const { ok, retryAfter } = await rateLimiter.limit(
-      ctx,
-      "passwordResetRequest",
-      { key: normalizeEmail(args.email) },
-    );
-    return ok ? null : retryAfter;
+    // Check the global bucket before the per-email one, so a new address can't
+    // create its record once the global cap is hit. Only take from the global
+    // bucket after the per-email check passes, so one address hammered past
+    // its own limit can't drain everyone else's budget.
+    const global = await rateLimiter.check(ctx, "passwordResetGlobal");
+    if (!global.ok) return global.retryAfter;
+    const perEmail = await rateLimiter.limit(ctx, "passwordResetRequest", {
+      key: normalizeEmail(args.email),
+    });
+    if (!perEmail.ok) return perEmail.retryAfter;
+    // Same transaction as the check above, so this always succeeds.
+    await rateLimiter.limit(ctx, "passwordResetGlobal");
+    return null;
   },
 });
 
@@ -70,6 +87,7 @@ export const adminResetTarget = internalQuery({
   args: { ambassadorId: v.id("users") },
   returns: v.object({
     userId: v.id("users"),
+    accountId: v.id("authAccounts"),
     name: v.string(),
     accountEmail: v.string(),
   }),
@@ -93,17 +111,35 @@ export const adminResetTarget = internalQuery({
     }
     return {
       userId: user._id,
+      accountId: account._id,
       name: user.name ?? "there",
       accountEmail: account.providerAccountId,
     };
   },
 });
 
-export const markPasswordSetupRequired = internalMutation({
-  args: { userId: v.id("users") },
+// Everything an admin reset must undo besides the password itself.
+export const finishAdminReset = internalMutation({
+  args: { userId: v.id("users"), accountId: v.id("authAccounts") },
   returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.userId, { passwordSetupRequired: true });
+    // A self-service code sent before the reset would otherwise stay valid for
+    // its full lifetime. That matters when the inbox is the thing that was
+    // compromised.
+    const code = await ctx.db
+      .query("authVerificationCodes")
+      .withIndex("accountId", (q) => q.eq("accountId", args.accountId))
+      .unique();
+    if (code !== null) await ctx.db.delete(code._id);
+    // Convex Auth counts failed password sign-ins per account id and clears
+    // the count only on a successful sign-in. Without this, an ambassador who
+    // locked themselves out would see the temporary password rejected too.
+    const lockout = await ctx.db
+      .query("authRateLimits")
+      .withIndex("identifier", (q) => q.eq("identifier", args.accountId))
+      .unique();
+    if (lockout !== null) await ctx.db.delete(lockout._id);
     return null;
   },
 });
@@ -120,11 +156,19 @@ export const markPasswordSetupRequired = internalMutation({
 // a new password before the portal opens.
 export const adminResetPassword = action({
   args: { ambassadorId: v.id("users") },
-  returns: v.object({ temporaryPassword: v.string(), emailed: v.boolean() }),
+  returns: v.object({
+    temporaryPassword: v.string(),
+    emailed: v.boolean(),
+    sentTo: v.string(),
+  }),
   handler: async (
     ctx,
     args,
-  ): Promise<{ temporaryPassword: string; emailed: boolean }> => {
+  ): Promise<{
+    temporaryPassword: string;
+    emailed: boolean;
+    sentTo: string;
+  }> => {
     const target = await ctx.runQuery(internal.passwordReset.adminResetTarget, {
       ambassadorId: args.ambassadorId,
     });
@@ -135,8 +179,9 @@ export const adminResetPassword = action({
       account: { id: target.accountEmail, secret: temporaryPassword },
     });
     await invalidateSessions(ctx, { userId: target.userId });
-    await ctx.runMutation(internal.passwordReset.markPasswordSetupRequired, {
+    await ctx.runMutation(internal.passwordReset.finishAdminReset, {
       userId: target.userId,
+      accountId: target.accountId,
     });
 
     const emailed = await trySendEmail(
@@ -149,6 +194,8 @@ export const adminResetPassword = action({
         logoUrl: EMAIL_LOGO_URL,
       }),
     );
-    return { temporaryPassword, emailed };
+    // The account's address, which can differ from `users.email`. Shown to the
+    // admin so they know where the email actually went.
+    return { temporaryPassword, emailed, sentTo: target.accountEmail };
   },
 });

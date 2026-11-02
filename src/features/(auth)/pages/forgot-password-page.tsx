@@ -147,6 +147,7 @@ function ResetPasswordForm({
     handleSubmit,
     formState: { errors },
   } = useForm<ResetValues>({ resolver: zodResolver(resetSchema) });
+  const codeField = register("code");
 
   async function onSubmit(values: ResetValues) {
     setSubmitting(true);
@@ -212,11 +213,18 @@ function ResetPasswordForm({
           id="reset-code"
           inputMode="numeric"
           autoComplete="one-time-code"
-          maxLength={8}
           spellCheck={false}
           placeholder="12345678"
           aria-invalid={Boolean(errors.code)}
-          {...register("code")}
+          {...codeField}
+          // Strip spaces, dashes, etc. instead of using maxLength, which cuts
+          // a pasted " 12345678" off before anything can trim it.
+          onChange={(event) => {
+            event.target.value = event.target.value
+              .replace(/\D/g, "")
+              .slice(0, 8);
+            void codeField.onChange(event);
+          }}
         />
         {errors.code ? (
           <p className="text-sm text-destructive">{errors.code.message}</p>

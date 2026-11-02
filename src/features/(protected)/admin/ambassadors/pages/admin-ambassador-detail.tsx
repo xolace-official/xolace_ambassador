@@ -138,12 +138,7 @@ export default function AdminAmbassadorDetail({
             <Metric label="Points" value={totals?.points ?? 0} />
             <Metric label="Missions" value={totals?.missionsCompleted ?? 0} />
           </div>
-          {ambassador.email ? (
-            <ResetPasswordButton
-              ambassadorId={ambassador._id}
-              email={ambassador.email}
-            />
-          ) : null}
+          <ResetPasswordButton ambassadorId={ambassador._id} />
         </div>
       </header>
 

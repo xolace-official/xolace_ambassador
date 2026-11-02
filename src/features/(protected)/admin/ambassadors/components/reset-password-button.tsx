@@ -16,14 +16,16 @@ import {
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
-type ResetResult = { temporaryPassword: string; emailed: boolean };
+type ResetResult = {
+  temporaryPassword: string;
+  emailed: boolean;
+  sentTo: string;
+};
 
 export function ResetPasswordButton({
   ambassadorId,
-  email,
 }: {
   ambassadorId: Id<"users">;
-  email: string;
 }) {
   const resetPassword = useAction(api.passwordReset.adminResetPassword);
   const [open, setOpen] = useState(false);
@@ -83,10 +85,9 @@ export function ResetPasswordButton({
                 <DialogDescription>
                   Their current password stops working and they are signed out
                   everywhere. You&apos;ll see a temporary password to pass on to
-                  them, and it is also emailed to{" "}
-                  <span className="break-all">{email}</span>. They must choose a
-                  new one when they next sign in. Only do this after confirming
-                  the request really came from them.
+                  them, and it is also emailed to the address they sign in with.
+                  They must choose a new one when they next sign in. Only do
+                  this after confirming the request really came from them.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -113,9 +114,18 @@ export function ResetPasswordButton({
               <DialogHeader>
                 <DialogTitle>Password reset</DialogTitle>
                 <DialogDescription>
-                  {result.emailed
-                    ? "The temporary password was also emailed to them. "
-                    : "The email could not be sent, so pass this on yourself. "}
+                  {result.emailed ? (
+                    <>
+                      The temporary password was also emailed to{" "}
+                      <span className="break-all">{result.sentTo}</span>.{" "}
+                    </>
+                  ) : (
+                    <>
+                      The email to{" "}
+                      <span className="break-all">{result.sentTo}</span> could
+                      not be sent, so pass this on yourself.{" "}
+                    </>
+                  )}
                   Share it through a channel you trust. It won&apos;t be shown
                   again once you close this.
                 </DialogDescription>
