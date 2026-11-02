@@ -10,14 +10,10 @@ import type { DataModel } from "./_generated/dataModel";
 import { normalizeEmail, RESET_RATE_LIMITED } from "./model/emailAddress";
 import { PasswordResetEmail } from "./model/passwordResetEmail";
 
-// Password() returns a shell whose real config — `authorize` included — sits
-// in `options` and is merged over the shell when Convex Auth loads providers.
-// Wrapping that `authorize` is the only hook that runs before a reset code is
-// created, which is where the throttle and the enumeration guard have to live.
+// Password()'s real `authorize` sits in `options`; wrapping it is the only hook before a reset code is created.
 const password = Password<DataModel>({
   reset: PasswordResetEmail,
-  // `profile` runs first on every flow (sign-up, sign-in, reset, reset
-  // verification), so this is the one place that decides the account id.
+  // Runs first on every flow, so this alone decides the account id.
   profile: (params) => {
     if (typeof params.email !== "string") {
       throw new Error("Missing email.");
@@ -36,8 +32,7 @@ if (typeof passwordConfig?.authorize !== "function") {
 }
 const passwordAuthorize = passwordConfig.authorize;
 
-// The library throws this for an email with no account. It must never reach
-// the client, or the reset form becomes a way to check who is an ambassador.
+// Thrown for an email with no account; leaking it would reveal who is an ambassador.
 const UNKNOWN_ACCOUNT = "InvalidAccountId";
 
 const PasswordWithGuardedReset = ConvexCredentials<DataModel>({
@@ -53,8 +48,7 @@ const PasswordWithGuardedReset = ConvexCredentials<DataModel>({
         throw new ConvexError({ code: RESET_RATE_LIMITED, retryAfterMs });
       }
       try {
-        // Returns null once the code is issued — the same answer as every
-        // early return above.
+        // Null once the code is issued, the same answer as every early return.
         return await passwordAuthorize(params, ctx);
       } catch (error) {
         if (!(error instanceof Error && error.message === UNKNOWN_ACCOUNT)) {
@@ -75,10 +69,7 @@ const PasswordWithGuardedReset = ConvexCredentials<DataModel>({
         }
         throw error;
       }
-      // Proving control of the inbox is at least as strong as the emailed
-      // temporary password, so a reset also completes first-time setup.
-      // Otherwise an invited ambassador who resets would be sent straight to
-      // /setup-password to pick a password a second time.
+      // Inbox proof beats the emailed temporary password, so a reset also completes first-time setup.
       if (result !== null) {
         await ctx.runMutation(internal.users.clearPasswordSetupRequired, {
           userId: result.userId,

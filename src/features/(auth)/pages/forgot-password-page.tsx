@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RESET_RATE_LIMITED } from "../../../../convex/model/emailAddress";
 
-// Unknown emails are throttled too, so this message is safe to show: it says
-// nothing about whether the account exists.
+// Unknown emails are throttled too, so this says nothing about whether the account exists.
 function rateLimitMessage(error: unknown): string | null {
   if (!(error instanceof ConvexError)) return null;
   const data = error.data as { code?: unknown; retryAfterMs?: unknown };
@@ -49,7 +48,7 @@ type RequestValues = z.infer<typeof requestSchema>;
 type ResetValues = z.infer<typeof resetSchema>;
 
 export function ForgotPasswordPage() {
-  // Held in memory only: the email never goes in the URL.
+  // Memory only, so the email never lands in the URL.
   const [email, setEmail] = useState<string | null>(null);
 
   return (
@@ -110,13 +109,18 @@ function RequestCodeForm({ onSent }: { onSent: (email: string) => void }) {
           type="email"
           autoComplete="email"
           spellCheck={false}
-          placeholder="you@example.com"
+          placeholder="you@example.com…"
           aria-invalid={Boolean(errors.email)}
+          aria-describedby="reset-email-error"
           {...register("email")}
         />
-        {errors.email ? (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        ) : null}
+        <p
+          id="reset-email-error"
+          aria-live="polite"
+          className="text-sm text-destructive empty:hidden"
+        >
+          {errors.email?.message}
+        </p>
       </div>
       <Button type="submit" disabled={submitting}>
         {submitting ? "Sending code…" : "Send reset code"}
@@ -161,7 +165,7 @@ function ResetPasswordForm({
       toast.success("Password updated", {
         description: "You're signed in with your new password.",
       });
-      // The login page already knows where a signed-in user belongs.
+      // The login page routes a signed-in user to their dashboard.
       router.replace("/login");
     } catch {
       toast.error("That code is wrong or has expired.", {
@@ -214,11 +218,11 @@ function ResetPasswordForm({
           inputMode="numeric"
           autoComplete="one-time-code"
           spellCheck={false}
-          placeholder="12345678"
+          placeholder="12345678…"
           aria-invalid={Boolean(errors.code)}
+          aria-describedby="reset-code-error"
           {...codeField}
-          // Strip spaces, dashes, etc. instead of using maxLength, which cuts
-          // a pasted " 12345678" off before anything can trim it.
+          // Not maxLength: it truncates a pasted " 12345678" before any trim.
           onChange={(event) => {
             event.target.value = event.target.value
               .replace(/\D/g, "")
@@ -226,9 +230,13 @@ function ResetPasswordForm({
             void codeField.onChange(event);
           }}
         />
-        {errors.code ? (
-          <p className="text-sm text-destructive">{errors.code.message}</p>
-        ) : null}
+        <p
+          id="reset-code-error"
+          aria-live="polite"
+          className="text-sm text-destructive empty:hidden"
+        >
+          {errors.code?.message}
+        </p>
       </div>
       <div className="space-y-2">
         <label htmlFor="reset-password" className="text-sm font-medium">
@@ -240,11 +248,16 @@ function ResetPasswordForm({
           autoComplete="new-password"
           placeholder="Choose a new password…"
           aria-invalid={Boolean(errors.password)}
+          aria-describedby="reset-password-error"
           {...register("password")}
         />
-        {errors.password ? (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
-        ) : null}
+        <p
+          id="reset-password-error"
+          aria-live="polite"
+          className="text-sm text-destructive empty:hidden"
+        >
+          {errors.password?.message}
+        </p>
       </div>
       <div className="space-y-2">
         <label htmlFor="reset-confirmation" className="text-sm font-medium">
@@ -256,13 +269,16 @@ function ResetPasswordForm({
           autoComplete="new-password"
           placeholder="Repeat your new password…"
           aria-invalid={Boolean(errors.confirmation)}
+          aria-describedby="reset-confirmation-error"
           {...register("confirmation")}
         />
-        {errors.confirmation ? (
-          <p className="text-sm text-destructive">
-            {errors.confirmation.message}
-          </p>
-        ) : null}
+        <p
+          id="reset-confirmation-error"
+          aria-live="polite"
+          className="text-sm text-destructive empty:hidden"
+        >
+          {errors.confirmation?.message}
+        </p>
       </div>
       <Button type="submit" disabled={submitting}>
         {submitting ? "Saving…" : "Save new password"}

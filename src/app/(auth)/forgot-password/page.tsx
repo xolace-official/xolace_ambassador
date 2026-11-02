@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { ForgotPasswordPage } from "@/features/(auth)/pages/forgot-password-page";
+import { portalMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata = portalMetadata({
   title: "Reset your password",
-  robots: { index: false, follow: false },
-};
+  description:
+    "Get a code by email to choose a new Xolace Ambassadors password.",
+});
 
 export default function Page() {
   return <ForgotPasswordPage />;

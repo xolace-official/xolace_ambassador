@@ -30,8 +30,7 @@ export function ResetPasswordButton({
   const resetPassword = useAction(api.passwordReset.adminResetPassword);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  // Held only while the dialog is open: closing it is the last time the admin
-  // can see the password.
+  // Cleared on close: that is the admin's last chance to see the password.
   const [result, setResult] = useState<ResetResult | null>(null);
 
   function close() {
