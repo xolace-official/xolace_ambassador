@@ -87,6 +87,12 @@ export function loginUrl() {
   return `${baseUrl()}/login`;
 }
 
+// Login link that returns the user to a page in their own portal. The login
+// form only honours a `next` path under `/{role}/{userId}/`.
+export function portalLoginUrl(role: string, userId: string, page: string) {
+  return `${loginUrl()}?next=${encodeURIComponent(`/${role}/${userId}/${page}`)}`;
+}
+
 function escapeHtml(value: string) {
   return value.replace(
     /[&<>'"]/g,
@@ -224,6 +230,7 @@ function missionItem(title: string, index: number) {
 
 export function missionSetActiveEmail(args: {
   name: string;
+  userId: string;
   setName: string;
   startsAt: number;
   endsAt: number;
@@ -232,6 +239,7 @@ export function missionSetActiveEmail(args: {
 }) {
   const startsAt = formatSetDate(args.startsAt);
   const endsAt = formatSetDate(args.endsAt);
+  const missionsUrl = portalLoginUrl("ambassador", args.userId, "missions");
 
   const steps = [
     "Sign in to your ambassador portal.",
@@ -265,7 +273,7 @@ ${args.missionTitles.map(missionItem).join("")}
 <ol style="margin:0 0 8px;padding-left:20px;font-size:15px;line-height:1.8;color:${BRAND.body}">
 ${steps.map((step) => `<li>${step}</li>`).join("\n")}
 </ol>` +
-        `<div style="margin:28px 0">${button("Sign in to view missions", loginUrl())}</div>` +
+        `<div style="margin:28px 0">${button("Sign in to view missions", missionsUrl)}</div>` +
         `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">Points are only awarded for contributions submitted before the set closes. Having trouble signing in? Reply to this email and the team will help.</p>`,
     }),
     text: `Hi ${args.name},\n\nA new mission set, ${args.setName}, is now active in your ambassador portal. It is only open for a limited time.\n\nOpened: ${startsAt}\nCloses: ${endsAt}\n\n${
@@ -274,7 +282,7 @@ ${steps.map((step) => `<li>${step}</li>`).join("\n")}
             .map((title) => `- ${title}`)
             .join("\n")}\n\n`
         : "Missions for your track are being added now. Sign in to see them as they go live.\n\n"
-    }How to take part:\n1. Sign in to your ambassador portal.\n2. Open Missions and choose the ones you want to take on.\n3. Submit your contribution before ${endsAt}.\n\nSign in to view missions: ${loginUrl()}\n\nPoints are only awarded for contributions submitted before the set closes. Having trouble signing in? Reply to this email and the team will help.`,
+    }How to take part:\n1. Sign in to your ambassador portal.\n2. Open Missions and choose the ones you want to take on.\n3. Submit your contribution before ${endsAt}.\n\nSign in to view missions: ${missionsUrl}\n\nPoints are only awarded for contributions submitted before the set closes. Having trouble signing in? Reply to this email and the team will help.`,
   };
 }
 

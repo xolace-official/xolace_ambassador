@@ -402,6 +402,7 @@ export const activeSetEmailDetails = internalQuery({
       ),
       recipients: v.array(
         v.object({
+          userId: v.id("users"),
           name: v.string(),
           email: v.string(),
           track: v.union(trackValidator, v.null()),
@@ -437,6 +438,7 @@ export const activeSetEmailDetails = internalQuery({
       // Only active ambassadors; an account with no profile is not active yet.
       if (profile?.status !== "active") continue;
       recipients.push({
+        userId: ambassador._id,
         name: ambassador.name?.trim() || "there",
         email: ambassador.email,
         track: profile.track ?? null,
@@ -472,6 +474,7 @@ export const sendActiveSetEmails = internalAction({
       recipient: recipient.email,
       email: missionSetActiveEmail({
         name: recipient.name,
+        userId: recipient.userId,
         setName: details.name,
         startsAt: details.startsAt,
         endsAt: details.endsAt,
