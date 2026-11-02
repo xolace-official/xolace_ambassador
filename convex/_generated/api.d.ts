@@ -28,8 +28,11 @@ import type * as model_auth from "../model/auth.js";
 import type * as model_contributions from "../model/contributions.js";
 import type * as model_email from "../model/email.js";
 import type * as model_meetingSlots from "../model/meetingSlots.js";
+import type * as model_passwordResetEmail from "../model/passwordResetEmail.js";
+import type * as model_passwords from "../model/passwords.js";
 import type * as model_pointLedger from "../model/pointLedger.js";
 import type * as notifications from "../notifications.js";
+import type * as passwordReset from "../passwordReset.js";
 import type * as pointLedger from "../pointLedger.js";
 import type * as programConfig from "../programConfig.js";
 import type * as provisioning from "../provisioning.js";
@@ -69,8 +72,11 @@ declare const fullApi: ApiFromModules<{
   "model/contributions": typeof model_contributions;
   "model/email": typeof model_email;
   "model/meetingSlots": typeof model_meetingSlots;
+  "model/passwordResetEmail": typeof model_passwordResetEmail;
+  "model/passwords": typeof model_passwords;
   "model/pointLedger": typeof model_pointLedger;
   notifications: typeof notifications;
+  passwordReset: typeof passwordReset;
   pointLedger: typeof pointLedger;
   programConfig: typeof programConfig;
   provisioning: typeof provisioning;
@@ -113,4 +119,5 @@ export declare const internal: FilterApi<
 export declare const components: {
   pointLedgerTotals: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"pointLedgerTotals">;
   contributionTotals: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"contributionTotals">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
 };

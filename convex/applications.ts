@@ -35,6 +35,7 @@ import {
 import { AuthError, requireAdmin } from "./model/auth";
 import { EMAIL_LOGO_URL, sendEmail, trySendEmail } from "./model/email";
 import { isMeetingSlotBooked } from "./model/meetingSlots";
+import { generateTemporaryPassword } from "./model/passwords";
 import { trackValidator } from "./schema";
 
 const applicationStatusValidator = v.union(
@@ -1170,13 +1171,6 @@ export const adminResendInvitation = action({
     );
   },
 });
-
-// Strip the uuid separators: it is emailed to a person to type, and a hyphen in
-// the middle is easy to misread as a letter or dropped entirely. Still random
-// per invitation, so it is never valid for another account.
-function generateTemporaryPassword() {
-  return `Xolace-${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}`;
-}
 
 async function sendInvitation(
   ctx: ActionCtx,
