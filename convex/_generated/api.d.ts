@@ -26,6 +26,7 @@ import type * as missionSets from "../missionSets.js";
 import type * as missions from "../missions.js";
 import type * as model_auth from "../model/auth.js";
 import type * as model_contributions from "../model/contributions.js";
+import type * as model_email from "../model/email.js";
 import type * as model_meetingSlots from "../model/meetingSlots.js";
 import type * as model_pointLedger from "../model/pointLedger.js";
 import type * as notifications from "../notifications.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   missions: typeof missions;
   "model/auth": typeof model_auth;
   "model/contributions": typeof model_contributions;
+  "model/email": typeof model_email;
   "model/meetingSlots": typeof model_meetingSlots;
   "model/pointLedger": typeof model_pointLedger;
   notifications: typeof notifications;

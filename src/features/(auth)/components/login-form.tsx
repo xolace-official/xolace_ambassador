@@ -34,6 +34,7 @@ export function LoginForm() {
   // Set by the setup-password page after a successful change. The token is gone
   // by then, so this is the only signal the user has that the save worked.
   const justSetPassword = searchParams.get("passwordSet") === "1";
+  const next = searchParams.get("next");
 
   // Gets the currently authenticated user from Convex.
   const user = useQuery(api.users.current);
@@ -64,12 +65,25 @@ export function LoginForm() {
     }
 
     if (user.passwordSetupRequired) {
-      router.replace("/setup-password");
+      // Carry `next` through setup so the sign-in after it can still return
+      // to the requested page.
+      router.replace(
+        next
+          ? `/setup-password?next=${encodeURIComponent(next)}`
+          : "/setup-password",
+      );
       return;
     }
 
-    router.replace(`/${user.role}/${user._id}/dashboard`);
-  }, [user, router]);
+    const portalRoot = `/${user.role}/${user._id}`;
+    // Only honour a return path inside the user's own portal, so `?next=`
+    // can't be used as an open redirect or to land on someone else's url.
+    const destination = next?.startsWith(`${portalRoot}/`)
+      ? next
+      : `${portalRoot}/dashboard`;
+
+    router.replace(destination);
+  }, [user, router, next]);
 
   async function onSubmit(values: LoginValues) {
     setIsSubmitting(true);
@@ -134,8 +148,7 @@ export function LoginForm() {
           <span className="font-medium text-foreground">
             Your password is set.
           </span>{" "}
-          Sign in with the password you just chose and you will go straight to
-          your dashboard.
+          Sign in with the password you just chose to continue.
         </div>
       ) : null}
 

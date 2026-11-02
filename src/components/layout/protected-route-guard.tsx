@@ -40,7 +40,10 @@ export function ProtectedRouteGuard({
     }
 
     if (!isSignedIn) {
-      router.replace("/login");
+      // Keep where they were headed (e.g. a link from an email) so login can
+      // send them back there instead of the dashboard.
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
 

@@ -26,6 +26,17 @@ const passwordSchema = z
 
 type PasswordValues = z.infer<typeof passwordSchema>;
 
+// Builds the /login url, preserving any `?next=` the login form passed along.
+// Read from window rather than useSearchParams so this page needs no Suspense
+// boundary; it only runs client-side. LoginForm validates `next` before use.
+function loginUrl(extra?: Record<string, string>) {
+  const params = new URLSearchParams(extra);
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (next) params.set("next", next);
+  const query = params.toString();
+  return query ? `/login?${query}` : "/login";
+}
+
 export function SetupPasswordPage() {
   const user = useQuery(api.users.current);
   const setPassword = useAction(api.users.setPassword);
@@ -38,7 +49,7 @@ export function SetupPasswordPage() {
   } = useForm<PasswordValues>({ resolver: zodResolver(passwordSchema) });
 
   useEffect(() => {
-    if (user === null) window.location.replace("/login");
+    if (user === null) window.location.replace(loginUrl());
     if (user && !user.passwordSetupRequired) {
       window.location.replace(`/${user.role}/${user._id}/dashboard`);
     }
@@ -54,7 +65,7 @@ export function SetupPasswordPage() {
       toast.success("Password saved", {
         description: "Sign in with your new password to reach your dashboard.",
       });
-      window.location.href = "/login?passwordSet=1";
+      window.location.href = loginUrl({ passwordSet: "1" });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not set your password.",
