@@ -637,7 +637,11 @@ export const recordActiveSetEmailResults = internalMutation({
     results: v.array(
       v.object({
         deliveryId: v.id("missionSetEmailDeliveries"),
-        delivered: v.boolean(),
+        result: v.union(
+          v.literal("sent"),
+          v.literal("failed"),
+          v.literal("unknown"),
+        ),
       }),
     ),
   },
@@ -647,9 +651,14 @@ export const recordActiveSetEmailResults = internalMutation({
     for (const result of args.results) {
       const delivery = await ctx.db.get(result.deliveryId);
       if (delivery === null || delivery.status === "sent") continue;
-      if (result.delivered) {
+      if (result.result === "sent") {
         await ctx.db.patch(delivery._id, { status: "sent", sentAt: now });
-      } else if (delivery.attempts >= MAX_EMAIL_ATTEMPTS) {
+      } else if (
+        // Resend may have sent it, and a retry would use a new idempotency
+        // key, so give up rather than risk a duplicate email.
+        result.result === "unknown" ||
+        delivery.attempts >= MAX_EMAIL_ATTEMPTS
+      ) {
         await ctx.db.patch(delivery._id, { status: "failed" });
       } else {
         await ctx.db.patch(delivery._id, {
@@ -692,15 +701,15 @@ export const sendActiveSetEmails = internalAction({
       }),
     }));
 
-    const delivered = await trySendEmailBatch(messages);
+    const results = await trySendEmailBatch(messages);
     await ctx.runMutation(internal.missionSets.recordActiveSetEmailResults, {
       results: claim.recipients.map((recipient, index) => ({
         deliveryId: recipient.deliveryId,
-        delivered: delivered[index] ?? false,
+        result: results[index] ?? "failed",
       })),
     });
     console.log(
-      `Mission set "${claim.name}" email sent to ${delivered.filter(Boolean).length} of ${messages.length} ambassadors.`,
+      `Mission set "${claim.name}" email sent to ${results.filter((result) => result === "sent").length} of ${messages.length} ambassadors.`,
     );
     return null;
   },

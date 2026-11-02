@@ -263,7 +263,8 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("sending"),
       v.literal("sent"),
-      // Gave up after the maximum number of attempts.
+      // Gave up after the maximum number of attempts, or after a send whose
+      // outcome is unknown (retrying could email the ambassador twice).
       v.literal("failed"),
       // No longer eligible (opted out, deactivated, or no email).
       v.literal("skipped"),
