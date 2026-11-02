@@ -2,13 +2,12 @@ import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import {
   internalAction,
   internalMutation,
-  internalQuery,
   type MutationCtx,
   mutation,
   query,
@@ -392,7 +391,8 @@ export const adminAdoptLegacyMissions = mutation({
 
 // The cron only ticks once a minute, so a short window could open and close
 // between ticks. Schedule the go-live announcement for the exact start time;
-// announceIfActive re-checks status, window and announcedAt when it fires, so
+// announceIfActive re-checks status and window when it fires, and announcedAt
+// plus per-recipient delivery rows keep it from notifying anyone twice, so
 // a job left stale by a later edit is a no-op.
 async function scheduleFutureAnnouncement(
   ctx: MutationCtx,
@@ -432,54 +432,183 @@ async function announceIfActive(
   if (
     missionSet === null ||
     missionSet.status !== "published" ||
-    missionSet.announcedAt !== undefined ||
     missionSet.startsAt > now ||
     missionSet.endsAt < now
   ) {
     return;
   }
 
-  await ctx.db.patch(missionSetId, { announcedAt: now });
-  await ctx.runMutation(internal.notifications.createForAmbassadors, {
-    kind: "mission",
-    title: "A new mission set is available",
-    description: `${missionSet.name} is now open for contributions.`,
-    href: "/missions",
-  });
-  // Sending needs `fetch`, which a mutation cannot do, so the email goes out
-  // from an action after this write commits.
-  await ctx.scheduler.runAfter(0, internal.missionSets.sendActiveSetEmails, {
-    missionSetId,
-  });
+  if (missionSet.announcedAt === undefined) {
+    await ctx.db.patch(missionSetId, { announcedAt: now });
+    await ctx.runMutation(internal.notifications.createForAmbassadors, {
+      kind: "mission",
+      title: "A new mission set is available",
+      description: `${missionSet.name} is now open for contributions.`,
+      href: "/missions",
+    });
+    await queueActiveSetEmails(ctx, missionSetId, now);
+  }
+
+  // `announcedAt` only gates the in-app notification. Email delivery is
+  // tracked per recipient, so the cron keeps retrying unsent recipients while
+  // the set is live without re-emailing anyone already reached. Sending needs
+  // `fetch`, which a mutation cannot do, so it runs in an action after this
+  // write commits.
+  if (await hasDueEmailDeliveries(ctx, missionSetId, now)) {
+    await ctx.scheduler.runAfter(0, internal.missionSets.sendActiveSetEmails, {
+      missionSetId,
+    });
+  }
 }
 
-export const activeSetEmailDetails = internalQuery({
-  args: { missionSetId: v.id("missionSets") },
-  returns: v.union(
+// Retry failed sends after 5, 10, 20 and 40 minutes, then give up.
+const MAX_EMAIL_ATTEMPTS = 5;
+const EMAIL_RETRY_BASE_MS = 5 * 60 * 1000;
+// Longer than an action can run, so a claimed recipient is only re-sent
+// once the send that claimed it has certainly stopped.
+const EMAIL_SEND_LEASE_MS = 15 * 60 * 1000;
+const EMAIL_CLAIM_LIMIT = 500;
+
+async function emailRecipient(ctx: MutationCtx, user: Doc<"users"> | null) {
+  if (user === null || user.role !== "ambassador" || !user.email) return null;
+  if (user.notificationPreferences?.mission === false) return null;
+  const profile = await ctx.db
+    .query("ambassadorProfiles")
+    .withIndex("by_userId", (q) => q.eq("userId", user._id))
+    .first();
+  // Only active ambassadors; an account with no profile is not active yet.
+  if (profile?.status !== "active") return null;
+  return {
+    userId: user._id,
+    name: user.name?.trim() || "there",
+    email: user.email,
+    track: profile.track ?? null,
+  };
+}
+
+// Fixes the recipient list at go-live: one pending delivery per ambassador.
+async function queueActiveSetEmails(
+  ctx: MutationCtx,
+  missionSetId: Id<"missionSets">,
+  now: number,
+) {
+  const ambassadors = await ctx.db
+    .query("users")
+    .withIndex("by_role", (q) => q.eq("role", "ambassador"))
+    .take(500);
+  for (const ambassador of ambassadors) {
+    if ((await emailRecipient(ctx, ambassador)) === null) continue;
+    await ctx.db.insert("missionSetEmailDeliveries", {
+      missionSetId,
+      userId: ambassador._id,
+      status: "pending",
+      attempts: 0,
+      nextAttemptAt: now,
+    });
+  }
+}
+
+async function dueEmailDeliveries(
+  ctx: MutationCtx,
+  missionSetId: Id<"missionSets">,
+  now: number,
+  limit: number,
+) {
+  const due: Doc<"missionSetEmailDeliveries">[] = [];
+  // `pending` rows are waiting for their next attempt; `sending` rows whose
+  // lease has expired belong to a send that was interrupted.
+  for (const status of ["pending", "sending"] as const) {
+    if (due.length >= limit) break;
+    const rows = await ctx.db
+      .query("missionSetEmailDeliveries")
+      .withIndex("by_missionSetId_and_status_and_nextAttemptAt", (q) =>
+        q
+          .eq("missionSetId", missionSetId)
+          .eq("status", status)
+          .lte("nextAttemptAt", now),
+      )
+      .take(limit - due.length);
+    due.push(...rows);
+  }
+  return due;
+}
+
+async function hasDueEmailDeliveries(
+  ctx: MutationCtx,
+  missionSetId: Id<"missionSets">,
+  now: number,
+) {
+  return (await dueEmailDeliveries(ctx, missionSetId, now, 1)).length > 0;
+}
+
+const emailClaimValidator = v.object({
+  name: v.string(),
+  startsAt: v.number(),
+  endsAt: v.number(),
+  missions: v.array(
     v.object({
-      name: v.string(),
-      startsAt: v.number(),
-      endsAt: v.number(),
-      missions: v.array(
-        v.object({
-          title: v.string(),
-          tracks: v.array(trackValidator),
-        }),
-      ),
-      recipients: v.array(
-        v.object({
-          userId: v.id("users"),
-          name: v.string(),
-          email: v.string(),
-          track: v.union(trackValidator, v.null()),
-        }),
-      ),
+      title: v.string(),
+      tracks: v.array(trackValidator),
     }),
-    v.null(),
   ),
+  recipients: v.array(
+    v.object({
+      deliveryId: v.id("missionSetEmailDeliveries"),
+      userId: v.id("users"),
+      name: v.string(),
+      email: v.string(),
+      track: v.union(trackValidator, v.null()),
+    }),
+  ),
+});
+
+// Atomically marks due deliveries as `sending`, so overlapping sends never
+// pick up the same recipient.
+export const claimActiveSetEmails = internalMutation({
+  args: { missionSetId: v.id("missionSets") },
+  returns: v.union(emailClaimValidator, v.null()),
   handler: async (ctx, args) => {
     const missionSet = await ctx.db.get(args.missionSetId);
-    if (missionSet === null || missionSet.status !== "published") return null;
+    const now = Date.now();
+    // Stop emailing once the set is no longer live.
+    if (
+      missionSet === null ||
+      missionSet.status !== "published" ||
+      missionSet.startsAt > now ||
+      missionSet.endsAt < now
+    ) {
+      return null;
+    }
+
+    const due = await dueEmailDeliveries(
+      ctx,
+      args.missionSetId,
+      now,
+      EMAIL_CLAIM_LIMIT,
+    );
+    const recipients = [];
+    for (const delivery of due) {
+      // A lease that keeps expiring means the send keeps dying mid-flight.
+      if (delivery.attempts >= MAX_EMAIL_ATTEMPTS) {
+        await ctx.db.patch(delivery._id, { status: "failed" });
+        continue;
+      }
+      const recipient = await emailRecipient(
+        ctx,
+        await ctx.db.get(delivery.userId),
+      );
+      if (recipient === null) {
+        await ctx.db.patch(delivery._id, { status: "skipped" });
+        continue;
+      }
+      await ctx.db.patch(delivery._id, {
+        status: "sending",
+        attempts: delivery.attempts + 1,
+        nextAttemptAt: now + EMAIL_SEND_LEASE_MS,
+      });
+      recipients.push({ deliveryId: delivery._id, ...recipient });
+    }
+    if (recipients.length === 0) return null;
 
     const missions = await ctx.db
       .query("missions")
@@ -487,29 +616,6 @@ export const activeSetEmailDetails = internalQuery({
         q.eq("missionSetId", args.missionSetId),
       )
       .take(100);
-
-    const ambassadors = await ctx.db
-      .query("users")
-      .withIndex("by_role", (q) => q.eq("role", "ambassador"))
-      .take(500);
-
-    const recipients = [];
-    for (const ambassador of ambassadors) {
-      if (!ambassador.email) continue;
-      if (ambassador.notificationPreferences?.mission === false) continue;
-      const profile = await ctx.db
-        .query("ambassadorProfiles")
-        .withIndex("by_userId", (q) => q.eq("userId", ambassador._id))
-        .first();
-      // Only active ambassadors; an account with no profile is not active yet.
-      if (profile?.status !== "active") continue;
-      recipients.push({
-        userId: ambassador._id,
-        name: ambassador.name?.trim() || "there",
-        email: ambassador.email,
-        track: profile.track ?? null,
-      });
-    }
 
     return {
       name: missionSet.name,
@@ -526,26 +632,55 @@ export const activeSetEmailDetails = internalQuery({
   },
 });
 
+export const recordActiveSetEmailResults = internalMutation({
+  args: {
+    results: v.array(
+      v.object({
+        deliveryId: v.id("missionSetEmailDeliveries"),
+        delivered: v.boolean(),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    for (const result of args.results) {
+      const delivery = await ctx.db.get(result.deliveryId);
+      if (delivery === null || delivery.status === "sent") continue;
+      if (result.delivered) {
+        await ctx.db.patch(delivery._id, { status: "sent", sentAt: now });
+      } else if (delivery.attempts >= MAX_EMAIL_ATTEMPTS) {
+        await ctx.db.patch(delivery._id, { status: "failed" });
+      } else {
+        await ctx.db.patch(delivery._id, {
+          status: "pending",
+          nextAttemptAt:
+            now + EMAIL_RETRY_BASE_MS * 2 ** Math.max(delivery.attempts - 1, 0),
+        });
+      }
+    }
+    return null;
+  },
+});
+
 export const sendActiveSetEmails = internalAction({
   args: { missionSetId: v.id("missionSets") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const details = await ctx.runQuery(
-      internal.missionSets.activeSetEmailDetails,
-      args,
-    );
-    if (details === null || details.recipients.length === 0) return null;
+    const claim: Infer<typeof emailClaimValidator> | null =
+      await ctx.runMutation(internal.missionSets.claimActiveSetEmails, args);
+    if (claim === null) return null;
 
-    const messages = details.recipients.map((recipient) => ({
+    const messages = claim.recipients.map((recipient) => ({
       recipient: recipient.email,
       email: missionSetActiveEmail({
         name: recipient.name,
         userId: recipient.userId,
-        setName: details.name,
-        startsAt: details.startsAt,
-        endsAt: details.endsAt,
+        setName: claim.name,
+        startsAt: claim.startsAt,
+        endsAt: claim.endsAt,
         // Ambassadors only see missions for their own track in the portal.
-        missionTitles: details.missions
+        missionTitles: claim.missions
           .filter(
             (mission) =>
               recipient.track !== null &&
@@ -557,9 +692,15 @@ export const sendActiveSetEmails = internalAction({
       }),
     }));
 
-    const sent = await trySendEmailBatch(messages);
+    const delivered = await trySendEmailBatch(messages);
+    await ctx.runMutation(internal.missionSets.recordActiveSetEmailResults, {
+      results: claim.recipients.map((recipient, index) => ({
+        deliveryId: recipient.deliveryId,
+        delivered: delivered[index] ?? false,
+      })),
+    });
     console.log(
-      `Mission set "${details.name}" email sent to ${sent} of ${messages.length} ambassadors.`,
+      `Mission set "${claim.name}" email sent to ${delivered.filter(Boolean).length} of ${messages.length} ambassadors.`,
     );
     return null;
   },

@@ -243,13 +243,39 @@ export default defineSchema({
     startsAt: v.number(),
     endsAt: v.number(),
     createdBy: v.id("users"),
-    // Set once ambassadors have been notified, so a set announces exactly
-    // once whether it goes live on save or later via the cron.
+    // Set once ambassadors have been notified in-app, so a set announces
+    // exactly once whether it goes live on save or later via the cron. Email
+    // delivery is tracked per recipient in `missionSetEmailDeliveries`.
     announcedAt: v.optional(v.number()),
   })
     .index("by_status", ["status"])
     .index("by_startsAt", ["startsAt"])
     .index("by_createdBy", ["createdBy"]),
+
+  // One row per ambassador emailed about a mission set going live, created
+  // when the set is announced. Failed sends go back to `pending` with a later
+  // `nextAttemptAt`; `sending` rows hold a lease until `nextAttemptAt` so an
+  // interrupted send is retried, and `sent` rows are never emailed again.
+  missionSetEmailDeliveries: defineTable({
+    missionSetId: v.id("missionSets"),
+    userId: v.id("users"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("sending"),
+      v.literal("sent"),
+      // Gave up after the maximum number of attempts.
+      v.literal("failed"),
+      // No longer eligible (opted out, deactivated, or no email).
+      v.literal("skipped"),
+    ),
+    attempts: v.number(),
+    nextAttemptAt: v.number(),
+    sentAt: v.optional(v.number()),
+  }).index("by_missionSetId_and_status_and_nextAttemptAt", [
+    "missionSetId",
+    "status",
+    "nextAttemptAt",
+  ]),
 
   leaderboardPublications: defineTable({
     missionSetId: v.id("missionSets"),

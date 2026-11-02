@@ -59,20 +59,21 @@ export async function trySendEmail(recipient: string, email: Email) {
 // Resend's default limit is 2 requests per second.
 const SINGLE_SEND_SPACING_MS = 600;
 
-// One message per recipient so no ambassador sees another's address.
+// One message per recipient so no ambassador sees another's address. Returns
+// whether each message was accepted, in the same order as `messages`.
 export async function trySendEmailBatch(
   messages: { recipient: string; email: Email }[],
 ) {
+  const delivered = messages.map(() => false);
   let config: ReturnType<typeof resendConfig>;
   try {
     config = resendConfig();
   } catch (error) {
     console.error("Email batch send failed:", error);
-    return 0;
+    return delivered;
   }
   const { apiKey, from } = config;
 
-  let sent = 0;
   for (let i = 0; i < messages.length; i += BATCH_SIZE) {
     const chunk = messages.slice(i, i + BATCH_SIZE);
     try {
@@ -85,18 +86,18 @@ export async function trySendEmailBatch(
           ...email,
         })),
       );
-      sent += chunk.length;
+      delivered.fill(true, i, i + chunk.length);
     } catch (error) {
       // Resend rejects the whole batch if any one address is invalid, so
       // retry one by one and let only the bad address fail.
       console.error("Email batch rejected, sending individually:", error);
-      for (const { recipient, email } of chunk) {
+      for (const [offset, { recipient, email }] of chunk.entries()) {
         await new Promise((resolve) =>
           setTimeout(resolve, SINGLE_SEND_SPACING_MS),
         );
-        if (await trySendEmail(recipient, email)) sent += 1;
+        delivered[i + offset] = await trySendEmail(recipient, email);
       }
     }
   }
-  return sent;
+  return delivered;
 }
