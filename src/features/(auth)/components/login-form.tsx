@@ -65,7 +65,13 @@ export function LoginForm() {
     }
 
     if (user.passwordSetupRequired) {
-      router.replace("/setup-password");
+      // Carry `next` through setup so the sign-in after it can still return
+      // to the requested page.
+      router.replace(
+        next
+          ? `/setup-password?next=${encodeURIComponent(next)}`
+          : "/setup-password",
+      );
       return;
     }
 
