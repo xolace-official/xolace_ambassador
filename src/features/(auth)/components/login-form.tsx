@@ -148,8 +148,7 @@ export function LoginForm() {
           <span className="font-medium text-foreground">
             Your password is set.
           </span>{" "}
-          Sign in with the password you just chose and you will go straight to
-          your dashboard.
+          Sign in with the password you just chose to continue.
         </div>
       ) : null}
 
