@@ -321,3 +321,61 @@ ${args.selectedSlot ? detail("Meeting time", escapeHtml(args.selectedSlot)) : ""
     text: `Hi ${args.name},\n\nCongratulations and welcome to the Xolace Ambassadors Program. Your application has been accepted.\n\nUse these details to sign in for the first time.\n\nEmail address: ${args.email}\nTemporary password: ${args.temporaryPassword}\nMeeting time: ${args.selectedSlot ?? "Not selected"}\n\nVisit the portal: ${args.loginUrl}\n\nYou will be asked to create a new password before entering the portal. Please keep these details private.`,
   };
 }
+
+export function passwordResetCodeEmail(args: {
+  code: string;
+  expiresInMinutes: number;
+  logoUrl: string;
+}) {
+  return {
+    subject: "Your Xolace Ambassadors password reset code",
+    html: layout({
+      eyebrow: "Password reset",
+      title: "Reset your password",
+      logoUrl: args.logoUrl,
+      content:
+        paragraph(
+          "Someone asked to reset the password for your Xolace Ambassadors account. Enter this code on the reset page to choose a new password.",
+        ) +
+        `<div style="margin:24px 0;padding:18px;border-radius:14px;background:${BRAND.tint};text-align:center;font-size:32px;font-weight:700;letter-spacing:0.3em;color:${BRAND.ink}">${escapeHtml(args.code)}</div>` +
+        paragraph(
+          `The code works once and expires in ${args.expiresInMinutes} minutes.`,
+        ) +
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">If you did not ask for this, you can ignore this email. Your password has not changed.</p>`,
+    }),
+    text: `Someone asked to reset the password for your Xolace Ambassadors account.\n\nYour reset code: ${args.code}\n\nEnter it on the reset page to choose a new password. The code works once and expires in ${args.expiresInMinutes} minutes.\n\nIf you did not ask for this, you can ignore this email. Your password has not changed.`,
+  };
+}
+
+export function adminPasswordResetEmail(args: {
+  name: string;
+  email: string;
+  temporaryPassword: string;
+  loginUrl: string;
+  logoUrl: string;
+}) {
+  return {
+    subject: "Your Xolace Ambassadors password was reset",
+    html: layout({
+      eyebrow: "Password reset",
+      title: `Your password was reset, ${args.name}`,
+      logoUrl: args.logoUrl,
+      content:
+        paragraph(
+          "A program admin reset the password on your Xolace Ambassadors account. Your old password no longer works and you have been signed out everywhere.",
+        ) +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid ${BRAND.border};border-radius:14px;background:${BRAND.page}">
+<tr><td style="padding:4px 20px 18px">
+${detail("Email address", escapeHtml(args.email))}
+${detail("Temporary password", escapeHtml(args.temporaryPassword))}
+</td></tr>
+</table>` +
+        paragraph(
+          "Sign in with the temporary password above. You will be asked to choose a new password before you can enter the portal.",
+        ) +
+        `<div style="margin:28px 0">${button("Sign in", args.loginUrl)}</div>` +
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${BRAND.muted}">If you did not ask for a reset, reply to this email so the team can look into it.</p>`,
+    }),
+    text: `Hi ${args.name},\n\nA program admin reset the password on your Xolace Ambassadors account. Your old password no longer works and you have been signed out everywhere.\n\nEmail address: ${args.email}\nTemporary password: ${args.temporaryPassword}\n\nSign in: ${args.loginUrl}\n\nYou will be asked to choose a new password before entering the portal. If you did not ask for a reset, reply to this email so the team can look into it.`,
+  };
+}

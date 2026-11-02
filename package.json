@@ -21,6 +21,7 @@
   "dependencies": {
     "@convex-dev/aggregate": "^0.3.3",
     "@convex-dev/auth": "^0.0.95",
+    "@convex-dev/rate-limiter": "0.4.3",
     "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-visually-hidden": "^1.2.4",

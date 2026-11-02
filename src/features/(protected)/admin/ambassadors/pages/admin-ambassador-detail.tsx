@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ResetPasswordButton } from "@/features/(protected)/admin/ambassadors/components/reset-password-button";
 import { RewardsPagination } from "@/features/(protected)/ambassador/rewards/components/rewards-pagination";
 import { MISSION_CATEGORY_LABELS } from "@/types/missions.type";
 import { api } from "../../../../../../convex/_generated/api";
@@ -132,9 +133,12 @@ export default function AdminAmbassadorDetail({
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:w-64">
-          <Metric label="Points" value={totals?.points ?? 0} />
-          <Metric label="Missions" value={totals?.missionsCompleted ?? 0} />
+        <div className="flex flex-col gap-3 sm:w-64">
+          <div className="grid grid-cols-2 gap-2">
+            <Metric label="Points" value={totals?.points ?? 0} />
+            <Metric label="Missions" value={totals?.missionsCompleted ?? 0} />
+          </div>
+          <ResetPasswordButton ambassadorId={ambassador._id} />
         </div>
       </header>
 
