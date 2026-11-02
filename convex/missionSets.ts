@@ -154,6 +154,7 @@ export const adminCreate = mutation({
       createdBy: admin._id,
     });
     await announceIfActive(ctx, missionSetId);
+    await scheduleFutureAnnouncement(ctx, missionSetId);
     return missionSetId;
   },
 });
@@ -203,6 +204,9 @@ export const adminUpdate = mutation({
     if (name.length < 3 || name.length > 160) {
       throw new Error("Enter a set name between 3 and 160 characters.");
     }
+    if (!Number.isFinite(args.startsAt) || !Number.isFinite(args.endsAt)) {
+      throw new Error("Choose valid start and end times.");
+    }
     if (args.endsAt <= args.startsAt) {
       throw new Error("Choose an end time after the start time.");
     }
@@ -222,6 +226,7 @@ export const adminUpdate = mutation({
       endsAt: args.endsAt,
     });
     await announceIfActive(ctx, args.missionSetId);
+    await scheduleFutureAnnouncement(ctx, args.missionSetId);
     return null;
   },
 });
@@ -316,6 +321,34 @@ export const promoteNextSet = internalMutation({
   },
 });
 
+// One-time backfill for sets that were already live before `announcedAt`
+// existed. Without it the first promoteNextSet tick after deploy would
+// re-announce them to every ambassador. Marks them as announced without
+// notifying; safe to re-run, since sets already marked are skipped.
+// Run right after deploying: npx convex run missionSets:backfillAnnouncedAt
+export const backfillAnnouncedAt = internalMutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const now = Date.now();
+    const publishedSets = await ctx.db
+      .query("missionSets")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .take(100);
+    const unannouncedActiveSets = publishedSets.filter(
+      (missionSet) =>
+        missionSet.announcedAt === undefined &&
+        missionSet.startsAt <= now &&
+        missionSet.endsAt >= now,
+    );
+
+    for (const missionSet of unannouncedActiveSets) {
+      await ctx.db.patch(missionSet._id, { announcedAt: missionSet.startsAt });
+    }
+    return unannouncedActiveSets.length;
+  },
+});
+
 export const adminAdoptLegacyMissions = mutation({
   args: {},
   returns: v.union(v.id("missionSets"), v.null()),
@@ -354,6 +387,39 @@ export const adminAdoptLegacyMissions = mutation({
     }
 
     return setId;
+  },
+});
+
+// The cron only ticks once a minute, so a short window could open and close
+// between ticks. Schedule the go-live announcement for the exact start time;
+// announceIfActive re-checks status, window and announcedAt when it fires, so
+// a job left stale by a later edit is a no-op.
+async function scheduleFutureAnnouncement(
+  ctx: MutationCtx,
+  missionSetId: Id<"missionSets">,
+) {
+  const missionSet = await ctx.db.get(missionSetId);
+  if (
+    missionSet === null ||
+    missionSet.status !== "published" ||
+    missionSet.announcedAt !== undefined ||
+    missionSet.startsAt <= Date.now()
+  ) {
+    return;
+  }
+  await ctx.scheduler.runAt(
+    missionSet.startsAt,
+    internal.missionSets.announceScheduledSet,
+    { missionSetId },
+  );
+}
+
+export const announceScheduledSet = internalMutation({
+  args: { missionSetId: v.id("missionSets") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await announceIfActive(ctx, args.missionSetId);
+    return null;
   },
 });
 
